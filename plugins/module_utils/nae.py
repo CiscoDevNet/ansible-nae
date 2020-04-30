@@ -124,43 +124,6 @@ class NAEModule(object):
         # self.result['response'] = data
 
 
-    def fail_json(self, msg, **kwargs):
-
-        # Return error information, if we have it
-        if self.error.get('code') is not None and self.error.get(
-                'text') is not None:
-            self.result['error'] = self.error
-
-        if 'state' in self.params:
-            if self.params.get('state') in ('absent', 'present'):
-                if self.params.get('output_level') in ('debug', 'info'):
-                    self.result['previous'] = self.existing
-
-            # Return the gory details when we need it
-            if self.params.get('output_level') == 'debug':
-                if self.imdata is not None:
-                    self.result['imdata'] = self.imdata
-                    self.result['totalCount'] = self.totalCount
-
-        if self.params.get('output_level') == 'debug':
-            if self.url is not None:
-                if 'state' in self.params:
-                    self.result['filter_string'] = self.filter_string
-                self.result['method'] = self.method
-                # self.result['path'] = self.path  # Adding 'path' in result
-                # causes state: absent in output
-                self.result['response'] = self.response
-                self.result['status'] = self.status
-                self.result['url'] = self.url
-
-        if 'state' in self.params:
-            if self.params.get('output_level') in ('debug', 'info'):
-                self.result['sent'] = self.config
-                self.result['proposed'] = self.proposed
-
-        self.result.update(**kwargs)
-        self.module.fail_json(msg=msg, **self.result)
-
     def get_all_assurance_groups(self):
         url = 'https://%(host)s:%(port)s/api/v1/config-services/assured-networks/aci-fabric/' % self.params
         resp, auth = fetch_url(self.module, url,
@@ -322,10 +285,6 @@ class NAEModule(object):
 
     def create_pre_change_from_manual_changes(self):
         self.params['file'] = None
-        # change_list = []
-        # change_list.append(self.params['changes'])
-        # changes = json.dumps(change_list)
-        # self.params['changes'] = changes
         self.send_pre_change_payload()
 
     def create_pre_change_from_file(self):
@@ -340,6 +299,8 @@ class NAEModule(object):
             # # Input file is not parsed. 
             data = self.load(open(self.params.get('file')))
             tree = self.construct_tree(data)
+            if tree is False:
+                self.module.fail_json(msg="Error parsing input file, unsupported object found in heirarchy.",**self.result)
             tree_roots = self.find_tree_roots(tree)
             ansible_ds = {}
             for root in tree_roots:
@@ -373,6 +334,8 @@ class NAEModule(object):
             i = 0
             while i < len(chunk):
                 c = chunk[i]
+                if i == 0 and c != '[':
+                    self.module.fail_json(msg="Input file invalid or already parsed.", **self.result)
                 buffer += c
 
                 if c == '"':
