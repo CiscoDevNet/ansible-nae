@@ -1,0 +1,8 @@
+[all]
+localhost              ansible_connection=local
+#candid-amslab.cisco.com
+
+
+[all:vars]
+ansible_python_interpreter=/usr/local/bin/python3
+validate_certs='no'

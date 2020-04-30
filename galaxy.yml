@@ -1,0 +1,23 @@
+---
+namespace: cisco
+name: nae
+# The version of the collection. Must be compatible with semantic versioning
+version: 0.0.1
+readme: README.md
+authors:
+- Shantanu Kulkarni (@Shan-KulK) <shankul@cisco.com, shantanu.kulkarni9@hotmail.com>
+description: Ansible Modules for Cisco NAE
+license_file: 'LICENSE'
+tags: 
+- cisco
+- nae
+- cloud
+- collection
+- networking
+- sdn
+- assurance
+repository: https://github.com/CiscoDevNet/ansible-nae
+documentation: https://docs.ansible.com/ansible/latest/scenario_guides/guide_nae.html
+homepage: https://github.com/CiscoDevNet/ansible-nae
+issues: https://github.com/CiscoDevNet/ansible-nae/issues
+...

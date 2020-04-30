@@ -1,0 +1,74 @@
+---
+# Note: This playbook is only to illustrate all module functionality. Running both add from change list and add from file 
+#       will fail since only one PCA can run on NAE at a time.
+- name: NAE TESTING
+  hosts: all
+  vars:
+    nae_login: &nae_login
+        host: 1.1.1.1
+        port: 443
+        username: Admin
+        password: password  
+    validate_certs: False
+  tasks:
+  - name: Add a new Pre-change analysis by specifying change list manually
+    nae_prechange:
+        <<: *nae_login
+        ag_name: FAB2
+        name: Testing AddBD
+        changes: |
+            [{
+                  "bd_change": {
+                     "action": "ADD",
+                     "dn": "uni/tn-PreChange/BD-BD2",
+                     "optimize_wan_bandwidth": "no",
+                     "type": "regular",
+                     "arp_flood": "no",
+                     "ip_learning": "yes",
+                     "limit_ip_learn_to_subnets": "yes",
+                     "unk_mac_ucast_act": "proxy",
+                     "unicast_route": "yes",
+                     "multi_dst_pkt_act": "bd-flood",
+                     "unk_mcast_act": "flood",
+                     "multi_cast_allow": "no",
+                     "vrf_name": "VRF1"
+                   }
+                 },
+                 {
+                   "network_subnet_change": {
+                     "action": "ADD",
+                     "dn": "uni/tn-PreChange/BD-BD2/subnet-10.0.0.1/8",
+                     "scope": "private",
+                     "make_this_primary_ip_address": "no",
+                     "treat_as_virtual_ip_address": "no",
+                     "subnet_control": "nd"
+                   }
+                 }]   
+        state: present
+    delegate_to: localhost
+  - name: Query all pre-change analyses
+    nae_prechange:
+        <<: *nae_login
+        ag_name: FAB2
+        state: query
+    delegate_to: localhost
+  - name: Delete an analysis
+    nae_prechange:
+        <<: *nae_login
+        ag_name: FAB2
+        name: test
+        state: absent
+  - name: Query a pre-change analysis
+    nae_prechange:
+      <<: *nae_login
+      ag_name: FAB2
+      name: Testing
+      state: query
+  - name: Create a pre-change analysis from file
+    nae_prechange:
+      <<: *nae_login
+      ag_name: FAB2
+      file: ../test.json
+      name: New
+      state: present
+...
