@@ -336,8 +336,8 @@ class NAEModule(object):
             i = 0
             while i < len(chunk):
                 c = chunk[i]
-                if i == 0 and c != '[':
-                    self.module.fail_json(msg="Input file invalid or already parsed.", **self.result)
+                # if i == 0 and c != '[':
+                    # self.module.fail_json(msg="Input file invalid or already parsed.", **self.result)
                 buffer += c
 
                 if c == '"':
@@ -620,10 +620,10 @@ class NAEModule(object):
         else:
             analyses = json.loads(resp.read())['value']['data']
 
-        self.result['TESTING'] = analyses
+        # self.result['TESTING'] = analyses
         for epoch in analyses:
             if epoch['status'] == 'RUNNING':
-                self.result['TESTING'] = "here"
+                # self.result['TESTING'] = "here"
                 self.params['analysis_id'] = epoch['analysis_id']
                 if('filename' in self.params):
                     self.params['file'] = self.params['filename']

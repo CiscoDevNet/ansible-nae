@@ -16,8 +16,8 @@
     nae_prechange:
       <<: *nae_login
       ag_name: FAB2
-      file: config.json
+      file: dump.json
       name: NewCollection
-      stop: True
+      verify: True
       state: present
 ...

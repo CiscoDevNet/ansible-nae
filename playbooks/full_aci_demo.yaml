@@ -1,0 +1,334 @@
+---
+
+- name: playbook for testing anp's and epg's
+  hosts: all
+  connection: local
+  gather_facts: no
+  vars:
+    aci_login: &aci_login
+      hostname: '{{ inventory_hostname }}'
+      username: '{{ user }}'
+      password: '{{ pass }}'
+      use_proxy: 'no'
+      validate_certs: '{{ validate_certs }}'
+
+  tasks:
+
+    # PREP
+
+    - name: ensure tenant exists
+      aci_tenant:
+          <<: *aci_login
+          name: AnsibleTest 
+          descr: 'tenant by Ansible'
+          filename: 'dump.json'
+
+    - pause:
+        prompt: "Press a key to continue"
+
+    - name: ensure context for tenant exists
+      aci_vrf:
+          <<: *aci_login
+          tenant: AnsibleTest
+          name: AnsibleTest_VRF
+          state: present
+          filename: 'dump.json'
+
+    - name: ensure bridge domain 1 exists
+      aci_bd:
+        <<: *aci_login
+        name: AnsibleTest_BD1 
+        vrf: AnsibleTest_VRF 
+        tenant: AnsibleTest 
+        state: present 
+        filename: 'dump.json'
+
+    - name: add subnet to BD
+      aci_bd_subnet: 
+        <<: *aci_login
+        tenant: AnsibleTest 
+        bd: AnsibleTest_BD1
+        subnet_name: BD1
+        gateway: 10.10.10.1 
+        mask: 24
+        state: present 
+        filename: 'dump.json'
+
+    - name: ensure bridge domain 2 exists
+      aci_bd: 
+        <<: *aci_login
+        name: AnsibleTest_BD2 
+        vrf: AnsibleTest_VRF 
+        tenant: AnsibleTest 
+        state: present 
+        filename: 'dump.json'
+
+    - name: add subnet to BD
+      aci_bd_subnet: 
+        <<: *aci_login
+        tenant: AnsibleTest 
+        bd: AnsibleTest_BD2 
+        subnet_name: BD2 
+        gateway: 20.20.20.1 
+        mask: 24  
+        state: present 
+        filename: 'dump.json'
+
+    - name: ensure web filter exists
+      aci_filter: 
+        <<: *aci_login
+        name: Web_Filter 
+        tenant: AnsibleTest 
+        state: present 
+        filename: 'dump.json'
+
+    - name: entry for web filter
+      aci_filter_entry: 
+        <<: *aci_login
+        name: web_filter 
+        ether_type: ip
+        ip_protocol: tcp
+        tenant: AnsibleTest
+        filter: Web_Filter
+        dst_port: 80
+        state: present 
+        filename: 'dump.json'
+
+    - name: ensure app filter exists
+      aci_filter: 
+        <<: *aci_login
+        name: App_Filter 
+        tenant: AnsibleTest
+        state: present 
+        filename: 'dump.json'
+
+    - name: entry for app filter
+      aci_filter_entry:
+        <<: *aci_login
+        name: app_filter 
+        ether_type: ip 
+        ip_protocol: tcp
+        tenant: AnsibleTest
+        filter: App_Filter
+        dst_port: 1433
+        state: present 
+        filename: 'dump.json'
+
+    - name: ensure db filter exists
+      aci_filter: 
+        <<: *aci_login
+        name: DB_Filter 
+        tenant: AnsibleTest 
+        state: present 
+        filename: 'dump.json'
+
+    - name: entry for db filter
+      aci_filter_entry: 
+        <<: *aci_login
+        name: db_filter 
+        ether_type: ip 
+        ip_protocol: tcp
+        tenant: AnsibleTest
+        filter: DB_Filter
+        dst_port: 1521
+        state: present 
+        filename: 'dump.json'
+
+    - name: ensure contracts exist
+      aci_contract:       
+        <<: *aci_login
+        name: '{{ item }}'
+        tenant: AnsibleTest 
+        filename: 'dump.json'
+      with_items:
+        - Web_Con
+        - App_Con
+        - DB_Con
+
+
+    - name: ensure subject exists for web contract
+      aci_contract_subject: 
+        <<: *aci_login
+        subject: web_subject
+        contract: Web_Con 
+        tenant: AnsibleTest 
+        filename: 'dump.json'
+
+    - name: ensure subject exists for web contract
+      aci_contract_subject:
+        <<: *aci_login
+        subject: app_subject
+        contract: App_Con 
+        tenant: AnsibleTest 
+        filename: 'dump.json'
+
+    - name: ensure subject exists for web contract
+      aci_contract_subject: 
+        <<: *aci_login
+        subject: db_subject 
+        contract: DB_Con  
+        tenant: AnsibleTest 
+        filename: 'dump.json'
+    
+    - name: ensure filter exists for web contract
+      aci_contract_subject_to_filter: 
+        <<: *aci_login
+        subject: web_subject 
+        contract: Web_Con 
+        filter: Web_Filter 
+        tenant: AnsibleTest 
+        filename: 'dump.json'
+
+    - name: ensure filter exists for web contract
+      aci_contract_subject_to_filter: 
+        <<: *aci_login
+        subject: app_subject 
+        contract: App_Con 
+        filter: App_Filter 
+        tenant: AnsibleTest 
+        filename: 'dump.json'
+
+    - name: ensure filter exists for web contract
+      aci_contract_subject_to_filter: 
+        <<: *aci_login
+        subject: db_subject 
+        contract: DB_Con 
+        filter: DB_Filter 
+        tenant: AnsibleTest 
+        filename: 'dump.json'
+
+    # TESTING APP NET PROFILES AND EPGS
+
+    - name: create app network profile
+      aci_ap: 
+        <<: *aci_login
+        name: 3Tier_App 
+        tenant: AnsibleTest 
+        state: present 
+        filename: 'dump.json'
+
+    - name: ensure web epg exists
+      aci_epg:
+        <<: *aci_login
+        name: Web_EPG
+        bd: AnsibleTest_BD1
+        ap: 3Tier_App
+        tenant: AnsibleTest
+        state: present
+        filename: 'dump.json'
+    
+    - name: Map web epg to VMM Domain
+      aci_epg_to_domain:
+        <<: *aci_login
+        tenant: AnsibleTest
+        ap: 3Tier_App
+        epg: Web_EPG
+        domain_type: vmm
+        vm_provider: kubernetes
+        domain: KubeSpray
+        state: present
+        filename: 'dump.json'
+
+
+    - name: Add contracts to  web epg
+      aci_epg_to_contract:
+        <<: *aci_login
+        tenant: AnsibleTest
+        ap: 3Tier_App
+        epg: Web_EPG
+        contract: Web_Con
+        contract_type: consumer
+        state: present
+        filename: 'dump.json'
+
+    - name: Add contracts to  web epg
+      aci_epg_to_contract:
+        <<: *aci_login
+        tenant: AnsibleTest
+        ap: 3Tier_App
+        epg: Web_EPG
+        contract: App_Con
+        contract_type: provider
+        state: present
+        filename: 'dump.json'
+
+
+    - name: ensure app epg exists
+      aci_epg:
+        <<: *aci_login
+        name: App_EPG
+        bd: AnsibleTest_BD1
+        ap: 3Tier_App
+        tenant: AnsibleTest
+        state: present
+        filename: 'dump.json'
+
+    - name: Map app epg to VMM Domain
+      aci_epg_to_domain:
+        <<: *aci_login
+        tenant: AnsibleTest
+        ap: 3Tier_App
+        epg: App_EPG
+        domain_type: vmm
+        vm_provider: vmware
+        domain: ACI
+        state: present        
+        filename: 'dump.json'
+
+    - name: Add contracts to  app epg
+      aci_epg_to_contract:
+        <<: *aci_login
+        tenant: AnsibleTest
+        ap: 3Tier_App
+        epg: App_EPG
+        contract: App_Con
+        contract_type: consumer
+        state: present
+        filename: 'dump.json'
+
+    - name: Add contracts to  app epg
+      aci_epg_to_contract:
+        <<: *aci_login
+        tenant: AnsibleTest
+        ap: 3Tier_App
+        epg: App_EPG
+        contract: DB_Con
+        contract_type: provider
+        state: present
+        filename: 'dump.json'
+        
+
+    - name: ensure db epg exists
+      aci_epg:
+        <<: *aci_login
+        name: DB_EPG
+        bd: AnsibleTest_BD1
+        ap: 3Tier_App
+        tenant: AnsibleTest
+        state: present
+        filename: 'dump.json'
+
+    - name: Map  epg to VMM Domain
+      aci_epg_to_domain:
+        <<: *aci_login
+        tenant: AnsibleTest
+        ap: 3Tier_App
+        epg: DB_EPG
+        domain_type: vmm
+        vm_provider: vmware
+        domain: ACI
+        state: present        
+        filename: 'dump.json'
+
+
+    - name: Add contracts to  app epg
+      aci_epg_to_contract:
+        <<: *aci_login
+        tenant: AnsibleTest
+        ap: 3Tier_App
+        epg: DB_EPG
+        contract: DB_Con
+        contract_type: consumer
+        state: present
+        filename: 'dump.json'
+ 
