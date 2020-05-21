@@ -1,0 +1,23 @@
+---
+# Testing first NAE Ansible Module!!
+# Note: This playbook is only to illustrate all module functionality. Running both add from change list and add from file 
+#       will fail since only one PCA can run on NAE at a time.
+- name: NAE TESTING
+  hosts: all
+  vars:
+    nae_login: &nae_login
+        host: 10.67.185.100
+        port: 8448  
+        username: admin
+        password: C@ndidadmin1234  
+    validate_certs: False
+  tasks:
+  - name: Create a pre-change analysis from file
+    nae_prechange:
+      <<: *nae_login
+      ag_name: FAB2
+      file: config.json
+      name: NewCollection
+      stop: True
+      state: present
+...

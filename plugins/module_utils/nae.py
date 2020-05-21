@@ -38,6 +38,7 @@ import base64
 import requests
 import json
 import os
+import time
 import gzip
 from copy import deepcopy
 from ansible.module_utils.basic import AnsibleModule
@@ -242,6 +243,7 @@ class NAEModule(object):
         if self.params['state'] == 'verify':
             status = None
             while status != "COMPLETED":
+                sleep(60)
                 try:
                     status = str(self.get_pre_change_analysis()['analysis_status'])
                     if status == "COMPLETED":
@@ -288,8 +290,8 @@ class NAEModule(object):
         self.send_pre_change_payload()
 
     def create_pre_change_from_file(self):
-        assert os.path.exists(self.params.get(
-            'file')), "File not found, " + str(self.params.get('file'))
+        if not os.path.exists(self.params.get('file')):
+            raise AssertionError ("File not found, " + str(self.params.get('file')))
         filename = self.params.get('file')
         self.params['filename'] = filename
         # self.result['Checking'] = str(self.params.get('filename'))
@@ -584,7 +586,7 @@ class NAEModule(object):
         self.params['fabric_id'] = str(
             self.get_assurance_group(
                 self.params.get('ag_name'))['uuid'])
-        url = 'https://%(host)s:%(port)s/api/v1/event-services/assured-networks/%(fabric_id)s/epochs?$sort=collectionTimestamp' % self.params
+        url = 'https://%(host)s:%(port)s/api/v1/event-services/assured-networks/%(fabric_id)s/epochs?$sort=-collectionTimestamp' % self.params
         resp, auth = fetch_url(self.module, url,
                                headers=self.http_headers,
                                data=None,
@@ -603,21 +605,54 @@ class NAEModule(object):
             r = gzip.decompress(resp.read())
             return json.loads(r.decode())['value']['data']
         return json.loads(resp.read())['value']['data']
+    
+
+    def stop_online_analysis(self):
+        url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/assured-networks/aci-fabric/?$sort=immutable_name' % self.params
+        resp, auth = fetch_url(self.module, url,
+                               headers=self.http_headers,
+                               data=None,
+                               method='GET')
+        
+        if resp.headers['Content-Encoding'] == "gzip":
+            r = gzip.decompress(resp.read())
+            analyses = json.loads(r.decode())['value']['data']
+        else:
+            analyses = json.loads(resp.read())['value']['data']
+
+        self.result['TESTING'] = analyses
+        for epoch in analyses:
+            if epoch['status'] == 'RUNNING':
+                self.result['TESTING'] = "here"
+                self.params['analysis_id'] = epoch['analysis_id']
+                if('filename' in self.params):
+                    self.params['file'] = self.params['filename']
+                    del self.params['filename']
+                self.module.fail_json(msg="Online analysis currently running. Please stop the analysis before attempting to run a pre-change analysis." , **self.result)
+                # stop_url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/analysis/%(analysis_id)s/stop' % self.params
+                # resp, auth = fetch_url(self.module, stop_url,
+                                       # headers=self.http_headers,
+                                       # data=None,
+                                       # method='POST')
+                
+                # if resp.headers['Content-Encoding'] == "gzip":
+                    # r = gzip.decompress(resp.read())
+                    # self.result['stopped'] = json.loads(r.decode())['value']['data']
+                # else:
+                    # self.result['stopped']  = json.loads(resp.read())['value']['data']
+                # return
+        return
+        
 
     def send_pre_change_payload(self):
         self.params['fabric_id'] = str(
             self.get_assurance_group(
                 self.params.get('ag_name'))['uuid'])
-        #self.params['base_epoch_id'] = str(self.get_epochs()[-1]["epoch_id"])
-        epochs = self.get_epochs()
-        count = 0
-        for x in epochs:
-            count = count + 1
-        for j in range(count-1,0,-1):
-            if not (epochs[j]["epoch_type"] == "PCV"):
-                self.params['base_epoch_id'] = str(epochs[j]["epoch_id"])
-                break
+        self.params['base_epoch_id'] = str(self.get_epochs()[0]["epoch_id"])
         f = self.params.get('file')
+        if self.params['stop']:
+            # Stop an existing live analysis
+            self.stop_online_analysis()
         # self.result['Checking'] = str(self.params.get('filename'))
         # self.module.exit_json(msg="Testing", **self.result)
         payload = {
