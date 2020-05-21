@@ -71,4 +71,12 @@
       file: ../test.json
       name: New
       state: present
+  - name: Create a pre-change analysis from unparsed aci dumpfile
+    nae_prechange:
+      <<: *nae_login
+      ag_name: FAB2
+      file: dump.json
+      name: New
+      state: present
+      verify: True    
 ...
