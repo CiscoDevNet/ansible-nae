@@ -1,0 +1,1 @@
+{"totalCount": "1", "imdata": [{"fvTenant": {"attributes": {"dn": "uni/tn-TenantA"}, "children": [{"fvBD": {"attributes": {"dn": "uni/tn-TenantA/BD-BD2", "name": "BD2"}}}, {"fvBD": {"attributes": {"dn": "uni/tn-TenantA/BD-BD1"}, "children": [{"fvSubnet": {"attributes": {"dn": "uni/tn-TenantA/BD-BD1/subnet-[10.10.10.1/24]", "ip": "10.10.10.1/24", "name": "BD1"}}}]}}]}}]}

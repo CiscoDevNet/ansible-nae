@@ -16,8 +16,14 @@
     nae_prechange:
       <<: *nae_login
       ag_name: FAB2
-      file: bd.json
-      verify: True
-      name: TestingTdn
+      file: config.json
+      name: TestingWait
       state: present
+  - name: Query a  pre-change analysis and wait
+    nae_prechange:
+      <<: *nae_login
+      ag_name: FAB2
+      verify: True
+      name: TestingWait
+      state: query
 ...

@@ -223,6 +223,16 @@ class NAEModule(object):
         self.result['Analyses'] = result
         return result
 
+
+    def is_json(self,myjson):
+      try:
+        json_object = json.loads(myjson)
+      except ValueError as e:
+        return False
+      return True
+
+
+
     def get_pre_change_analysis(self):
         ret = self.get_pre_change_analyses()
         # self.result['ret'] = ret
@@ -240,10 +250,10 @@ class NAEModule(object):
                 self.params.get('ag_name'))['uuid'])
         if self.get_pre_change_analysis() is None:
             self.module.exit_json(msg='No such Pre-Change Job exists.')
-        if self.params['state'] == 'verify':
+        if self.params['verify']:
             status = None
             while status != "COMPLETED":
-                sleep(60)
+                time.sleep(30)
                 try:
                     status = str(self.get_pre_change_analysis()['analysis_status'])
                     if status == "COMPLETED":
@@ -275,7 +285,6 @@ class NAEModule(object):
         for x in result:
             if int(x['count']) > 0:
                 if(str(x['category']) == "COMPLIANCE" and str(x['epoch2_details']['severity']) == "EVENT_SEVERITY_INFO"):
-                     del result[x]
                      continue
                     # with open("output.txt", 
                 count = count + 1 
@@ -290,15 +299,19 @@ class NAEModule(object):
         self.send_pre_change_payload()
 
     def create_pre_change_from_file(self):
+        no_parse = False
         if not os.path.exists(self.params.get('file')):
             raise AssertionError ("File not found, " + str(self.params.get('file')))
         filename = self.params.get('file')
         self.params['filename'] = filename
         # self.result['Checking'] = str(self.params.get('filename'))
         # self.module.exit_json(msg="Testing", **self.result)
-
-        if self.params['verify']:
+        f = open(self.params.get('file'), "rb")
+        if self.is_json(f.read()) is True:
+            no_parse = True
+        if self.params['verify'] and no_parse is False:
             # # Input file is not parsed. 
+
             data = self.load(open(self.params.get('file')))
             tree = self.construct_tree(data)
             if tree is False:
@@ -315,7 +328,6 @@ class NAEModule(object):
                 json.dump(toplevel, f)
             f.close()
 
-        f = open(self.params.get('file'), "rb")
         # self.result['Checking'] = f
         # self.module.exit_json(msg="Testing", **self.result)
         config = []
