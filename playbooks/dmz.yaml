@@ -6,18 +6,18 @@
   hosts: all
   vars:
     nae_login: &nae_login
-        host: 10.67.185.100
-        port: 8448  
+        host: 173.36.219.127
+        port: 443  
         username: admin
-        password: C@ndidadmin1234  
+        password: ins3965!ins3965! 
     validate_certs: False
   tasks:
   - name: Create a pre-change analysis from file
     nae_prechange:
       <<: *nae_login
-      ag_name: FAB2
+      ag_name: lh-dmz1-pod1-aci-v32
       file: dump.json
       verify: True
-      name: TestingTdn
+      name: TestingfDumping
       state: present
 ...

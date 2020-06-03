@@ -50,12 +50,6 @@ options:
     type: str
     choices: [ absent, present, query ]
     default: present
-  stop:
-    description:
-    - Flag specifying if existing online analysis is to be stopped
-    - when creating a new pre-change analysis
-    type: bool
-    required: no
   file:
     description:
     - Optional parameter if creating new pre-change analysis from file.
@@ -165,7 +159,6 @@ def main():
         validate_certs=dict(type='bool', default=False),
         state=dict(type='str', default='present', choices=['absent',
                    'present', 'query', 'verify']),
-        stop=dict(type='str', default=False),
         )
 
     module = AnsibleModule(argument_spec=argument_spec,
@@ -179,7 +172,6 @@ def main():
     state = module.params.get('state')
     ag_name = module.params.get('ag_name')
     name = module.params.get('name')
-    stop = module.params.get('stop')
     nae = NAEModule(module)
 
     if state == 'present' and change_file:

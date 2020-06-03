@@ -45,7 +45,7 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.parsing.convert_bool import boolean
 from ansible.module_utils.urls import fetch_url
 from ansible.module_utils._text import to_bytes, to_native
-
+from jsonpath_ng import jsonpath, parse
 
 def nae_argument_spec():
     return dict(
@@ -311,7 +311,7 @@ class NAEModule(object):
             no_parse = True
         if self.params['verify'] and no_parse is False:
             # # Input file is not parsed. 
-
+            self.params['cmap'] = {}
             data = self.load(open(self.params.get('file')))
             tree = self.construct_tree(data)
             if tree is False:
@@ -322,10 +322,12 @@ class NAEModule(object):
                 exp = self.export_tree(root)
                 for key, val in exp.items():
                     ansible_ds[key] = val
+            self.copy_children(ansible_ds)
             toplevel = {"totalCount" : "1", "imdata" : []}
             toplevel['imdata'].append(ansible_ds)
             with open(self.params.get('file'), 'w') as f:
                 json.dump(toplevel, f)
+            del self.params['cmap']
             f.close()
 
         # self.result['Checking'] = f
@@ -334,6 +336,30 @@ class NAEModule(object):
         self.params['file'] = f
         self.params['changes'] = config
         self.send_pre_change_payload()
+
+
+    def copy_children(self,tree):
+        '''
+        Copies existing children objects to the built tree
+
+        '''
+        cmap = self.params['cmap']
+        for dn, children in cmap.items():
+            aci_class = self.get_aci_class((self.parse_path(dn)[-1]).split("-")[0])
+            json_path_expr_search =  parse(f'$..children.[*].{aci_class}')
+            json_path_expr_update = parse(str([str(match.full_path) for match in json_path_expr_search.find(tree) if match.value['attributes']['dn'] == dn][0]))
+            curr_obj = [match.value for match in json_path_expr_update.find(tree)][0]
+            if 'children' in curr_obj:
+                for child in children:
+                    curr_obj['children'].append(child)
+            elif 'children' not in curr_obj:
+                curr_obj['children'] = []
+                for child in children:
+                    curr_obj['children'].append(child)
+            json_path_expr_update.update(curr_obj,tree)
+        
+        return
+
 
 
     def load(self,fh, chunk_size=1024):
@@ -424,9 +450,10 @@ class NAEModule(object):
             for nm, desc in item.items():
                 assert 'attributes' in desc
                 attr = desc['attributes']
-
                 assert 'dn' in attr
-
+                if 'children' in desc:
+                    existing_children = desc['children']
+                    self.params['cmap'][attr['dn']] = existing_children
                 path = self.parse_path(attr['dn'])
                 cursor = tree
                 prev_node = None
@@ -619,41 +646,6 @@ class NAEModule(object):
         return json.loads(resp.read())['value']['data']
     
 
-    def stop_online_analysis(self):
-        url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/assured-networks/aci-fabric/?$sort=immutable_name' % self.params
-        resp, auth = fetch_url(self.module, url,
-                               headers=self.http_headers,
-                               data=None,
-                               method='GET')
-        
-        if resp.headers['Content-Encoding'] == "gzip":
-            r = gzip.decompress(resp.read())
-            analyses = json.loads(r.decode())['value']['data']
-        else:
-            analyses = json.loads(resp.read())['value']['data']
-
-        # self.result['TESTING'] = analyses
-        for epoch in analyses:
-            if epoch['status'] == 'RUNNING':
-                # self.result['TESTING'] = "here"
-                self.params['analysis_id'] = epoch['analysis_id']
-                if('filename' in self.params):
-                    self.params['file'] = self.params['filename']
-                    del self.params['filename']
-                self.module.fail_json(msg="Online analysis currently running. Please stop the analysis before attempting to run a pre-change analysis." , **self.result)
-                # stop_url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/analysis/%(analysis_id)s/stop' % self.params
-                # resp, auth = fetch_url(self.module, stop_url,
-                                       # headers=self.http_headers,
-                                       # data=None,
-                                       # method='POST')
-                
-                # if resp.headers['Content-Encoding'] == "gzip":
-                    # r = gzip.decompress(resp.read())
-                    # self.result['stopped'] = json.loads(r.decode())['value']['data']
-                # else:
-                    # self.result['stopped']  = json.loads(resp.read())['value']['data']
-                # return
-        return
         
 
     def send_pre_change_payload(self):
@@ -662,11 +654,6 @@ class NAEModule(object):
                 self.params.get('ag_name'))['uuid'])
         self.params['base_epoch_id'] = str(self.get_epochs()[0]["epoch_id"])
         f = self.params.get('file')
-        if self.params['stop']:
-            # Stop an existing live analysis
-            self.stop_online_analysis()
-        # self.result['Checking'] = str(self.params.get('filename'))
-        # self.module.exit_json(msg="Testing", **self.result)
         payload = {
             "name": self.params.get('name'),
             "fabric_uuid": self.params.get('fabric_id'),
