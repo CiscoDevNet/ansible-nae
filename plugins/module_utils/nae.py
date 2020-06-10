@@ -50,7 +50,7 @@ from jsonpath_ng import jsonpath, parse
 def nae_argument_spec():
     return dict(
         host=dict(type='str', required=True, aliases=['hostname']),
-        port=dict(type='int', required=True),
+        port=dict(type='int', required=False, default=443),
         username=dict(type='str', default='admin', aliases=['user']),
         password=dict(type='str', no_log=True),
     )
@@ -89,10 +89,13 @@ class NAEModule(object):
             if('filename' in self.params):
                 self.params['file'] = self.params['filename']
                 del self.params['filename']
-            self.module.exit_json(
-                msg=json.loads(
-                    auth.get('body'))['messages'][0]['message'],
-                **self.result)
+            self.response = auth.get('msg')
+            self.status = auth.get('status')
+            try:
+                self.module.fail_json(msg=self.response,**self.result)
+            except KeyError:
+                # Connection error
+                self.fail_json(msg='Connection failed for %(url)s. %(msg)s' % auth, **self.result)
 
         url = 'https://%(host)s:%(port)s/api/v1/login' % self.params
         user_credentials = json.dumps({"username": self.params.get(

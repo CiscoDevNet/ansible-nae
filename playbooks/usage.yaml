@@ -5,10 +5,10 @@
   hosts: all
   vars:
     nae_login: &nae_login
-        host: 1.1.1.1
-        port: 443
-        username: Admin
-        password: password  
+        host: 173.36.219.127
+        port: 443  
+        username: admin
+        password: ins3965!ins3965! 
     validate_certs: False
   tasks:
   - name: Add a new Pre-change analysis by specifying change list manually
