@@ -58,7 +58,8 @@ Once the collection is installed, you can use it in a playbook by specifying the
 ### Offline File Management
 - [ ] Upload/Delete/Get a File
 
-### Offline Analysis
+### Online/Offline Analysis
+- [ ] Create/Start/Stop/Delete Online Analysis
 - [ ] Create/Start/Stop/Delete Offline Analysis
 
 ### Smart Events
@@ -66,7 +67,8 @@ Once the collection is installed, you can use it in a playbook by specifying the
 - [ ] Export Smart Events in CSV format
 - [ ] Smart Event Suppression
 - - [ ] Create/Update/Delete/Read Even suppression rules
-- - [ ] Activate a requirement set with an AG
+- - [ ] Create/Update/Delete/Read Even suppression rules sets
+- - [ ] Activate a rules	 set with an AG
 - - [ ] Associate/Disassociate a requirement set with an AG
 ### TCAM Analysis
 - [ ] Export TCAM stats as CSV
