@@ -45,7 +45,7 @@ Once the collection is installed, you can use it in a playbook by specifying the
 - [ ] Create/Update/Read/Delete
 - - [ ] Object Selectors
 - - [ ] Traffic Selector
-- - [ ] Compiace Requirement 
+- - [ ] Compliance Requirement 
 - - [ ] Compliance Requirement Sets 
 - [ ] Create Associate/Disassociate a requirement set with an AG
 - [ ] Report Creation
