@@ -51,9 +51,9 @@ Once the collection is installed, you can use it in a playbook by specifying the
 - [ ] Report Creation
 
 ### Assurange Group Management
-- [ ] Create/Update/Read/Delete Online Assurange Group 
+- [ ] Create/Update/Read/Delete Online Assurance Group 
 - - [ ] Configure F5 Load Balancer
-- [ ] Create/Update/Read/Delete Offline Assurange Group 
+- [ ] Create/Update/Read/Delete Offline Assurance Group 
 
 ### Offline File Management
 - [ ] Upload/Delete/Get a File
