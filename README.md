@@ -6,11 +6,19 @@ The ansible-nae project provides an Ansible collection for managing and automati
 
 ## Requirements
 Ansible v2.8 or newer
+requests
+requests_toolbelt
+jsonpath_ng
 
 ## Install
-Ansible must be installed
+Ansible and other requirements must be installed
 ```
-sudo pip install ansible
+sudo pip install ansible requests requests_toolbet jsonpath_ng
+```
+
+Install the collection
+```
+ansible-galaxy collection install cisco.nae
 ```
 
 ## Use
