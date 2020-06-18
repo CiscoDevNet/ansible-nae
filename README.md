@@ -36,3 +36,44 @@ Once the collection is installed, you can use it in a playbook by specifying the
       state: present
 ...
 ```
+## RoadMap
+### Pre-change analysis
+- [x] Configure PCA
+- [x] Start/Stop/Query PCA
+
+### Compliance Analysis
+- [ ] Create/Update/Read/Delete
+- - [ ] Object Selectors
+- - [ ] Traffic Selector
+- - [ ] Compliance Requirement 
+- - [ ] Compliance Requirement Sets 
+- [ ] Create Associate/Disassociate a requirement set with an AG
+- [ ] Report Creation
+
+### Assurance Group Management
+- [ ] Create/Update/Read/Delete Online Assurance Group 
+- - [ ] Configure F5 Load Balancer
+- [ ] Create/Update/Read/Delete Offline Assurance Group 
+
+### Offline File Management
+- [ ] Upload/Delete/Get a File
+
+### Online/Offline Analysis
+- [ ] Create/Start/Stop/Delete Online Analysis
+- [ ] Create/Start/Stop/Delete Offline Analysis
+
+### Smart Events
+- [ ] Get smart events by Type/Severity 
+- [ ] Export Smart Events in CSV format
+- [ ] Smart Event Suppression
+- - [ ] Create/Update/Delete/Read Even suppression rules
+- - [ ] Create/Update/Delete/Read Even suppression rules sets
+- - [ ] Activate a rules	 set with an AG
+- - [ ] Associate/Disassociate a requirement set with an AG
+### TCAM Analysis
+- [ ] Export TCAM stats as CSV
+
+### Appliance Management
+- [ ] Create/Update/Delete/Read Users
+
+

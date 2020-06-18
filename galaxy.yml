@@ -17,7 +17,7 @@ tags:
 - sdn
 - assurance
 repository: https://github.com/CiscoDevNet/ansible-nae
-documentation: https://docs.ansible.com/ansible/latest/scenario_guides/guide_nae.html
+# documentation: https://docs.ansible.com/ansible/latest/scenario_guides/guide_nae.html
 homepage: https://github.com/CiscoDevNet/ansible-nae
 issues: https://github.com/CiscoDevNet/ansible-nae/issues
 ...
