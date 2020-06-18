@@ -157,6 +157,67 @@ class NAEModule(object):
                 return ag
         return None
 
+    def deleteAG(self):
+        self.params['uuid'] = str(self.get_assurance_group(self.params.get('name'))['uuid'])
+        url = 'https://%(host)s:%(port)s/api/v1/config-services/assured-networks/aci-fabric/%(uuid)s' % self.params
+        resp, auth = fetch_url(self.module, url,
+                               headers=self.http_headers,
+                               data=None,
+                               method='DELETE')
+        if auth.get('status') != 200:
+            if('filename' in self.params):
+                self.params['file'] = self.params['filename']
+                del self.params['filename']
+            self.response = auth.get('msg')
+            self.status = auth.get('status')
+            try:
+                self.module.fail_json(msg=self.response,**self.result)
+            except KeyError:
+                # Connection error
+                self.fail_json(msg='Connection failed for %(url)s. %(msg)s' % auth, **self.result)
+        if json.loads(resp.read())['success'] is True:
+            self.result['Result'] = 'Assurance Group "%(name)s" deleted successfully' %self.params
+
+    def newOfflineAG(self):
+        # This method creates a new Offline Assurance Group, you only need to pass the AG Name.
+
+        url = 'https://%(host)s:%(port)s/api/v1/config-services/assured-networks/aci-fabric/' % self.params
+
+        form ='''{
+          "analysis_id": "",
+          "display_name": "",
+          "description": "",
+          "operational_mode": "OFFLINE",
+          "status": "STOPPED",
+          "active": true,
+          "unique_name": "''' + str(self.params.get('name')) + '''",
+          "assured_network_type": "",
+          "analysis_timeout_in_secs": 3600,
+          "apic_configuration_export_policy": {
+            "apic_configuration_export_policy_enabled": false,
+            "export_format": "XML",
+            "export_policy_name": ""
+          },
+          "analysis_schedule_id": ""}'''
+       
+        resp, auth = fetch_url(self.module, url,
+                               headers=self.http_headers,
+                               data=form,
+                               method='POST')
+        
+        if auth.get('status') != 201:
+            if('filename' in self.params):
+                self.params['file'] = self.params['filename']
+                del self.params['filename']
+            self.response = auth.get('msg')
+            self.status = auth.get('status')
+            try:
+                self.module.fail_json(msg=str(self.response) + str(self.status),**self.result)
+            except KeyError:
+                # Connection error
+                self.fail_json(msg='Connection failed for %(url)s. %(msg)s' % auth, **self.result)
+        self.result['Result'] = 'Successfully created Assurance Group "%(name)s"' %self.params 
+
     def get_pre_change_analyses(self):
         self.params['fabric_id'] = str(
             self.get_assurance_group(

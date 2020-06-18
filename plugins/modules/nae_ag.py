@@ -60,7 +60,15 @@ EXAMPLES = \
     port: 8080
     username: Admin
     password: 1234
-    state: query:
+    state: query
+    name: AG1
+- name: Create Offline Assurance Group
+  nae_ag:
+    host: nae
+    port: 8080
+    username: Admin
+    password: 1234
+    state: present
     name: AG1
 '''
 
@@ -103,6 +111,23 @@ def main():
     nae = NAEModule(module)
 
     if state == 'query' and name:
+        ag = nae.get_assurance_group(name)
+        if ag is None:
+            module.exit_json(msg='No such Assurance Group exists', **nae.result)
+        nae.result['Result'] = ag
+        module.exit_json(**nae.result)
+    elif state == 'query' and not name:
+        nae.get_all_assurance_groups()
+        nae.result['Result'] = nae.assuranceGroups
+        module.exit_json(**nae.result)
+    elif state == 'absent' and name:
+        nae.deleteAG()
+        result['changed'] = True
+        module.exit_json(**nae.result)
+    elif state == 'present' and name:
+        nae.newOfflineAG()
+        result['changed'] = True
+        module.exit_json(**nae.result)
 
 
 
