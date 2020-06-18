@@ -70,6 +70,26 @@ EXAMPLES = \
     password: 1234
     state: present
     name: AG1
+- name: Delete Offline/Online Assurance Group
+  nae_ag:
+    host: nae
+    port: 8080
+    username: Admin
+    password: 1234
+    state: absent
+    name: AG1
+- name Create Online Assurance Group (with APIC Configuration Export Polciy)
+  nae_ag:
+    host: nae
+    port: 8080
+    username: Admin
+    password: 1234
+    state: present
+    name: AG1
+    online: True
+    apic_hostnames: 1.2.3.4
+    apic_username: admin
+    apic_password: password
 '''
 
 RETURN = \
@@ -95,6 +115,10 @@ def main():
     argument_spec.update(  # Not required for querying all objects
         name=dict(type='str', aliases=['name']),
         description=dict(type='str'),
+        apic_hostnames=dict(type='str', default=""),
+        apic_username=dict(type='str', default=""),
+        apic_password=dict(type='str', default=""),
+        online=dict(type='bool', default=False),
         validate_certs=dict(type='bool', default=False),
         state=dict(type='str', default='present', choices=['absent',
                    'present', 'query', 'modify']),
@@ -108,6 +132,10 @@ def main():
     description = module.params.get('description')
     state = module.params.get('state')
     name = module.params.get('name')
+    online = module.params.get('online')
+    apic_hostname = module.params.get('apic_hostname')
+    apic_username = module.params.get('apic_username')
+    apic_password = module.params.get('apic_password')
     nae = NAEModule(module)
 
     if state == 'query' and name:
@@ -124,11 +152,14 @@ def main():
         nae.deleteAG()
         result['changed'] = True
         module.exit_json(**nae.result)
+    elif state == 'present' and online:
+        nae.newOnlineAG()
+        result['changed'] = True
+        module.exit_json(**nae.result)
     elif state == 'present' and name:
         nae.newOfflineAG()
         result['changed'] = True
         module.exit_json(**nae.result)
-
 
 
 

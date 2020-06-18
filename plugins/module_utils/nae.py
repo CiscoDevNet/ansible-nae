@@ -177,7 +177,53 @@ class NAEModule(object):
                 self.fail_json(msg='Connection failed for %(url)s. %(msg)s' % auth, **self.result)
         if json.loads(resp.read())['success'] is True:
             self.result['Result'] = 'Assurance Group "%(name)s" deleted successfully' %self.params
+    
+    def newOnlineAG(self):
+        # This method creates a new Offline Assurance Group, you only need to pass the AG Name.
 
+        url = 'https://%(host)s:%(port)s/api/v1/config-services/assured-networks/aci-fabric/' % self.params
+
+        form ='''{
+          "analysis_id": "",
+          "display_name": "",
+          "description": "",
+          "interval": 900,
+          "password": "''' + str(self.params.get('apic_password')) + '''",
+          "operational_mode": "ONLINE",
+          "status": "STOPPED",
+          "active": true,
+          "unique_name": "''' + str(self.params.get('name')) + '''",
+          "assured_network_type": "",
+          "apic_hostnames": [ "''' + str(self.params.get('apic_hostnames')) + '''" ],
+          "username": "''' + str(self.params.get('apic_username')) + '''",
+          "analysis_timeout_in_secs": 3600,
+          "apic_configuration_export_policy": {
+            "apic_configuration_export_policy_enabled": true,
+            "export_format": "JSON",
+            "export_policy_name": "''' + str(self.params.get('name')) + '''"
+          },
+          "nat_configuration": null,
+          "assured_fabric_type": null,
+          "analysis_schedule_id": ""}'''
+       
+        resp, auth = fetch_url(self.module, url,
+                               headers=self.http_headers,
+                               data=form,
+                               method='POST')
+        
+        if auth.get('status') != 201:
+            if('filename' in self.params):
+                self.params['file'] = self.params['filename']
+                del self.params['filename']
+            self.response = auth.get('msg')
+            self.status = auth.get('status')
+            try:
+                self.module.fail_json(msg=str(self.response) + str(self.status),**self.result)
+            except KeyError:
+                # Connection error
+                self.fail_json(msg='Connection failed for %(url)s. %(msg)s' % auth, **self.result)
+        self.result['Result'] = 'Successfully created Assurance Group "%(name)s"' %self.params 
+    
     def newOfflineAG(self):
         # This method creates a new Offline Assurance Group, you only need to pass the AG Name.
 
