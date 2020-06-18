@@ -34,6 +34,15 @@ Once the collection is installed, you can use it in a playbook by specifying the
       file: config.json
       name: New
       state: present
+  - name Create Online Assurance Group (with APIC Configuration Export Polciy)
+    nae_ag:
+      <<: *nae_login
+      state: present
+      name: AG1
+      online: True
+      apic_hostnames: 1.2.3.4
+      apic_username: admin
+      apic_password: password
 ...
 ```
 ## RoadMap
