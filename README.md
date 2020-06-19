@@ -13,7 +13,7 @@ jsonpath_ng
 ## Install
 Ansible and other requirements must be installed
 ```
-sudo pip install ansible requests requests_toolbet jsonpath_ng
+sudo pip install ansible requests requests-toolbet jsonpath_ng
 ```
 
 Install the collection
