@@ -68,7 +68,7 @@ Once the collection is installed, you can use it in a playbook by specifying the
 - [ ] Report Creation
 
 ### Assurance Group Management
-- [ ] Create/Update/Read/Delete Online Assurance Group 
+- [x] Create/Update/Read/Delete Online Assurance Group 
 - - [ ] Configure F5 Load Balancer
 - [x] Create/Update/Read/Delete Offline Assurance Group 
 
