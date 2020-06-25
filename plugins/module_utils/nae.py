@@ -363,13 +363,13 @@ class NAEModule(object):
         if self.params['verify']:
             status = None
             while status != "COMPLETED":
-                time.sleep(30)
                 try:
                     status = str(self.get_pre_change_analysis()['analysis_status'])
                     if status == "COMPLETED":
                         break
                 except:
                     pass
+                time.sleep(30)
         else:
             job_is_done = str(self.get_pre_change_analysis()['analysis_status'])
             if job_is_done != "COMPLETED":
