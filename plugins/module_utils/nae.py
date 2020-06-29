@@ -80,7 +80,7 @@ class NAEModule(object):
         self.login()
 
     def login(self):
-        url = 'https://%(host)s:%(port)s/api/v1/whoami' % self.params
+        url = 'https://%(host)s:%(port)s/nae/api/v1/whoami' % self.params
         resp, auth = fetch_url(self.module, url,
                                data=None,
                                method='GET')
@@ -97,7 +97,7 @@ class NAEModule(object):
                 # Connection error
                 self.fail_json(msg='Connection failed for %(url)s. %(msg)s' % auth, **self.result)
 
-        url = 'https://%(host)s:%(port)s/api/v1/login' % self.params
+        url = 'https://%(host)s:%(port)s/nae/api/v1/login' % self.params
         user_credentials = json.dumps({"username": self.params.get(
             'username'), "password": self.params.get('password'), "domain": 'Local'})
         self.http_headers['Cookie'] = resp.headers.get('Set-Cookie')
@@ -129,7 +129,7 @@ class NAEModule(object):
 
 
     def get_all_assurance_groups(self):
-        url = 'https://%(host)s:%(port)s/api/v1/config-services/assured-networks/aci-fabric/' % self.params
+        url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/assured-networks/aci-fabric/' % self.params
         resp, auth = fetch_url(self.module, url,
                                headers=self.http_headers,
                                data=None,
@@ -159,7 +159,7 @@ class NAEModule(object):
 
     def deleteAG(self):
         self.params['uuid'] = str(self.get_assurance_group(self.params.get('name'))['uuid'])
-        url = 'https://%(host)s:%(port)s/api/v1/config-services/assured-networks/aci-fabric/%(uuid)s' % self.params
+        url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/assured-networks/aci-fabric/%(uuid)s' % self.params
         resp, auth = fetch_url(self.module, url,
                                headers=self.http_headers,
                                data=None,
@@ -181,7 +181,7 @@ class NAEModule(object):
     def newOnlineAG(self):
         # This method creates a new Offline Assurance Group, you only need to pass the AG Name.
 
-        url = 'https://%(host)s:%(port)s/api/v1/config-services/assured-networks/aci-fabric/' % self.params
+        url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/assured-networks/aci-fabric/' % self.params
 
         form ='''{
           "analysis_id": "",
@@ -198,7 +198,7 @@ class NAEModule(object):
           "username": "''' + str(self.params.get('apic_username')) + '''",
           "analysis_timeout_in_secs": 3600,
           "apic_configuration_export_policy": {
-            "apic_configuration_export_policy_enabled": true,
+            "apic_configuration_export_policy_enabled": "''' + str(self.params.get('export_apic_policy')) + '''",
             "export_format": "JSON",
             "export_policy_name": "''' + str(self.params.get('name')) + '''"
           },
@@ -227,7 +227,7 @@ class NAEModule(object):
     def newOfflineAG(self):
         # This method creates a new Offline Assurance Group, you only need to pass the AG Name.
 
-        url = 'https://%(host)s:%(port)s/api/v1/config-services/assured-networks/aci-fabric/' % self.params
+        url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/assured-networks/aci-fabric/' % self.params
 
         form ='''{
           "analysis_id": "",
@@ -359,7 +359,7 @@ class NAEModule(object):
             self.get_assurance_group(
                 self.params.get('ag_name'))['uuid'])
         if self.get_pre_change_analysis() is None:
-            self.module.exit_json(msg='No such Pre-Change Job exists.')
+            self.module.fail_json(msg='No such Pre-Change Job exists.',**self.result)
         if self.params['verify']:
             status = None
             while status != "COMPLETED":
@@ -735,7 +735,7 @@ class NAEModule(object):
         self.params['fabric_id'] = str(
             self.get_assurance_group(
                 self.params.get('ag_name'))['uuid'])
-        url = 'https://%(host)s:%(port)s/api/v1/event-services/assured-networks/%(fabric_id)s/epochs?$sort=-collectionTimestamp' % self.params
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_id)s/epochs?$sort=-collectionTimestamp' % self.params
         resp, auth = fetch_url(self.module, url,
                                headers=self.http_headers,
                                data=None,

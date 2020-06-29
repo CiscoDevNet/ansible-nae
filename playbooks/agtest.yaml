@@ -5,15 +5,25 @@
   hosts: all
   vars:
     nae_login: &nae_login
-        host: 173.36.219.127
+        host: 10.66.176.111
         port: 443  
         username: admin
-        password: ins3965!ins3965! 
+        password: C@ndidadmin1234
     validate_certs: False
   tasks:
-  - name: Create a pre-change analysis from file
+  #- name: Create offline ag
+    #nae_ag:
+      #<<: *nae_login
+      #name: Test
+      #state: present
+  - name: Create Online Assurance Group (with APIC Configuration Export Polciy)
     nae_ag:
       <<: *nae_login
-      name: Test
       state: present
+      name: AG1
+      online: True
+      apic_hostnames: 173.36.219.25
+      apic_username: ansible_github_ci
+      apic_password: sJ94G92#8dq2hx*K4qh
+      export_apic_policy: True
 ...

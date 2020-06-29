@@ -78,7 +78,7 @@ EXAMPLES = \
     password: 1234
     state: absent
     name: AG1
-- name Create Online Assurance Group (with APIC Configuration Export Polciy)
+- name: Create Online Assurance Group (with APIC Configuration Export Polciy)
   nae_ag:
     host: nae
     port: 8080
@@ -90,6 +90,7 @@ EXAMPLES = \
     apic_hostnames: 1.2.3.4
     apic_username: admin
     apic_password: password
+    export_apic_policy: True
 '''
 
 RETURN = \
@@ -122,6 +123,7 @@ def main():
         validate_certs=dict(type='bool', default=False),
         state=dict(type='str', default='present', choices=['absent',
                    'present', 'query', 'modify']),
+        export_apic_policy=dict(type='bool', default=False)
         )
 
     module = AnsibleModule(argument_spec=argument_spec,
