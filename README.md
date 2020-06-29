@@ -6,11 +6,19 @@ The ansible-nae project provides an Ansible collection for managing and automati
 
 ## Requirements
 Ansible v2.8 or newer
+requests
+requests_toolbelt
+jsonpath_ng
 
 ## Install
-Ansible must be installed
+Ansible and other requirements must be installed
 ```
-sudo pip install ansible
+sudo pip install ansible requests requests-toolbelt jsonpath_ng
+```
+
+Install the collection
+```
+ansible-galaxy collection install cisco.nae
 ```
 
 ## Use
@@ -34,6 +42,15 @@ Once the collection is installed, you can use it in a playbook by specifying the
       file: config.json
       name: New
       state: present
+  - name Create Online Assurance Group (with APIC Configuration Export Polciy)
+    nae_ag:
+      <<: *nae_login
+      state: present
+      name: AG1
+      online: True
+      apic_hostnames: 1.2.3.4
+      apic_username: admin
+      apic_password: password
 ...
 ```
 ## RoadMap
@@ -51,7 +68,7 @@ Once the collection is installed, you can use it in a playbook by specifying the
 - [ ] Report Creation
 
 ### Assurance Group Management
-- [ ] Create/Update/Read/Delete Online Assurance Group 
+- [x] Create/Update/Read/Delete Online Assurance Group 
 - - [ ] Configure F5 Load Balancer
 - [x] Create/Update/Read/Delete Offline Assurance Group 
 
