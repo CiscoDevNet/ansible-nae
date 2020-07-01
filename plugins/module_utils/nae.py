@@ -125,6 +125,20 @@ class NAEModule(object):
 
         # Remove the LOGIN-OTP from header, it is only needed at the beginning
         self.http_headers.pop('X-NAE-LOGIN-OTP', None)
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/candid-version' % self.params
+        resp,auth = fetch_url(self.module, url, headers=self.http_headers,data=None,method='GET')
+        if auth.get('status') != 200:
+            if('filename' in self.params):
+                self.params['file'] = self.params['filename']
+                del self.params['filename']
+            self.response = auth.get('msg')
+            self.status = auth.get('status')
+            try:
+                self.module.fail_json(msg=self.response,**self.result)
+            except KeyError:
+                # Connection error
+                self.fail_json(msg='Connection failed for %(url)s. %(msg)s' % auth, **self.result)
+        self.version = json.loads(resp.read())['value']['data']['candid_version']
         # self.result['response'] = data
 
 
@@ -406,7 +420,86 @@ class NAEModule(object):
 
     def create_pre_change_from_manual_changes(self):
         self.params['file'] = None
-        self.send_pre_change_payload()
+        self.send_manual_payload()
+
+    def send_manual_payload(self):
+        self.params['fabric_id'] = str(
+            self.get_assurance_group(
+                self.params.get('ag_name'))['uuid'])
+        self.params['base_epoch_id'] = str(self.get_epochs()[0]["epoch_id"])
+        if '4.1' in self.version:
+            f = self.params['file']
+            fields = {
+                    ('data', 
+                        (f,
+                        
+                            # content to upload 
+                                '''{
+                                    "name": "''' + self.params.get('name') + '''",
+                                    "fabric_uuid": "''' + self.params.get('fabric_id') + '''",
+                                    "base_epoch_id": "''' + self.params.get('base_epoch_id') + '''",
+                                    
+                                    "changes": ''' + self.params.get('changes') + ''',
+                                    "stop_analysis": false,
+                                    "change_type": "CHANGE_LIST"
+                                    }'''
+                            # The content type of the file
+                            , 'application/json'))
+                    }
+            url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis' % self.params
+            m = MultipartEncoder(fields=fields)
+            self.http_headers['Content-Type']= m.content_type
+            resp, auth = fetch_url(self.module, url,
+                                   headers=self.http_headers,
+                                   data=m,
+                                   method='POST')
+
+
+            if auth.get('status') != 200:
+                if('filename' in self.params):
+                    self.params['file'] = self.params['filename']
+                    del self.params['filename']
+                self.result['status'] = auth['status']
+                self.module.exit_json(msg=json.loads(
+                        auth.get('body'))['messages'][0]['message'],**self.result)
+
+            if('filename' in self.params):
+                self.params['file'] = self.params['filename']
+                del self.params['filename']
+
+            self.result['Result'] = "Pre-change analysis %(name)s successfully created." % self.params
+ 
+        elif '5.0' in  self.version:
+            url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/manual-changes?action=RUN' %self.params
+            form = '''{
+                                    "name": "''' + self.params.get('name') + '''",
+                                    "allow_unsupported_object_modification": true,
+                                    "uploaded_file_name": null,
+                                    "stop_analysis": false,
+                                    "fabric_uuid": "''' + self.params.get('fabric_id') + '''",
+                                    "base_epoch_id": "''' + self.params.get('base_epoch_id') + '''",
+                                    "imdata": ''' + self.params.get('changes') + '''
+                                    }'''
+
+            resp, auth = fetch_url(self.module, url,
+                                   headers=self.http_headers,
+                                   data=form,
+                                   method='POST')
+
+
+            if auth.get('status') != 200:
+                if('filename' in self.params):
+                    self.params['file'] = self.params['filename']
+                    del self.params['filename']
+                self.result['status'] = auth['status']
+                self.module.exit_json(msg=json.loads(
+                        auth.get('body'))['messages'][0]['message'],**self.result)
+
+            if('filename' in self.params):
+                self.params['file'] = self.params['filename']
+                del self.params['filename']
+
+            self.result['Result'] = "Pre-change analysis %(name)s successfully created." % self.params
 
     def create_pre_change_from_file(self):
         no_parse = False

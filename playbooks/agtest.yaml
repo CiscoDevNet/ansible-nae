@@ -19,11 +19,5 @@
   - name: Create Online Assurance Group (with APIC Configuration Export Polciy)
     nae_ag:
       <<: *nae_login
-      state: present
-      name: AG1
-      online: True
-      apic_hostnames: 173.36.219.25
-      apic_username: ansible_github_ci
-      apic_password: sJ94G92#8dq2hx*K4qh
-      export_apic_policy: True
+      state: query
 ...
