@@ -408,7 +408,7 @@ class NAEModule(object):
         count = 0;
         for x in result:
             if int(x['count']) > 0:
-                if(str(x['category']) == "COMPLIANCE" and str(x['epoch2_details']['severity']) == "EVENT_SEVERITY_INFO"):
+                if str(x['epoch2_details']['severity']) == "EVENT_SEVERITY_INFO":
                      continue
                     # with open("output.txt", 
                 count = count + 1 
