@@ -63,7 +63,6 @@ class NAEModule(object):
         self.resp = {}
         self.params = module.params
         self.result = dict(changed=False)
-        self.assuranceGroups = {}
         self.files = {}
         self.assuranceGroups = []
         self.session_cookie = ""
@@ -429,10 +428,17 @@ class NAEModule(object):
         count = 0
         for x in result:
             if int(x['count']) > 0:
+<<<<<<< HEAD
                 if(str(x['category']) == "COMPLIANCE" and str(x['epoch2_details']['severity']) == "EVENT_SEVERITY_INFO"):
                     continue
                     # with open("output.txt",
                 count = count + 1
+=======
+                if str(x['epoch2_details']['severity']) == "EVENT_SEVERITY_INFO":
+                     continue
+                    # with open("output.txt", 
+                count = count + 1 
+>>>>>>> 2c97f5a31e0a692ea6b84db47fdca8659357b7c5
         if(count != 0):
             self.result['Later Epoch Smart Events'] = result
             self.module.fail_json(
@@ -893,13 +899,6 @@ class NAEModule(object):
 
         url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis' % self.params
         m = MultipartEncoder(fields=files)
-        self.http_headers['Content-Type'] = m.content_type
-        kwargs = {
-            "verify": False,
-            "headers": self.http_headers,
-            "cookies": self.session_cookie,
-            "data": m,
-        }
         resp, auth = fetch_url(self.module, url,
                                headers=self.http_headers,
                                data=m,
@@ -918,3 +917,53 @@ class NAEModule(object):
             del self.params['filename']
 
         self.result['Result'] = "Pre-change analysis %(name)s successfully created." % self.params
+
+    
+
+    def newObjectSelector(self, form):
+        ag = self.getFirstAG()
+        url ='https://'+self.ip_addr+'/nae/api/v1/event-services/assured-networks/'+ag["uuid"]+'/model/aci-policy/compliance-requirement/object-selectors'
+        req = requests.post(url, data=form,  headers=self.http_headers, cookies=self.session_cookie, verify=False)
+        if req.status_code == 200:
+           self.logger.info("Object Selectors created")
+        else:
+           self.logger.info("Object Selectors creation failed with error message \n %s",req.json())
+
+    def newTrafficSelector(self, form):
+        ag = self.getFirstAG()
+        url ='https://'+self.ip_addr+'/nae/api/v1/event-services/assured-networks/'+ag["uuid"]+'/model/aci-policy/compliance-requirement/traffic-selectors'
+        req = requests.post(url, data=form,  headers=self.http_headers, cookies=self.session_cookie, verify=False)
+        if req.status_code == 200:
+           self.logger.info("Traffic Selectors created")
+        else:
+           self.logger.info("Traffic Selectors creation failed with error message \n %s",req.json())
+
+    def newComplianceRequirement(self, form):
+        ag = self.getFirstAG()
+        url ='https://'+self.ip_addr+'/nae/api/v1/event-services/assured-networks/'+ag["uuid"]+'/model/aci-policy/compliance-requirement/requirements'
+        req = requests.post(url, data=form,  headers=self.http_headers, cookies=self.session_cookie, verify=False)
+        if req.status_code == 200:
+           self.logger.info("Compliance Requirement created")
+        else:
+           self.logger.info("Compliance Requirement creation failed with error message \n %s",req.json())
+
+    def newComplianceRequirementSet(self, form):
+        ag = self.getFirstAG()
+        url = 'https://'+self.ip_addr+'/nae/api/v1/event-services/assured-networks/'+ag["uuid"]+'/model/aci-policy/compliance-requirement/requirement-sets'
+        req = requests.post(url, data=form,  headers=self.http_headers, cookies=self.session_cookie, verify=False)
+        if req.status_code == 200:
+           self.logger.info("Complianc Requirement Set created")
+        else:
+           self.logger.info("Complianc Requirement Set creation failed with error message \n %s",req.json())
+
+
+    def getFirstAG(self):
+        # Some API requires an Assurance grup in the API call even if does not matter which AG you select
+        # For this I have created this methodggGG
+        self.get_all_assurance_groups()
+        return self.assuranceGroups[0]     
+
+
+
+
+
