@@ -428,17 +428,10 @@ class NAEModule(object):
         count = 0
         for x in result:
             if int(x['count']) > 0:
-<<<<<<< HEAD
-                if(str(x['category']) == "COMPLIANCE" and str(x['epoch2_details']['severity']) == "EVENT_SEVERITY_INFO"):
-                    continue
-                    # with open("output.txt",
-                count = count + 1
-=======
                 if str(x['epoch2_details']['severity']) == "EVENT_SEVERITY_INFO":
                      continue
                     # with open("output.txt", 
                 count = count + 1 
->>>>>>> 2c97f5a31e0a692ea6b84db47fdca8659357b7c5
         if(count != 0):
             self.result['Later Epoch Smart Events'] = result
             self.module.fail_json(
