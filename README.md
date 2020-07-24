@@ -58,6 +58,10 @@ Once the collection is installed, you can use it in a playbook by specifying the
 - [x] Configure PCA
 - [x] Start/Stop/Query PCA
 
+### Epoch Delta
+- [ ] Configure Delta Analysis
+- [ ] Query Delta Analysis Result 
+
 ### Compliance Analysis
 - [ ] Create/Update/Read/Delete
 - - [ ] Object Selectors
