@@ -912,8 +912,6 @@ class NAEModule(object):
                                data=m,
                                method='POST')
 
-        #Once uploaded we can revert to the standard content type
-
         if auth.get('status') != 200:
             if('filename' in self.params):
                 self.params['file'] = self.params['filename']
