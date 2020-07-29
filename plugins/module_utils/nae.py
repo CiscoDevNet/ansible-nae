@@ -469,9 +469,10 @@ class NAEModule(object):
             }
             url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis' % self.params
             m = MultipartEncoder(fields=fields)
-            self.http_headers['Content-Type'] = m.content_type
+            h = self.http_headers.copy()
+            h['Content-Type'] = m.content_type
             resp, auth = fetch_url(self.module, url,
-                                   headers=self.http_headers,
+                                   headers=h,
                                    data=m,
                                    method='POST')
 
@@ -878,10 +879,20 @@ class NAEModule(object):
             "name": self.params.get('name'),
             "fabric_uuid": self.params.get('fabric_id'),
             "base_epoch_id": self.params.get('base_epoch_id'),
-            "stop_analysis": False,
-            "change_type": "CONFIG_FILE",
-            "changes": self.params.get('changes'),
+            "stop_analysis": False
         }
+
+        if '4.1' in self.version:
+            payload['change_type'] = "CONFIG_FILE"
+            payload['changes'] = self.params.get('changes')
+            url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis' % self.params
+
+        elif '5.0' in self.version:
+            payload['allow_unsupported_object_modification'] = 'true'
+            payload['uploaded_file_name'] = str(self.params.get('filename'))
+            url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/file-changes' % self.params
+
+
         files = {"file": (str(self.params.get('filename')),
                           open(str(self.params.get('filename')),
                                'rb'),
@@ -889,11 +900,15 @@ class NAEModule(object):
                  "data": ("blob",
                           json.dumps(payload),
                           'application/json')}
-
-        url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis' % self.params
+       
         m = MultipartEncoder(fields=files)
+        
+        #Need to set the right content type for the multi part upload! 
+        h = self.http_headers.copy()
+        h['Content-Type'] = m.content_type
+
         resp, auth = fetch_url(self.module, url,
-                               headers=self.http_headers,
+                               headers=h,
                                data=m,
                                method='POST')
 
