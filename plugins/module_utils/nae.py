@@ -913,49 +913,313 @@ class NAEModule(object):
 
     
 
-    def newObjectSelector(self, form):
-        ag = self.getFirstAG()
-        url ='https://'+self.ip_addr+'/nae/api/v1/event-services/assured-networks/'+ag["uuid"]+'/model/aci-policy/compliance-requirement/object-selectors'
-        req = requests.post(url, data=form,  headers=self.http_headers, cookies=self.session_cookie, verify=False)
-        if req.status_code == 200:
-           self.logger.info("Object Selectors created")
+    def new_object_selector(self):
+        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/object-selectors' % self.params
+        resp, auth = fetch_url(self.module, url,
+                               data=self.params['form'],
+                               headers=self.http_headers,
+                               method='POST')
+        if auth.get('status') != 200:
+            if('filename' in self.params):
+                self.params['file'] = self.params['filename']
+                del self.params['filename']
+            self.status = auth.get('status')
+            try:
+                self.module.fail_json(msg=json.loads(auth.get('body'))['messages'][0]['message'],**self.result)
+            except KeyError:
+                # Connection error
+                self.fail_json(
+                    msg='Connection failed for %(url)s. %(msg)s' %
+                    auth, **self.result)
         else:
-           self.logger.info("Object Selectors creation failed with error message \n %s",req.json())
+            final_msg = "Object Selector " + str(json.loads(resp.read())['value']['data']['name']) + " created" 
+            self.result['Result'] = final_msg
 
-    def newTrafficSelector(self, form):
-        ag = self.getFirstAG()
-        url ='https://'+self.ip_addr+'/nae/api/v1/event-services/assured-networks/'+ag["uuid"]+'/model/aci-policy/compliance-requirement/traffic-selectors'
-        req = requests.post(url, data=form,  headers=self.http_headers, cookies=self.session_cookie, verify=False)
-        if req.status_code == 200:
-           self.logger.info("Traffic Selectors created")
+    def new_traffic_selector(self):
+        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/traffic-selectors' % self.params
+        resp, auth = fetch_url(self.module, url,
+                               data=self.params['form'],
+                               headers=self.http_headers,
+                               method='POST')
+        if auth.get('status') != 200:
+            if('filename' in self.params):
+                self.params['file'] = self.params['filename']
+                del self.params['filename']
+            self.status = auth.get('status')
+            try:
+                self.module.fail_json(msg=json.loads(auth.get('body'))['messages'][0]['message'],**self.result)
+            except KeyError:
+                # Connection error
+                self.fail_json(
+                    msg='Connection failed for %(url)s. %(msg)s' %
+                    auth, **self.result)
         else:
-           self.logger.info("Traffic Selectors creation failed with error message \n %s",req.json())
+            final_msg = "Traffic Selector " + str(json.loads(resp.read())['value']['data']['name']) + " created" 
+            self.result['Result'] = final_msg
 
-    def newComplianceRequirement(self, form):
-        ag = self.getFirstAG()
-        url ='https://'+self.ip_addr+'/nae/api/v1/event-services/assured-networks/'+ag["uuid"]+'/model/aci-policy/compliance-requirement/requirements'
-        req = requests.post(url, data=form,  headers=self.http_headers, cookies=self.session_cookie, verify=False)
-        if req.status_code == 200:
-           self.logger.info("Compliance Requirement created")
+    def new_compliance_requirement(self):
+        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirements' % self.params
+        resp, auth = fetch_url(self.module, url,
+                               data=self.params['form'],
+                               headers=self.http_headers,
+                               method='POST')
+        if auth.get('status') != 200:
+            if('filename' in self.params):
+                self.params['file'] = self.params['filename']
+                del self.params['filename']
+            self.status = auth.get('status')
+            try:
+                self.module.fail_json(msg=json.loads(auth.get('body'))['messages'][0]['message'],**self.result)
+            except KeyError:
+                # Connection error
+                self.fail_json(
+                    msg='Connection failed for %(url)s. %(msg)s' %
+                    auth, **self.result)
         else:
-           self.logger.info("Compliance Requirement creation failed with error message \n %s",req.json())
+            final_msg = "Compliance requirement " + str(json.loads(resp.read())['value']['data']['name']) + " created" 
+            self.result['Result'] = final_msg
 
-    def newComplianceRequirementSet(self, form):
-        ag = self.getFirstAG()
-        url = 'https://'+self.ip_addr+'/nae/api/v1/event-services/assured-networks/'+ag["uuid"]+'/model/aci-policy/compliance-requirement/requirement-sets'
-        req = requests.post(url, data=form,  headers=self.http_headers, cookies=self.session_cookie, verify=False)
-        if req.status_code == 200:
-           self.logger.info("Complianc Requirement Set created")
+    def new_compliance_requirement_set(self):
+        ag = self.get_assurance_group(self.params.get('ag_name'))["uuid"]
+        d = json.loads(self.params['form'])
+        assurance_groups_lists = []
+        assurance_groups_lists.append(dict(active=True, fabric_uuid=ag))
+        d['assurance_groups'] = assurance_groups_lists
+        self.params['form'] = json.dumps(d)
+        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirement-sets' % self.params
+        resp, auth = fetch_url(self.module, url,
+                               data=self.params['form'],
+                               headers=self.http_headers,
+                               method='POST')
+        if auth.get('status') != 200:
+            if('filename' in self.params):
+                self.params['file'] = self.params['filename']
+                del self.params['filename']
+            self.status = auth.get('status')
+            try:
+                self.module.fail_json(msg=auth.get('body'),**self.result)
+            except KeyError:
+                # Connection error
+                self.fail_json(
+                    msg='Connection failed for %(url)s. %(msg)s' %
+                    auth, **self.result)
         else:
-           self.logger.info("Complianc Requirement Set creation failed with error message \n %s",req.json())
+            final_msg = "Compliance requirement set " + str(json.loads(resp.read())['value']['data']['name']) + " created" 
+            self.result['Result'] = final_msg
+    
+    def get_all_requirement_sets(self):
+        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirement-sets' % self.params
+        resp, auth = fetch_url(self.module, url,
+                               headers=self.http_headers,
+                               method='GET')
+        if auth.get('status') != 200:
+            if('filename' in self.params):
+                self.params['file'] = self.params['filename']
+                del self.params['filename']
+            self.status = auth.get('status')
+            try:
+                self.module.fail_json(msg=auth.get('body'),**self.result)
+            except KeyError:
+                # Connection error
+                self.fail_json(
+                    msg='Connection failed for %(url)s. %(msg)s' %
+                    auth, **self.result)
+        else:
+            if resp.headers['Content-Encoding'] == "gzip":
+                r = gzip.decompress(resp.read())
+                self.result['Result'] = json.loads(r.decode())['value']['data']
+                return json.loads(r.decode())['value']['data']
+            self.result['Result'] = json.loads(resp.read())['value']['data']
+            return json.loads(r.decode())['value']['data']
 
+    def get_all_requirements(self):
+        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirements' % self.params
+        resp, auth = fetch_url(self.module, url,
+                               headers=self.http_headers,
+                               method='GET')
+        if auth.get('status') != 200:
+            if('filename' in self.params):
+                self.params['file'] = self.params['filename']
+                del self.params['filename']
+            self.status = auth.get('status')
+            try:
+                self.module.fail_json(msg=auth.get('body'),**self.result)
+            except KeyError:
+                # Connection error
+                self.fail_json(
+                    msg='Connection failed for %(url)s. %(msg)s' %
+                    auth, **self.result)
+        else:
+            if resp.headers['Content-Encoding'] == "gzip":
+                r = gzip.decompress(resp.read())
+                self.result['Result'] = json.loads(r.decode())['value']['data']
+                return json.loads(r.decode())['value']['data']
+            self.result['Result'] = json.loads(resp.read())['value']['data']
+            return json.loads(r.decode())['value']['data']
+
+    def get_all_traffic_selectors(self):
+        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/traffic-selectors' % self.params
+        resp, auth = fetch_url(self.module, url,
+                               headers=self.http_headers,
+                               method='GET')
+        if auth.get('status') != 200:
+            if('filename' in self.params):
+                self.params['file'] = self.params['filename']
+                del self.params['filename']
+            self.status = auth.get('status')
+            try:
+                self.module.fail_json(msg=auth.get('body'),**self.result)
+            except KeyError:
+                # Connection error
+                self.fail_json(
+                    msg='Connection failed for %(url)s. %(msg)s' %
+                    auth, **self.result)
+        else:
+            if resp.headers['Content-Encoding'] == "gzip":
+                r = gzip.decompress(resp.read())
+                self.result['Result'] = json.loads(r.decode())['value']['data']
+                return json.loads(r.decode())['value']['data']
+            self.result['Result'] = json.loads(resp.read())['value']['data']
+            return json.loads(r.decode())['value']['data']
+
+    def get_all_object_selectors(self):
+        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/object-selectors' % self.params
+        resp, auth = fetch_url(self.module, url,
+                               headers=self.http_headers,
+                               method='GET')
+        if auth.get('status') != 200:
+            if('filename' in self.params):
+                self.params['file'] = self.params['filename']
+                del self.params['filename']
+            self.status = auth.get('status')
+            try:
+                self.module.fail_json(msg=auth.get('body'),**self.result)
+            except KeyError:
+                # Connection error
+                self.fail_json(
+                    msg='Connection failed for %(url)s. %(msg)s' %
+                    auth, **self.result)
+        else:
+            if resp.headers['Content-Encoding'] == "gzip":
+                r = gzip.decompress(resp.read())
+                self.result['Result'] = json.loads(r.decode())['value']['data']
+                return json.loads(r.decode())['value']['data']
+            self.result['Result'] = json.loads(resp.read())['value']['data']
+            return json.loads(r.decode())['value']['data']
+
+    def get_compliance_object(self, name):
+        if self.params.get('selector') == 'object':
+            objs = self.get_all_object_selectors()
+            return [x for x in objs if x['name'] == name][0]        
+        elif self.params.get('selector') == 'traffic':
+            objs = self.get_all_traffic_selectors()
+            return [x for x in objs if x['name'] == name][0]        
+        elif self.params.get('selector') == 'requirement':
+            objs = self.get_all_requirements()
+            return [x for x in objs if x['name'] == name][0]        
+        elif self.params.get('selector') == 'requirement_sets':
+            objs = self.get_all_requirement_sets()
+            return [x for x in objs if x['name'] == name][0]        
+
+    def delete_object_selector(self):
+        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        self.params['obj_uuid'] = self.get_compliance_object(self.params.get('name'))["uuid"]
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/object-selectors/%(obj_uuid)s' % self.params
+        resp, auth = fetch_url(self.module, url,
+                               headers=self.http_headers,
+                               method='DELETE')
+        if auth.get('status') != 200:
+            if('filename' in self.params):
+                self.params['file'] = self.params['filename']
+                del self.params['filename']
+            self.status = auth.get('status')
+            try:
+                self.module.fail_json(msg=auth.get('body'),**self.result)
+            except KeyError:
+                # Connection error
+                self.fail_json(
+                    msg='Connection failed for %(url)s. %(msg)s' %
+                    auth, **self.result)
+        else:
+            self.result['Result'] = "Object selector " + self.params.get('name') + " deleted"
+
+    def delete_traffic_selector(self):
+        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        self.params['obj_uuid'] = self.get_compliance_object(self.params.get('name'))["uuid"]
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/traffic-selectors/%(obj_uuid)s' % self.params
+        resp, auth = fetch_url(self.module, url,
+                               headers=self.http_headers,
+                               method='DELETE')
+        if auth.get('status') != 200:
+            if('filename' in self.params):
+                self.params['file'] = self.params['filename']
+                del self.params['filename']
+            self.status = auth.get('status')
+            try:
+                self.module.fail_json(msg=auth.get('body'),**self.result)
+            except KeyError:
+                # Connection error
+                self.fail_json(
+                    msg='Connection failed for %(url)s. %(msg)s' %
+                    auth, **self.result)
+        else:
+            self.result['Result'] = "Traffic selector " + self.params.get('name') + " deleted"
+
+    def delete_requirement(self):
+        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        self.params['obj_uuid'] = self.get_compliance_object(self.params.get('name'))["uuid"]
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirements/%(obj_uuid)s' % self.params
+        resp, auth = fetch_url(self.module, url,
+                               headers=self.http_headers,
+                               method='DELETE')
+        if auth.get('status') != 200:
+            if('filename' in self.params):
+                self.params['file'] = self.params['filename']
+                del self.params['filename']
+            self.status = auth.get('status')
+            try:
+                self.module.fail_json(msg=auth.get('body'),**self.result)
+            except KeyError:
+                # Connection error
+                self.fail_json(
+                    msg='Connection failed for %(url)s. %(msg)s' %
+                    auth, **self.result)
+        else:
+            self.result['Result'] = "Requirement " + self.params.get('name') + " deleted"
+
+    def delete_requirement_set(self):
+        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        self.params['obj_uuid'] = self.get_compliance_object(self.params.get('name'))["uuid"]
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirement_set/%(obj_uuid)s' % self.params
+        resp, auth = fetch_url(self.module, url,
+                               headers=self.http_headers,
+                               method='DELETE')
+        if auth.get('status') != 200:
+            if('filename' in self.params):
+                self.params['file'] = self.params['filename']
+                del self.params['filename']
+            self.status = auth.get('status')
+            try:
+                self.module.fail_json(msg=auth.get('body'),**self.result)
+            except KeyError:
+                # Connection error
+                self.fail_json(
+                    msg='Connection failed for %(url)s. %(msg)s' %
+                    auth, **self.result)
+        else:
+            self.result['Result'] = "Requirement set " + self.params.get('name') + " deleted"
 
     def getFirstAG(self):
-        # Some API requires an Assurance grup in the API call even if does not matter which AG you select
-        # For this I have created this methodggGG
         self.get_all_assurance_groups()
         return self.assuranceGroups[0]     
-
 
 
 

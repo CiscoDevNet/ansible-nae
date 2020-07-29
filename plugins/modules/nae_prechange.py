@@ -1,12 +1,18 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
 
-# GNU General Public License v3.0+ (see COPYING or https://www.gnu.org/licenses/gpl-3.0.txt)
+# GNU General Public License v3.0+ (see COPYING or
+# https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+from ansible_collections.cisco.nae.plugins.module_utils.nae import NAEModule, nae_argument_spec
+from ansible.module_utils.basic import AnsibleModule
+import requests
 __metaclass__ = type
 
-#     def createPreChange(self, ag_name,name,description,interactive_flag,changes):
+# def createPreChange(self,
+# ag_name,name,description,interactive_flag,changes):
 
 ANSIBLE_METADATA = {'metadata_version': '1.1', 'status': ['preview'],
                     'supported_by': 'certified'}
@@ -56,7 +62,7 @@ options:
   changes:
     description:
     - Optional parameter if creating new pre-change analysis from change-list (manual)
-    
+
 author:
 - Shantanu Kulkarni (@shan_kulk)
 '''
@@ -137,17 +143,13 @@ resp:
     returned: always
 '''
 
-import requests
-from ansible.module_utils.basic import AnsibleModule
-from ansible_collections.cisco.nae.plugins.module_utils.nae import NAEModule, nae_argument_spec
 # from ansible.module_utils.network.aci.nae import NAEModule, \
-    # nae_argument_spec
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
+# nae_argument_spec
 
 
 def main():
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-    result = dict(changed=False,resp='')
+    result = dict(changed=False, resp='')
     argument_spec = nae_argument_spec()
     argument_spec.update(  # Not required for querying all objects
         ag_name=dict(type='str', aliases=['fab_name']),
@@ -158,13 +160,13 @@ def main():
         file=dict(type='str', default=None),
         validate_certs=dict(type='bool', default=False),
         state=dict(type='str', default='present', choices=['absent',
-                   'present', 'query', 'verify']),
-        )
+                                                           'present', 'query', 'verify']),
+    )
 
     module = AnsibleModule(argument_spec=argument_spec,
                            supports_check_mode=True,
                            required_if=[['state', 'absent', ['name']],
-                           ['state', 'present', ['name']]])
+                                        ['state', 'present', ['name']]])
 
     changes = module.params.get('changes')
     change_file = module.params.get('file')
@@ -185,7 +187,9 @@ def main():
     elif state == 'query' and name:
         nae.result['Result'] = nae.get_pre_change_result()
         if not nae.result['Result']:
-          module.exit_json(msg="Pre-change analysis failed. The above smart events have been detected for later epoch only.", **nae.result)
+            module.exit_json(
+                msg="Pre-change analysis failed. The above smart events have been detected for later epoch only.",
+                **nae.result)
         module.exit_json(**nae.result)
     elif state == 'query' and not name:
         nae.show_pre_change_analyses()
@@ -193,9 +197,6 @@ def main():
     elif state == 'absent':
         nae.delete_pre_change_analysis()
         module.exit_json(**nae.result)
-
-
-
 
     module.fail_json(msg='Incorrect params passed', **self.result)
 

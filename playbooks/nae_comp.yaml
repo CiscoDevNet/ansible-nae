@@ -1,0 +1,79 @@
+---
+# Testing first NAE Ansible Module!!
+# Note: This playbook is only to illustrate all module functionality. Running both add from change list and add from file 
+#       will fail since only one PCA can run on NAE at a time.
+- name: NAE TESTING
+  hosts: all
+  vars:
+    nae_login: &nae_login
+        host: 10.67.185.100
+        port: 8448
+        username: admin
+        password: C@ndidadmin1234  
+    validate_certs: False
+  tasks:
+  - name: Create an object selector
+    nae_compliance:
+      <<: *nae_login
+      state: present
+      selector: object
+      form: |
+        {
+          "name": "Testingobjzzzzzzz",
+          "description": null,
+          "includes": [
+            {
+              "matches": [
+                {
+                  "application_epgmatch": {
+                    "object_attribute": "DN",
+                    "tenant": {
+                      "pattern": "NAE_Compliance",
+                      "type": "EXACT"
+                    },
+                    "application_profile": {
+                      "pattern": "ComplianceIsGood",
+                      "type": "EXACT"
+                    },
+                    "application_epg": {
+                      "pattern": "DataBase",
+                      "type": "EXACT"
+                    }
+                  }
+                }
+              ]
+            }
+          ],
+          "excludes": [],
+          "selector_type": "OST_EPG"
+        }
+  - name: Create a compliance requirement
+    nae_compliance:
+      <<: *nae_login
+      state: present
+      selector: requirement
+      form: |
+        {
+          "name": "TestingSegmentationzzzzzzzz",
+          "config_compliance_parameter": {
+          },
+          "epg_selector_a": "FrontEnd",
+          "epg_selector_b": "DataBase",
+          "requirement_type": "SEGMENTATION",
+          "communication_type": "MUST_NOT",
+          "is_all_traffic": false
+        }
+  - name: Create a compliance requirement set
+    nae_compliance:
+      <<: *nae_login
+      state: present
+      selector: requirement_set
+      ag_name: FAB2
+      form: |
+        {
+          "name": "Segmentation Compliancezzzzzz",
+          "requirements": [
+              "Segmentation"
+          ]
+        }
+...
