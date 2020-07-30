@@ -63,11 +63,11 @@ Once the collection is installed, you can use it in a playbook by specifying the
 - [ ] Query Delta Analysis Result 
 
 ### Compliance Analysis
-- [ ] Create/Update/Read/Delete
-- - [ ] Object Selectors
-- - [ ] Traffic Selector
-- - [ ] Compliance Requirement 
-- - [ ] Compliance Requirement Sets 
+- [x] Create/Update/Read/Delete
+- - [x] Object Selectors
+- - [x] Traffic Selector
+- - [x] Compliance Requirement 
+- - [x] Compliance Requirement Sets 
 - [ ] Create Associate/Disassociate a requirement set with an AG
 - [ ] Report Creation
 
