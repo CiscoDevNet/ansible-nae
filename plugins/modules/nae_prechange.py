@@ -11,8 +11,6 @@ from ansible.module_utils.basic import AnsibleModule
 import requests
 __metaclass__ = type
 
-# def createPreChange(self,
-# ag_name,name,description,interactive_flag,changes):
 
 ANSIBLE_METADATA = {'metadata_version': '1.1', 'status': ['preview'],
                     'supported_by': 'certified'}
@@ -143,8 +141,6 @@ resp:
     returned: always
 '''
 
-# from ansible.module_utils.network.aci.nae import NAEModule, \
-# nae_argument_spec
 
 
 def main():

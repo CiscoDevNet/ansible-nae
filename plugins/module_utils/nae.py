@@ -40,6 +40,9 @@ import json
 import os
 import time
 import gzip
+import filelock
+import pathlib
+import hashlib
 from copy import deepcopy
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.parsing.convert_bool import boolean
@@ -146,6 +149,20 @@ class NAEModule(object):
         self.version = json.loads(
             resp.read())['value']['data']['candid_version']
         # self.result['response'] = data
+
+
+    def get_logout_lock(self):
+        # This lock has been introduced because logout and file upload cannot be
+        # done in parallel. This is because logout incorrectly aborts all file
+        # uploads by a user (not just that session). So, this lock must be
+        # acquired for logout and file upload.
+        lock_filename = "logout.lock"
+        try:
+            pathlib.Path(lock_filename).touch(exist_ok=False)
+        except OSError:
+            pass
+        return filelock.FileLock(lock_filename)
+
 
     def get_all_assurance_groups(self):
         url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/assured-networks/aci-fabric/' % self.params
@@ -1050,7 +1067,7 @@ class NAEModule(object):
                 self.result['Result'] = json.loads(r.decode())['value']['data']
                 return json.loads(r.decode())['value']['data']
             self.result['Result'] = json.loads(resp.read())['value']['data']
-            return json.loads(r.decode())['value']['data']
+            return json.loads(resp.read())['value']['data']
 
     def get_all_requirements(self):
         self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
@@ -1076,7 +1093,7 @@ class NAEModule(object):
                 self.result['Result'] = json.loads(r.decode())['value']['data']
                 return json.loads(r.decode())['value']['data']
             self.result['Result'] = json.loads(resp.read())['value']['data']
-            return json.loads(r.decode())['value']['data']
+            return json.loads(resp.read())['value']['data']
 
     def get_all_traffic_selectors(self):
         self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
@@ -1102,7 +1119,7 @@ class NAEModule(object):
                 self.result['Result'] = json.loads(r.decode())['value']['data']
                 return json.loads(r.decode())['value']['data']
             self.result['Result'] = json.loads(resp.read())['value']['data']
-            return json.loads(r.decode())['value']['data']
+            return json.loads(resp.read())['value']['data']
 
     def get_all_object_selectors(self):
         self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
@@ -1236,6 +1253,172 @@ class NAEModule(object):
         self.get_all_assurance_groups()
         return self.assuranceGroups[0]     
 
+    def upload_file(self):
+        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        file_upload_uuid = None
+        uri = 'https://%(host)s:%(port)s/nae/api/v1/file-services/upload-file' % self.params
+        try:
+            with self.get_logout_lock():
+                chunk_url = self.start_upload(uri, 'OFFLINE_ANALYSIS') 
+                complete_url = None
+                if chunk_url:
+                    complete_url = self.upload_file_by_chunk(chunk_url)
+                else:
+                    self.fail_json(msg='Error',**self.result)
+                if complete_url:
+                    file_upload_uuid = self.complete_upload(complete_url)['uuid']
+                else:
+                    self.fail_json(msg='Failed to upload file chunks',**self.result)
+            return file_upload_uuid
+        except Exception as e:
+            self.fail_json(msg='Failed to upload file chunks',**self.result)
 
+        return all_files_status
 
+    def start_upload(self, uri, upload_type):
+        """
+        Pass metadata to api and trigger start of upload file.
+        Args:
+            unique_name: str: name of upload
+            file_name:  str:  file name of upload
+            file_path:  str: path of file
+            fabric_uuid: str: offline fabric id
+            uri: str: uri
+            upload_type: str: offline file/nat file
+        Returns:
+            str: chunk url , used for uploading chunks
+                  or None if there was an issue starting
+        """
+        file_size_in_bytes = os.path.getsize(self.params.get('file'))
+        if not file_name:
+            file_name = os.path.basename(self.params.get('file'))
+        args = {"data": {"unique_name": self.params.get('name'),
+                         "filename": file_name,
+                         "size_in_bytes": int(file_size_in_bytes),
+                         "upload_type": upload_type}}  # "OFFLINE_ANALYSIS"
+        
+        resp, auth = fetch_url(self.module, uri,
+                               data=json.dumps(args['data']),
+                               headers=self.http_headers,
+                               method='POST')
+        if auth.get('status') != 200:
+            self.status = auth.get('status')
+            try:
+                self.module.fail_json(msg=auth.get('body'),**self.result)
+            except KeyError:
+                # Connection error
+                self.fail_json(
+                    msg='Connection failed for %(url)s. %(msg)s' %
+                    auth, **self.result)
+        elif auth.get('status') == 201:
+            return str(json.loads(resp.read())['value']['data']['links'][-1]['href'])
+        return None
 
+    def upload_file_by_chunk(self, chunk_url):
+        """Pass metadata to api and trigger start of upload file.
+        Args:
+           chunk_url: str: url to send chunks
+           file_path: str: path of file and filename
+        Returns:
+            str: chunk url , used for uploading chunks or None if issue uploading
+        """
+        try:
+            chunk_id = 0
+            offset = 0
+            chunk_uri = 'https://%(host)s:%(port)s/nae' % self.params 
+            chunk_uri = chunk_uri + chunk_url[chunk_url.index('/api/'):]
+            response = None
+            file_size_in_bytes = os.path.getsize(self.params.get('file'))
+            chunk_byte_size = 10000000
+            if file_size_in_bytes < chunk_byte_size:
+                chunk_byte_size = int(file_size_in_bytes // 2)
+            with open(self.params.get('file'), 'rb') as f:
+                for chunk in self.read_in_chunks(f, chunk_byte_size):
+                    checksum = hashlib.md5(chunk).hexdigest()
+                    chunk_info = {"offset": int(offset),
+                                  "checksum": checksum,
+                                  "chunk_id": chunk_id,
+                                  "size_in_bytes": sys.getsizeof(chunk)}
+                    files = {"chunk-info": (None, json.dumps(chunk_info),
+                                            'application/json'),
+                             "chunk-data": (os.path.basename(self.params.get('file')) +
+                                            str(chunk_id),
+                                            chunk, 'application/octet-stream')}
+                    args = {"files": files}
+                    chunk_headers = self.http_headers.copy()
+                    chunk_headers.pop("Content-Type",None)
+                    resp, auth = fetch_url(self.module, uri,
+                                           data=None,
+                                           headers=chunk_headers,
+                                           files=args['files'],
+                                           method='POST')
+                    chunk_id += 1
+                    if resp and auth.get('status') != 201:
+                        self.module.fail_json(msg="Incorrect response code" ,**self.result)
+                        return None
+                if response:
+                    return str(json.loads(resp.read())['value']['data']['links'][-1]['href'])
+                else:
+                    self.module.fail_json(msg="No reponse received while uploading chunks" ,**self.result)
+        except IOError as ioex:
+            self.module.fail_json(msg="Cannot open supplied file" ,**self.result)
+        return None
+
+    def read_in_chunks(self, file_object, chunk_byte_size):
+        """
+        Return chunks of file.
+        Args:
+           file_object: file: open file object
+           chunk_byte_size: int: size of chunk to return
+        Returns:
+            Returns a chunk of the file
+        """
+        while True:
+            data = file_object.read(chunk_byte_size)
+            if not data:
+                break
+            yield data
+
+    def complete_upload(self, complete_url):
+        """Complete request to start dag.
+
+        Args:
+           chunk_url: str: url to complte upload and start dag
+
+        Returns:
+            str: uuid or None
+
+        NOTE: Modified function to not fail if epoch is at scale.
+        Scale epochs sometimes take longer to upload and in that
+        case, the api returns a timeout even though the upload
+        completes successfully later.
+        """
+        timeout = 300
+        complete_uri = 'https://%(host)s:%(port)s/nae' % self.params 
+        complete_uri = complete_uri + complete_url[complete_url.index('/api/'):]
+        resp, auth = fetch_url(self.module, complete_uri,
+                               data=None,
+                               headers=self.http_headers,
+                               method='POST')
+        try:
+            if resp and auth.get('status') == 200:
+                return str(json.loads(resp.read())['value']['data']['links'][-1]['href'])
+            elif not resp or auth.get('status') == 400:
+                total_time = 0
+                while total_time < timeout:
+                    time.sleep(10)
+                    total_time += 10
+                    resp,auth = fetch_url(self.module, 'https://%(host)s:%(port)s/nae/api/v1/file-services/upload-file', data=None, method='GET')
+                    if resp and auth.get('status') == 200:
+                        json.loads(resp.read())
+                        uuid = complete_url.split('/')[-2]
+                        for offline_file in resp['value']['data']:
+                            if offline_file['uuid'] == uuid:
+                                success = offline_file['status'] == 'UPLOAD_COMPLETED'
+                                if success:
+                                    return {'uuid': offline_file['uuid']}
+
+            self.module.fail_json(msg="No upload complete" ,**self.result)
+            raise Exception
+        except Exception as e:
+            self.module.fail_json(msg="Unknown error" ,**self.result)
