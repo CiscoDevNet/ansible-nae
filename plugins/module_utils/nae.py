@@ -1422,3 +1422,200 @@ class NAEModule(object):
             raise Exception
         except Exception as e:
             self.module.fail_json(msg="Unknown error" ,**self.result)
+
+
+
+    def isLiveAnalysis(self):
+        self.get_all_assurance_groups()
+        for ag in self.assuranceGroups:
+            if ag['status'] == "RUNNING" and 'iterations' not in ag:
+                return ag['unique_name']
+
+    def isOnDemandAnalysis(self):
+        self.get_all_assurance_groups()
+        for ag in self.assuranceGroups:
+            if (ag['status'] == "RUNNING" or ag['status'] == "ANALYSIS_NOT_STARTED" or ag['status'] == "ANALYSIS_IN_PROGRESS")  and ('iterations' in ag):
+                return ag['unique_name']
+            
+
+    def get_tcam_stats(self):
+        self.params['fabric_id'] = str(
+            self.get_assurance_group(
+                self.params.get('ag_name'))['uuid'])
+        self.params['latest_epoch'] = str(self.get_epochs()[-1]["epoch_id"])
+        self.params['page'] = 0
+        self.params['obj_per_page'] = 200
+        has_more_data = True
+        tcam_data = []
+        # As long as there is more data get it
+        while has_more_data:  
+            #I get data sorter by tcam hists for hitcount-by-rules --> hitcount-by-epgpair-contract-filter
+            url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_id)s/model/aci-policy/tcam/hitcount-by-rules/hitcount-by-epgpair-contract-filter?$epoch_id=%(latest_epoch)s&$page=%(page)s&size=%(obj_per_page)s&$sort=-cumulative_count&$view=histogram' % self.params
+            resp, auth = fetch_url(self.module, url, headers=self.http_headers, method='GET')
+            if auth.get('status') != 200:
+                self.result['Error'] = auth.get('msg')
+                self.result['url'] = url
+                self.module.fail_json(msg="Error getting TCAM",**self.result)
+            self.params['page'] = self.params['page'] + 1
+            has_more_data = json.loads(resp.read())['value']['data_summary']['has_more_data']
+            tcam_data.append(json.loads(resp.read())['value']['data'])
+        
+        self.result['Result'] = 'Pages extracted %(page)s' % self.params
+        return tcam_data
+    
+    def StartOnDemandAnalysis(self,iterations):
+        runningLive = self.isLiveAnalysis()
+        runningOnDemand = self.isOnDemandAnalysis()
+        if runningLive:
+            self.module.fail_json(msg=f'There is currently a Live analysis on {runningLive} please stop it manually and try again' ,**self.result)
+        
+        elif runningOnDemand :
+            self.module.fail_json(msg=f'There is currently an OnDemand analysis running on {runningOnDemand} please stop it manually and try again' ,**self.result)
+        else:
+            self.fabric_uuid = self.get_assurance_group(self.params.get('ag_name'))
+
+            if ag == None:
+                self.module.fail_json(msg="Assurance group does not exist" ,**self.result)
+
+            ag_iterations = json.dumps({'iterations': iterations})
+            url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/assured-networks/aci-fabric/%(fabric_uuid)s/start-analysis' % self.params
+            resp, auth = fetch_url(self.module, url,
+                                   data=ag_iterations,
+                                   headers=self.http_headers,
+                                   method='POST')
+            if auth.get('status') == 200:
+                self.result['Result'] = 'Successfully started OnDemand Analysis on %(ag_name)s' % self.params
+                
+            else:
+                self.module.fail_json(msg="OnDemand Analysis failed to start",**self.result)
+   
+    def query_delta_analyses(self):
+        self.result['Delta analyses'] = self.get_delta_analyses()
+
+    def get_delta_analyses(self):
+        self.params['fabric_id'] = str(
+            self.get_assurance_group(
+                self.params.get('ag_name'))['uuid'])
+        url = 'https://%(host)s/nae/api/v1/job-services?$page=0&$size=100&$sort=status&$type=EPOCH_DELTA_ANALYSIS&assurance_group_id=%(fabric_id)s' % self.params
+        resp, auth = fetch_url(self.module, url, data=None, headers=self.http_headers, method='GET')
+        return json.loads(resp.read())['value']['data']
+
+    def delete_delta_analysis(self):
+        self.params['fabric_id'] = str(
+            self.get_assurance_group(
+                self.params.get('ag_name'))['uuid'])
+        try:
+            self.params['analysis_id'] = [analysis for analysis in self.get_delta_analyses() if analysis['unique_name'] == self.params.get('name')][0]['uuid'] 
+        except IndexError:
+            fail = "Delta analysis %(name)s does not exist on %(ag_name)s." % self.params
+            self.module.fail_json(msg=fail,**self.result)
+
+
+        url = 'https://%(host)s/nae/api/v1/job-services/%(analysis_id)s' % self.params
+        resp, auth = fetch_url(self.module, url, data=None, headers=self.http_headers, method='DELETE')
+        if 'OK' in auth.get('msg'):
+            self.result['Result'] = 'Delta analysis %(name)s successfully deleted' % self.params
+        else:
+            fail = "Delta analysis deleted failed " + auth.get('msg')
+            self.module.fail_json(msg=fail,**self.result)
+
+
+    def new_delta_analysis(self):
+        fabric_id = str(
+            self.get_assurance_group(
+                self.params.get('ag_name'))['uuid'])
+        epochs = list(self.get_epochs())
+        e = [epoch for epoch in epochs if epoch['fabric_id'] == fabric_id] 
+        later_epoch_uuid = e[0]['epoch_id']
+        prior_epoch_uuid = e[1]['epoch_id']
+        url = 'https://%(host)s/nae/api/v1/job-services' % self.params
+        form = '''{
+               "type": "EPOCH_DELTA_ANALYSIS",
+               "name": "''' + self.params.get('name') + '''",
+               "parameters": [
+                   {
+                       "name": "prior_epoch_uuid",
+                       "value": "''' + str(prior_epoch_uuid) + '''"
+                   },
+                   {
+                       "name": "later_epoch_uuid",
+                       "value": "''' + str(later_epoch_uuid) + '''"
+                   }
+                   ]
+               }'''
+        resp, auth = fetch_url(self.module, url, data=form, headers=self.http_headers, method='POST')
+        
+        if 'OK' in auth.get('msg'):
+            self.result['Result'] = 'Delta analysis %(name)s successfully created' % self.params
+        else:
+            fail = "Delta analysis creation failed " + auth.get('msg')
+            self.module.fail_json(msg=fail,**self.result)
+    
+    # def newOfflineAnalysis(self, name, fileID, fabricID):
+        # self.logger.info("Trying to Starting Analysis  %s",name)
+        
+        # while self.isOnDemandAnalysis() or self.isLiveAnalysis():
+            # self.module.fail_json(msg="There is currently an  analysis running.",**self.result)
+
+        # form = '''{
+          # "unique_name": "''' + name + '''",
+          # "file_upload_uuid": "''' + fileID +'''",
+          # "aci_fabric_uuid": "''' + fabricID + '''",
+          # "analysis_timeout_in_secs": 3600
+        # }'''
+        
+        # if '4.0' in self.version:
+            # url ='https://'+self.ip_addr+'/nae/api/v1/event-services/offline-analysis'
+            # req = requests.post(url, data=form,  headers=self.http_headers, cookies=self.session_cookie, verify=False)
+            # if req.status_code == 202:
+                # self.logger.info("Offline Analysis %s Started", name)
+            # else:
+                # self.logger.info("Offline Analysis creation failed with error message \n %s",req.content)
+
+        
+        # elif '4.1' in self.version or '5.0' in  self.version or '5.1' in self.version:
+            # #in 4.1 starting an offline analysis is composed of 2 steps
+            # # 1 Create the Offline analysis
+            # url ='https://'+self.ip_addr+'/nae/api/v1/config-services/offline-analysis'
+            # req = requests.post(url, data=form,  headers=self.http_headers, cookies=self.session_cookie, verify=False)
+            # if req.status_code == 202:
+                # self.logger.info("Offline Analysis %s Created", name)
+                # pprint(req.json()['value']['data'])
+                # #Get the analysis UUID:
+                # analysis_id = req.json()['value']['data']['uuid']
+
+                # url ='https://'+self.ip_addr+'/nae/api/v1/config-services/analysis'
+
+                # form = '''{
+                  # "interval": 300,
+                  # "type": "OFFLINE",
+                  # "assurance_group_list": [
+                    # {
+                      # "uuid": "''' + fabricID + '''"
+                    # }
+                  # ],
+                  # "offline_analysis_list": [
+                    # {
+                      # "uuid":"''' + analysis_id + '''" 
+                    # }
+                  # ],
+                  # "iterations": 1
+                # }'''
+
+                # req = requests.post(url, data=form,  headers=self.http_headers, cookies=self.session_cookie, verify=False)
+                # if req.status_code == 202 or req.status_code == 200 :
+                    # self.logger.info("Offline Analysis %s Started", name)
+                    # #Sleeping 10s as it takes a moment for the status to be updated. 
+                    # time.sleep(10)
+                # else:
+                    # self.logger.info("Offline Analysis creation failed with error message \n %s",req.content)
+
+        # else:
+                # self.logger.info("Unsupported version")
+
+    # def getFiles(self):
+        # #This methods loads all the uploaded files to NAE
+        # url = 'https://'+self.ip_addr+'/nae/api/v1/file-services/upload-file'
+        # req = requests.get(url, headers=self.http_headers, cookies=self.session_cookie, verify=False)
+        # self.files = req.json()['value']['data']
+   

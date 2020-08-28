@@ -60,7 +60,6 @@ options:
   changes:
     description:
     - Optional parameter if creating new pre-change analysis from change-list (manual)
-
 author:
 - Shantanu Kulkarni (@shan_kulk)
 '''
@@ -194,7 +193,7 @@ def main():
         nae.delete_pre_change_analysis()
         module.exit_json(**nae.result)
 
-    module.fail_json(msg='Incorrect params passed', **self.result)
+    module.fail_json(msg='Incorrect params passed', **nae.result)
 
 
 if __name__ == '__main__':
