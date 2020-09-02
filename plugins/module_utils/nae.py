@@ -1487,7 +1487,7 @@ class NAEModule(object):
                 tcam_data.append(json.loads(resp.read())['value']['data'])
             self.params['page'] = self.params['page'] + 1
 
-        self.result['Result'] = 'Pages extracted %(page)s' % self.params
+        self.result['Result'] = 'Pages extracted %(page)s ' % self.params
         return tcam_data
 
     def tcam_to_csv(self):
