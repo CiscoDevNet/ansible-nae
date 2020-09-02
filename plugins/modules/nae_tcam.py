@@ -29,20 +29,31 @@ options:
     - Name of assurance group
     type: str
     required: yes
+  file:
+    description:
+    - Path to file to write tcam data to (csv)
+    type: str
+    required: no
 author:
 - Shantanu Kulkarni (@shan_kulk)
 '''
 
 EXAMPLES = \
     r'''
-- name: Create object selector from form
+- name: Get tcam results
   nae_tcam:
     host: nae
     port: 8080
     username: Admin
     password: 1234
     ag_name: fab1
-
+- name: Get tcam results and write to local csv file
+    host: nae
+    port: 8080
+    username: Admin
+    password: 1234
+    ag_name: fab1
+    file: tcam_data
 '''
 
 RETURN = \
@@ -53,23 +64,30 @@ resp:
     returned: always
 '''
 
+
 def main():
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     result = dict(changed=False, resp='')
     argument_spec = nae_argument_spec()
     argument_spec.update(  # Not required for querying all objects
         validate_certs=dict(type='bool', default=False),
-        ag_name=dict(type='str',default="")
+        file=dict(type='str', default=""),
+        ag_name=dict(type='str', default="")
     )
 
     module = AnsibleModule(argument_spec=argument_spec,
                            supports_check_mode=True,
-                                        )
+                           )
+    file = module.params.get('file')
     ag_name = module.params.get('ag_name')
     nae = NAEModule(module)
+    if ag_name and file:
+        nae.tcam_to_csv()
+        module.exit_json(**nae.result)
     if ag_name:
         nae.result['tcam'] = nae.get_tcam_stats()
-    module.fail_json(msg='Incorrect params passed', **self.result)
+        module.exit_json(**nae.result)
+    module.fail_json(msg='Incorrect params passed', **nae.result)
 
 
 if __name__ == '__main__':
