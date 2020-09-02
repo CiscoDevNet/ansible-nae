@@ -75,33 +75,39 @@ resp:
     returned: always
 '''
 
+
 def main():
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     result = dict(changed=False, resp='')
     argument_spec = nae_argument_spec()
     argument_spec.update(  # Not required for querying all objects
         validate_certs=dict(type='bool', default=False),
-        name=dict(type='str',default=""),
-        ag_name=dict(type='str',default=""),
-        state=dict(type='str',default="")
+        name=dict(type='str', default=""),
+        ag_name=dict(type='str', default=""),
+        state=dict(type='str', default="")
     )
 
     module = AnsibleModule(argument_spec=argument_spec,
                            supports_check_mode=True,
-                           required_if=[['state', 'absent', ['ag_name','name']],
+                           required_if=[['state', 'absent', ['ag_name', 'name']],
                                         ['state', 'query', ['ag_name']],
-                                        ['state', 'present', ['ag_name','name']]])
+                                        ['state', 'present', ['ag_name', 'name']]])
     ag_name = module.params.get('ag_name')
     name = module.params.get('name')
     state = module.params.get('state')
     nae = NAEModule(module)
-    if state == 'present':
+    if state == 'present' and 'name':
         nae.new_delta_analysis()
         module.exit_json(**nae.result)
     if state == 'query' and not name:
         nae.query_delta_analyses()
         module.exit_json(**nae.result)
     if state == 'query' and name:
+        nae.result['Result'] = nae.get_delta_result()
+        if not nae.result['Result']:
+            module.exit_json(
+                msg="Delta analysis failed. The above smart events have been detected for later epoch only.",
+                **nae.result)
         module.exit_json(**nae.result)
     if state == 'absent':
         nae.delete_delta_analysis()

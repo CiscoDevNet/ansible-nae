@@ -1,26 +1,19 @@
 ---
-# Note: This playbook is only to illustrate all module functionality. Running both add from change list and add from file 
+# Note: This playbook is only to illustrate all module functionality. Running both add from change list and add from file
 #       will fail since only one PCA can run on NAE at a time.
 - name: NAE TESTING
   hosts: all
   vars:
     nae_login: &nae_login
-        host: 173.36.219.127
-        port: 443  
-        username: admin
-        password: ins3965!ins3965! 
+      host: 173.36.219.127
+      port: 443
+      username: admin
+      password: ins3965!ins3965!
     validate_certs: False
   tasks:
-  - name: Testing delta
-    nae_delta:
-      <<: *nae_login
-      state: query
-      ag_name: lh-dmz1-pod1-aci-v32
-  - name: Testing delete delta
-    nae_delta:
-      <<: *nae_login
-      state: absent
-      ag_name: lh-dmz1-pod1-aci-v32
-      name: TestingfDumping
-...
-
+    - name: Testing delta
+      nae_delta:
+        <<: *nae_login
+        name: Test
+        state: query
+        ag_name: lh-dmz1-pod1-aci-v32
