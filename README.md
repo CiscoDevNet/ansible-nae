@@ -59,8 +59,8 @@ Once the collection is installed, you can use it in a playbook by specifying the
 - [x] Start/Stop/Query PCA
 
 ### Epoch Delta
-- [ ] Configure Delta Analysis
-- [ ] Query Delta Analysis Result 
+- [x] Configure Delta Analysis
+- [x] Query Delta Analysis Result 
 
 ### Compliance Analysis
 - [x] Create/Update/Read/Delete
@@ -92,7 +92,7 @@ Once the collection is installed, you can use it in a playbook by specifying the
 - - [ ] Activate a rules	 set with an AG
 - - [ ] Associate/Disassociate a requirement set with an AG
 ### TCAM Analysis
-- [ ] Export TCAM stats as CSV
+- [x] Export TCAM stats as CSV
 
 ### Appliance Management
 - [ ] Create/Update/Delete/Read Users
