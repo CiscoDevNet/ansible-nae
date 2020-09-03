@@ -13,7 +13,7 @@ jsonpath_ng
 ## Install
 Ansible and other requirements must be installed
 ```
-sudo pip install ansible requests requests-toolbelt jsonpath_ng
+sudo pip install ansible requests requests-toolbelt jsonpath_ng pathlib filelock
 ```
 
 Install the collection
