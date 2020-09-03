@@ -193,35 +193,39 @@ class NAEModule(object):
         return None
 
     def deleteAG(self):
-        self.params['uuid'] = str(
-            self.get_assurance_group(
-                self.params.get('name'))['uuid'])
-        url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/assured-networks/aci-fabric/%(uuid)s' % self.params
-        resp, auth = fetch_url(self.module, url,
-                               headers=self.http_headers,
-                               data=None,
-                               method='DELETE')
-        if auth.get('status') != 200:
-            if('filename' in self.params):
-                self.params['file'] = self.params['filename']
-                del self.params['filename']
-            self.response = auth.get('msg')
-            self.status = auth.get('status')
-            try:
-                self.module.fail_json(msg=self.response, **self.result)
-            except KeyError:
-                # Connection error
-                self.fail_json(
-                    msg='Connection failed for %(url)s. %(msg)s' %
-                    auth, **self.result)
-        if json.loads(resp.read())['success'] is True:
-            self.result['Result'] = 'Assurance Group "%(name)s" deleted successfully' % self.params
+        ag = self.get_assurance_group(self.params.get('name'))
+        if ag == None:
+            self.result['Result'] = "No such Assurance Group exists"
+        else:
+            self.params['uuid'] = str(
+                self.get_assurance_group(
+                    self.params.get('name'))['uuid'])
+            url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/assurance-group/fabric/%(uuid)s' % self.params
+            resp, auth = fetch_url(self.module, url,
+                                headers=self.http_headers,
+                                data=None,
+                                method='DELETE')
+            if auth.get('status') != 200:
+                if('filename' in self.params):
+                    self.params['file'] = self.params['filename']
+                    del self.params['filename']
+                self.response = auth.get('msg')
+                self.status = auth.get('status')
+                try:
+                    self.module.fail_json(msg=self.response, **self.result)
+                except KeyError:
+                    # Connection error
+                    self.fail_json(
+                        msg='Connection failed for %(url)s. %(msg)s' %
+                        auth, **self.result)
+            if json.loads(resp.read())['success'] is True:
+                self.result['Result'] = 'Assurance Group "%(name)s" deleted successfully' % self.params
 
     def newOnlineAG(self):
         # This method creates a new Offline Assurance Group, you only need to
         # pass the AG Name.
 
-        url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/assured-networks/aci-fabric/' % self.params
+        url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/assurance-group/fabric' % self.params
 
         form = '''{
           "analysis_id": "",
@@ -255,11 +259,11 @@ class NAEModule(object):
             if('filename' in self.params):
                 self.params['file'] = self.params['filename']
                 del self.params['filename']
-            self.response = auth.get('msg')
+            self.response = json.loads(auth.get('body'))
             self.status = auth.get('status')
             try:
                 self.module.fail_json(
-                    msg=str(self.response) + str(self.status), **self.result)
+                    msg=str(self.response['messages'][0]['message']) , **self.result)
             except KeyError:
                 # Connection error
                 self.fail_json(
@@ -271,8 +275,7 @@ class NAEModule(object):
         # This method creates a new Offline Assurance Group, you only need to
         # pass the AG Name.
 
-        url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/assured-networks/aci-fabric/' % self.params
-
+        url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/assurance-group/fabric' % self.params
         form = '''{
           "analysis_id": "",
           "display_name": "",
@@ -299,11 +302,11 @@ class NAEModule(object):
             if('filename' in self.params):
                 self.params['file'] = self.params['filename']
                 del self.params['filename']
-            self.response = auth.get('msg')
+            self.response = json.loads(auth.get('body'))
             self.status = auth.get('status')
             try:
                 self.module.fail_json(
-                    msg=str(self.response) + str(self.status), **self.result)
+                    msg=str(self.response['messages'][0]['message']) , **self.result)
             except KeyError:
                 # Connection error
                 self.fail_json(
