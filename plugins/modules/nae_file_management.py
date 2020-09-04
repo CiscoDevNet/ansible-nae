@@ -94,13 +94,15 @@ def main():
         file=dict(type='str', aliases=['file_name']),
         state=dict(type='str', default='present', choices=['absent',
                                                            'present', 'query']),
+        validate_certs=dict(type='bool', default=False)
     )
 
     module = AnsibleModule(argument_spec=argument_spec,
                            supports_check_mode=True,
                            required_if=[['state', 'absent', ['name']],
-                                        ['state', 'present', ['file']]
-                                        ['state', 'present', ['name']]])
+                                        ['state', 'present', ['file']],
+                                        ['state', 'present', ['name']],
+                                        ])
 
     state = module.params.get('state')
     file_name = module.params.get('file')
@@ -108,10 +110,16 @@ def main():
     nae = NAEModule(module)
 
     if state == 'present':
-        self.upload_file()
+        nae.upload_file()
         module.exit_json(**nae.result)
-        
-
+    elif state == 'absent':
+        nae.delete_file()
+        module.exit_json(**nae.result)
+    elif state == 'query':
+        nae.get_all_files()
+        nae.result['Result'] = nae.files
+        module.exit_json(**nae.result)
+  
     module.fail_json(msg='Incorrect params passed', **self.result)
 
 

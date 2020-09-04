@@ -68,7 +68,7 @@ class NAEModule(object):
         self.resp = {}
         self.params = module.params
         self.result = dict(changed=False)
-        self.files = {}
+        self.files = []
         self.assuranceGroups = []
         self.session_cookie = ""
         self.error = dict(code=None, text=None)
@@ -1681,6 +1681,47 @@ class NAEModule(object):
             fail = "Delta analysis creation failed " + auth.get('msg')
             self.module.fail_json(msg=fail, **self.result)
 
+    def get_all_files(self):
+        has_more_data = True
+        while has_more_data:
+            url = 'https://%(host)s:%(port)s//nae/api/v1/file-services/upload-file' % self.params
+            resp, auth = fetch_url(self.module, url,
+                                headers=self.http_headers,
+                                data=None,
+                                method='GET')
+
+            if auth.get('status') != 200:
+                if('filename' in self.params):
+                    self.params['file'] = self.params['filename']
+                    del self.params['filename']
+                self.module.exit_json(
+                    msg=json.loads(
+                        auth.get('body'))['messages'][0]['message'],
+                    **self.result)
+
+            if resp.headers['Content-Encoding'] == "gzip":
+                r = gzip.decompress(resp.read())
+                has_more_data = json.loads(r.decode())['value']['data_summary']['has_more_data']
+                self.files.append(json.loads(r.decode())['value']['data'])
+            return self.files
+   
+    def delete_file(self):  
+        try:
+            for page in self.get_all_files():
+                self.params['file_id'] = [f for f in page if f['unique_name'] == self.params.get('name')][0]['uuid']
+
+        except IndexError:
+            fail = "File %(name)s does not exist on." % self.params
+            self.module.fail_json(msg=fail, **self.result)
+        url = 'https://%(host)s/nae/api/v1/file-services/upload-file/%(file_id)s' % self.params
+        resp, auth = fetch_url(self.module, url, data=None,
+                               headers=self.http_headers, method='DELETE')
+        if 'OK' in auth.get('msg'):
+            self.result['Result'] = 'File %(name)s successfully deleted' % self.params
+        else:
+            fail = "File  deleted failed " + auth.get('msg')
+            self.module.fail_json(msg=fail, **self.result)
+   
     # def newOfflineAnalysis(self, name, fileID, fabricID):
         # self.logger.info("Trying to Starting Analysis  %s",name)
 
