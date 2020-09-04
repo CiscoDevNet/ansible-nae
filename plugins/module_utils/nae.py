@@ -39,6 +39,7 @@ import requests
 import csv
 import json
 import os
+import sys
 import time
 import gzip
 import filelock
@@ -50,7 +51,7 @@ from ansible.module_utils.parsing.convert_bool import boolean
 from ansible.module_utils.urls import fetch_url
 from ansible.module_utils._text import to_bytes, to_native
 from jsonpath_ng import jsonpath, parse
-
+import requests
 
 def nae_argument_spec():
     return dict(
@@ -73,7 +74,7 @@ class NAEModule(object):
         self.error = dict(code=None, text=None)
         self.version = ""
         self.http_headers = {
-            'Accept': '*/*',
+            'Accept': 'application/json, text/plain, */*',
             'Accept-Encoding': 'gzip, deflate, br',
             'Accept-Language': 'en-GB,en-US;q=0.9,en;q=0.8,it;q=0.7',
             'Sec-Fetch-Mode': 'cors',
@@ -1330,16 +1331,15 @@ class NAEModule(object):
                 if chunk_url:
                     complete_url = self.upload_file_by_chunk(chunk_url)
                 else:
-                    self.fail_json(msg='Error', **self.result)
+                    self.module.fail_json(msg='Error', **self.result)
                 if complete_url:
-                    file_upload_uuid = self.complete_upload(complete_url)[
-                        'uuid']
+                    file_upload_uuid = self.complete_upload(complete_url)
                 else:
-                    self.fail_json(
-                        msg='Failed to upload file chunks', **self.result)
+                    self.module.fail_json(
+                        'Failed to upload file chunks', **self.result)
             return file_upload_uuid
         except Exception as e:
-            self.fail_json(msg='Failed to upload file chunks', **self.result)
+            self.module.fail_json(msg='Failed to upload file chunks', **self.result)
 
         return all_files_status
 
@@ -1358,9 +1358,9 @@ class NAEModule(object):
                   or None if there was an issue starting
         """
         file_size_in_bytes = os.path.getsize(self.params.get('file'))
-        if not file_name:
-            file_name = os.path.basename(self.params.get('file'))
-        args = {"data": {"unique_name": self.params.get('name'),
+        file_name = os.path.basename(self.params.get('file'))
+        args = {"data": {"comment": "",
+                         "unique_name": self.params.get('name'),
                          "filename": file_name,
                          "size_in_bytes": int(file_size_in_bytes),
                          "upload_type": upload_type}}  # "OFFLINE_ANALYSIS"
@@ -1369,17 +1369,19 @@ class NAEModule(object):
                                data=json.dumps(args['data']),
                                headers=self.http_headers,
                                method='POST')
-        if auth.get('status') != 200:
+        if auth.get('status') == 201:
+            return str(json.loads(resp.read())['value']['data']['links'][-1]['href'])
+        else:
             self.status = auth.get('status')
             try:
-                self.module.fail_json(msg=auth.get('body'), **self.result)
+                message = auth.get('body')
+                self.module.fail_json(msg=message, **self.result)
             except KeyError:
                 # Connection error
-                self.fail_json(
+                self.module.fail_json(
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
-        elif auth.get('status') == 201:
-            return str(json.loads(resp.read())['value']['data']['links'][-1]['href'])
+
         return None
 
     def upload_file_by_chunk(self, chunk_url):
@@ -1415,18 +1417,15 @@ class NAEModule(object):
                     args = {"files": files}
                     chunk_headers = self.http_headers.copy()
                     chunk_headers.pop("Content-Type", None)
-                    resp, auth = fetch_url(self.module, uri,
-                                           data=None,
-                                           headers=chunk_headers,
-                                           files=args['files'],
-                                           method='POST')
+                    # Ansible preders us to use fetch_url but does not support binary file uploads so reverting back to requests seems the only thing not working. 
+                    response = requests.post(chunk_uri, data = None, files=args['files'], headers=chunk_headers, verify=False)
                     chunk_id += 1
-                    if resp and auth.get('status') != 201:
+                    if response and response.status_code != 201:
                         self.module.fail_json(
                             msg="Incorrect response code", **self.result)
                         return None
                 if response:
-                    return str(json.loads(resp.read())['value']['data']['links'][-1]['href'])
+                    return str(response.json()['value']['data']['links'][-1]['href'])
                 else:
                     self.module.fail_json(
                         msg="No reponse received while uploading chunks", **self.result)
