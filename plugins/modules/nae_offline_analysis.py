@@ -94,8 +94,9 @@ def main():
         name=dict(type='str', aliases=['unique_name']),
         filename=dict(type='str', aliases=['file_name']),
         ag_name=dict(type='str', aliases=['assurance_group_name']),
+        complete=dict(type='bool', default=False),
         state=dict(type='str', default='present', choices=['absent',
-                                                           'present', 'query']),
+                                                           'present', 'query','complete']),
         validate_certs=dict(type='bool', default=False)
     )
 

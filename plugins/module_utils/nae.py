@@ -85,6 +85,14 @@ class NAEModule(object):
             'Connection': 'keep-alive'}
         self.login()
 
+    def __del__(self):
+        url = 'https://%(host)s:%(port)s/nae/api/v1/logout' % self.params
+        resp, auth = fetch_url(self.module, url,
+                        headers=self.http_headers,
+                        data=None,
+                        method='POST')
+        #self.module.fail_json(msg="LOGOUG", **self.result)
+
     def login(self):
         url = 'https://%(host)s:%(port)s/nae/api/v1/whoami' % self.params
         resp, auth = fetch_url(self.module, url,
@@ -1739,64 +1747,71 @@ class NAEModule(object):
         if self.isOnDemandAnalysis() or self.isLiveAnalysis():
             self.module.fail_json(msg="There is currently an  analysis running.",**self.result)
         
-        self.get_all_files()
-        for uploadedFile in self.files:
-           fileID = [f for f in uploadedFile if f['unique_name'] == self.params.get('filename')]
-           if not fileID:
-               self.module.fail_json(msg="File %(filename)s not found" % self.params ,**self.result) 
-        fileID = fileID[0]['uuid']
-        fabricID = self.get_assurance_group(self.params.get('ag_name'))
-        if not fabricID:
-            self.module.fail_json(msg="Assurace Group %(name)s not found" % self.params ,**self.result) 
-        fabricID = self.get_assurance_group(self.params.get('ag_name'))["uuid"]
-        form = '''{
-          "unique_name": "''' + self.params.get('name') + '''",
-          "file_upload_uuid": "''' + fileID +'''",
-          "aci_fabric_uuid": "''' + fabricID + '''",
-          "analysis_timeout_in_secs": 3600
-        }'''
-        if '4.1' in self.version or '5.0' in  self.version or '5.1' in self.version:
-            #in 4.1 starting an offline analysis is composed of 2 steps
-            # 1 Create the Offline analysis
-            url ='https://%(host)s/nae/api/v1/config-services/offline-analysis' % self.params
+        if self.get_OfflineAnalysis(self.params.get('name')):
+            self.result['Result']=  'Offline Analysis %(name)s elready exists ' % self.params
+        else:    
+            self.get_all_files()
+            for uploadedFile in self.files:
+                fileID = [f for f in uploadedFile if f['unique_name'] == self.params.get('filename')]
+                if not fileID:
+                    self.module.fail_json(msg="File %(filename)s not found" % self.params ,**self.result) 
+            fileID = fileID[0]['uuid']
+            fabricID = self.get_assurance_group(self.params.get('ag_name'))
+            if not fabricID:
+                self.module.fail_json(msg="Assurace Group %(name)s not found" % self.params ,**self.result) 
+            fabricID = self.get_assurance_group(self.params.get('ag_name'))["uuid"]
+            form = '''{
+            "unique_name": "''' + self.params.get('name') + '''",
+            "file_upload_uuid": "''' + fileID +'''",
+            "aci_fabric_uuid": "''' + fabricID + '''",
+            "analysis_timeout_in_secs": 3600
+            }'''
+            if '4.1' in self.version or '5.0' in  self.version or '5.1' in self.version:
+                #in 4.1 starting an offline analysis is composed of 2 steps
+                # 1 Create the Offline analysis
+                url ='https://%(host)s/nae/api/v1/config-services/offline-analysis' % self.params
 
-            resp, auth = fetch_url(self.module, url, data=form,
-                        headers=self.http_headers, method='POST')
-           
-            if auth.get('status') == 202:
-                #Get the analysis UUID:
-                analysis_id = json.loads(resp.read())['value']['data']['uuid']
-
-                url ='https://%(host)s/nae/api/v1/config-services/analysis' % self.params
-
-                form = '''{
-                "interval": 300,
-                "type": "OFFLINE",
-                "assurance_group_list": [
-                {
-                "uuid": "''' + fabricID + '''"
-                }
-                ],
-                "offline_analysis_list": [
-                {
-                "uuid":"''' + analysis_id + '''"
-                }
-                ],
-                "iterations": 1
-                }'''
                 resp, auth = fetch_url(self.module, url, data=form,
                             headers=self.http_headers, method='POST')
-                if auth.get('status') == 202 or auth.get('status') == 200 :
-                    self.result['Result']=  'Offline Analysis %(name)s successfully created' % self.params
-                    #Sleeping 10s as it takes a moment for the status to be updated.
-                    #time.sleep(10)
+            
+                if auth.get('status') == 202:
+                    #Get the analysis UUID:
+                    analysis_id = json.loads(resp.read())['value']['data']['uuid']
+
+                    url ='https://%(host)s/nae/api/v1/config-services/analysis' % self.params
+
+                    form = '''{
+                    "interval": 300,
+                    "type": "OFFLINE",
+                    "assurance_group_list": [
+                    {
+                    "uuid": "''' + fabricID + '''"
+                    }
+                    ],
+                    "offline_analysis_list": [
+                    {
+                    "uuid":"''' + analysis_id + '''"
+                    }
+                    ],
+                    "iterations": 1
+                    }'''
+                    resp, auth = fetch_url(self.module, url, data=form,
+                                headers=self.http_headers, method='POST')
+                    if auth.get('status') == 202 or auth.get('status') == 200 :
+                        self.result['Result']=  'Offline Analysis %(name)s successfully created' % self.params
+                        if self.params['complete']:
+                            status = None
+                            while status != "ANALYSIS_COMPLETED":
+                                status = self.get_OfflineAnalysis(self.params.get('name'))['status']
+                                time.sleep(10)
+                else:
+                    fail = json.loads(auth.get('body'))['messages'][0]['message']
+                    self.module.fail_json(msg=fail, **self.result)
             else:
-                fail = json.loads(auth.get('body'))['messages'][0]['message']
-                self.module.fail_json(msg=fail, **self.result)
-        else:
-            self.module.fail_json(msg="Unsupported version", **self.result)
+                self.module.fail_json(msg="Unsupported version", **self.result)
 
     def get_all_OfflineAnalysis(self):
+        self.offlineAnalysis.clear()
         has_more_data = True
         while has_more_data:
             url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/offline-analysis' % self.params
@@ -1830,7 +1845,7 @@ class NAEModule(object):
             for oa in pages:
                 if oa['unique_name'] == name:
                     return oa
-        return "Offline Analysis %(name)s does not exist on." % self.params
+        return None
     
     def deleteOfflineAnalysis(self):  
             try:

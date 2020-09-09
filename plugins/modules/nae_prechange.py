@@ -155,7 +155,7 @@ def main():
         file=dict(type='str', default=None),
         validate_certs=dict(type='bool', default=False),
         state=dict(type='str', default='present', choices=['absent',
-                                                           'present', 'query', 'verify']),
+                                                           'present', 'query']),
     )
 
     module = AnsibleModule(argument_spec=argument_spec,
