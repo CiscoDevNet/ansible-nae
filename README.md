@@ -77,11 +77,11 @@ Once the collection is installed, you can use it in a playbook by specifying the
 - [x] Create/Update/Read/Delete Offline Assurance Group 
 
 ### Offline File Management
-- [ ] Upload/Delete/Get a File
+- [x] Upload/Delete/Get a File
 
 ### Online/Offline Analysis
-- [ ] Create/Start/Stop/Delete Online Analysis
-- [ ] Create/Start/Stop/Delete Offline Analysis
+- [x] Create/Start/Stop/Delete Online Analysis
+- [x] Create/Start/Stop/Delete Offline Analysis
 
 ### Smart Events
 - [ ] Get smart events by Type/Severity 
