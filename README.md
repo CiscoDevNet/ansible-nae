@@ -97,4 +97,11 @@ Once the collection is installed, you can use it in a playbook by specifying the
 ### Appliance Management
 - [ ] Create/Update/Delete/Read Users
 
+# Testing latest code
+
+If you wanna test the latest code you can:
+- Clone this repo
+- ansible-galaxy collection build --force
+- ansible-galaxy collection install cisco-nae-* --force
+
 
