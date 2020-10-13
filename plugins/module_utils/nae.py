@@ -1702,7 +1702,7 @@ class NAEModule(object):
     def get_all_files(self):
         has_more_data = True
         while has_more_data:
-            url = 'https://%(host)s:%(port)s//nae/api/v1/file-services/upload-file' % self.params
+            url = 'https://%(host)s:%(port)s/nae/api/v1/file-services/upload-file' % self.params
             resp, auth = fetch_url(self.module, url,
                                 headers=self.http_headers,
                                 data=None,
@@ -1722,8 +1722,9 @@ class NAEModule(object):
                 has_more_data = json.loads(r.decode())['value']['data_summary']['has_more_data']
                 self.files.append(json.loads(r.decode())['value']['data'])
             else:
-                has_more_data = json.loads(resp.read())['value']['data_summary']['has_more_data']
-                self.files.append(json.loads(resp.read())['value']['data'])
+                r = resp.read()
+                has_more_data = json.loads(r)['value']['data_summary']['has_more_data']
+                self.files.append(json.loads(r)['value']['data'])
             return self.files
    
     def delete_file(self):  
@@ -1834,8 +1835,9 @@ class NAEModule(object):
                 has_more_data = json.loads(r.decode())['value']['data_summary']['has_more_data']
                 self.offlineAnalysis.append(json.loads(r.decode())['value']['data'])
             else:
-                has_more_data = json.loads(resp.read())['value']['data_summary']['has_more_data']
-                self.offlineAnalysis.append(json.loads(resp.read())['value']['data'])
+                r= resp.read()
+                has_more_data = json.loads(r)['value']['data_summary']['has_more_data']
+                self.offlineAnalysis.append(json.loads(r)['value']['data'])
             return self.offlineAnalysis
 
     def get_OfflineAnalysis(self, name):
