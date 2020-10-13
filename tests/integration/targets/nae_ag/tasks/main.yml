@@ -1,0 +1,51 @@
+# Test code for the NAE modules
+# Copyright: (c) 2020, Cindy Zhao (cizhao) <cizhao@cisco.com>
+#
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+- name: Test that we have an NAE host, NAE username and NAE password
+  fail:
+    msg: 'Please define the following variables: nae_host, nae_username and nae_password.'
+  when: nae_host is not defined or nae_username is not defined or nae_password is not defined
+
+- name: Set vars
+  set_fact: 
+    nae_info: &nae_info
+      host: '{{ nae_host }}'
+      username: '{{ nae_username }}'
+      password: '{{ nae_password }}'
+      validate_certs: '{{ nae_validate_certs | default(false) }}'
+
+# - name: Create Online Assurance Group (with APIC Configuration Export Polciy)
+#   cisco.nae.nae_ag:
+#     <<: *nae_info
+#     state: present
+#     name: ansible_nae_ap
+#     online: True
+#     apic_hostnames: 173.36.219.68
+#     apic_username: ansible_github_ci
+#     apic_password: jZqwpB*r9&5mx3mn8e5
+#     export_apic_policy: True
+
+- name: Query Online Assurance Group (with APIC Configuration Export Polciy)
+  cisco.nae.nae_ag:
+    <<: *nae_info
+    state: query
+    name: Test
+
+# - name: Create offline ag
+#   cisco.nae.nae_ag:
+#     <<: *nae_info
+#     name: ansible_nae_ag
+#     state: present
+
+# - name: Delete ag
+#   cisco.nae.nae_ag:
+#     <<: *nae_info
+#     state: absent
+#     name: ansible_nae_ag
+
+- name: View all assurance groups
+  cisco.nae.nae_ag:
+    <<: *nae_info
+    state: query
