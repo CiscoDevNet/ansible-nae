@@ -20,11 +20,11 @@
 #   cisco.nae.nae_ag:
 #     <<: *nae_info
 #     state: present
-#     name: ansible_nae_ap
+#     name: ansible_nae_ap_online
 #     online: True
-#     apic_hostnames: 173.36.219.68
-#     apic_username: ansible_github_ci
-#     apic_password: jZqwpB*r9&5mx3mn8e5
+#     apic_hostnames: '{{ apic_hostname }}'
+#     apic_username: '{{ apic_username }}'
+#     apic_password: '{{ apic_password }}'
 #     export_apic_policy: True
 
 - name: Query Online Assurance Group (with APIC Configuration Export Polciy)
@@ -36,14 +36,14 @@
 # - name: Create offline ag
 #   cisco.nae.nae_ag:
 #     <<: *nae_info
-#     name: ansible_nae_ag
+#     name: ansible_nae_ag_offline
 #     state: present
 
 # - name: Delete ag
 #   cisco.nae.nae_ag:
 #     <<: *nae_info
 #     state: absent
-#     name: ansible_nae_ag
+#     name: ansible_nae_ag_online
 
 - name: View all assurance groups
   cisco.nae.nae_ag:
