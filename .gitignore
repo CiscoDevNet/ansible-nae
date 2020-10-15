@@ -389,5 +389,8 @@ $RECYCLE.BIN/
 # vsCode
 .vscode
 
+# vim
+.vim
+
 # Ansible Collection tarball
 cisco-nae-*.tar.gz
