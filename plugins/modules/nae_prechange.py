@@ -22,7 +22,7 @@ module: nae_prechange
 short_description: Manage pre-change analyses.
 description:
 - Manage Pre-Change Analyses on Cisco NAE fabrics.
-version_added: '2.4'
+version_added: '0.0.2'
 options:
   ag_name:
     description:
@@ -64,8 +64,7 @@ author:
 - Shantanu Kulkarni (@shan_kulk)
 '''
 
-EXAMPLES = \
-    r'''
+EXAMPLES = r'''
 - name: Add a pre-change analysis from manual changes
   nae_prechange:
     host: nae
@@ -73,12 +72,11 @@ EXAMPLES = \
     username: Admin
     password: C@ndidadmin1234
     ag_name: FAB2
-    name: NewTenantAnalysis
     changes: {"tenant_change": {"action": "ADD","dn": "uni/tn-newTenant","description": "Adding a new Tenant"}}
     name: NewAnalysis
     state: present
-delegate_to: localhost
-- name: Delete a pre-change analysis
+  delegate_to: localhost
+- name: Delete a pre_change analysis
   nae_prechange:
     host: nae
     port: 8080
@@ -87,7 +85,7 @@ delegate_to: localhost
     ag_name: FAB2
     name: NewAnalysis
     state: absent
-delegate_to: localhost
+  delegate_to: localhost
 - name: Add a new pre-change analysis from file
   nae_prechange:
     host: nae
@@ -99,7 +97,7 @@ delegate_to: localhost
     name: NewAnalysis
     description: New Analysis
     state: present
-delegate_to: localhost
+  delegate_to: localhost
 - name: Query a pre-change analysis
   nae_prechange:
     host: nae
@@ -139,7 +137,6 @@ resp:
     type: str
     returned: always
 '''
-
 
 
 def main():

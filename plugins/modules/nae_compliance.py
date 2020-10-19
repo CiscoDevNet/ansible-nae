@@ -22,7 +22,7 @@ module: nae_compliance
 short_description: Manage compliance objects.
 description:
 - Manage compliance objects  on Cisco NAE fabrics.
-version_added: '2.4'
+version_added: '0.0.2'
 options:
   form:
     description:
@@ -92,6 +92,7 @@ resp:
     returned: always
 '''
 
+
 def main():
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
     result = dict(changed=False, resp='')
@@ -99,18 +100,18 @@ def main():
     argument_spec.update(  # Not required for querying all objects
         name=dict(type='str', aliases=['name']),
         description=dict(type='str'),
-        selector=dict(type='str',default='object', choices=['object','traffic','requirement','requirement_set']),
+        selector=dict(type='str', default='object', choices=['object', 'traffic', 'requirement', 'requirement_set']),
         validate_certs=dict(type='bool', default=False),
         state=dict(type='str', default='present', choices=['absent',
                                                            'present', 'query', 'modify']),
-        form=dict(type='str',default=""),
-        ag_name=dict(type='str',default="")
+        form=dict(type='str', default=""),
+        ag_name=dict(type='str', default="")
     )
 
     module = AnsibleModule(argument_spec=argument_spec,
                            supports_check_mode=True,
                            required_if=[['state', 'absent', ['name']],
-                                        ['selector', 'requirement_set', ['ag_name']],    
+                                        ['selector', 'requirement_set', ['ag_name']],
                                         ])
     selector = module.params.get('selector')
     ag_name = module.params.get('ag_name')
@@ -162,7 +163,7 @@ def main():
         nae.delete_requirement_set()
         result['changed'] = True
         module.exit_json(**nae.result)
-    module.fail_json(msg='Incorrect params passed', **self.result)
+    module.fail_json(msg='Incorrect params passed', **nae.result)
 
 
 if __name__ == '__main__':

@@ -21,7 +21,7 @@ module: nae_offline_analysis
 short_description: NAE offline analysis.
 description:
 - Upload file to NAE.
-version_added: '2.4'
+version_added: '0.0.2'
 options:
   name:
     description:
@@ -74,7 +74,7 @@ EXAMPLES = \
     username: Admin
     password: 1234
     state: absent
-    name: OfflineAnalysis_1 
+    name: OfflineAnalysis_1
 '''
 
 RETURN = \
@@ -96,7 +96,7 @@ def main():
         ag_name=dict(type='str', aliases=['assurance_group_name']),
         complete=dict(type='bool', default=False),
         state=dict(type='str', default='present', choices=['absent',
-                                                           'present', 'query','complete']),
+                                                           'present', 'query', 'complete']),
         validate_certs=dict(type='bool', default=False)
     )
 
@@ -120,15 +120,15 @@ def main():
     elif state == 'absent':
         nae.deleteOfflineAnalysis()
         module.exit_json(**nae.result)
-    elif state == 'query' and name :
+    elif state == 'query' and name:
         nae.result['Result'] = nae.get_OfflineAnalysis(name)
         module.exit_json(**nae.result)
     elif state == 'query':
         nae.get_all_OfflineAnalysis()
         nae.result['Result'] = nae.offlineAnalysis
         module.exit_json(**nae.result)
-  
-    module.fail_json(msg='Incorrect params passed', **self.result)
+
+    module.fail_json(msg='Incorrect params passed', **nae.result)
 
 
 if __name__ == '__main__':

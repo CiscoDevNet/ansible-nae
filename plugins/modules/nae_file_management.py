@@ -21,7 +21,7 @@ module: nae_file_management
 short_description: NAE file upload.
 description:
 - Upload file to NAE.
-version_added: '2.4'
+version_added: '0.0.2'
 options:
   name:
     description:
@@ -73,7 +73,7 @@ EXAMPLES = \
     username: Admin
     password: 1234
     state: absent
-    name: config1 
+    name: config1
 '''
 
 RETURN = \
@@ -119,8 +119,8 @@ def main():
         nae.get_all_files()
         nae.result['Result'] = nae.files
         module.exit_json(**nae.result)
-  
-    module.fail_json(msg='Incorrect params passed', **self.result)
+
+    module.fail_json(msg='Incorrect params passed', **nae.result)
 
 
 if __name__ == '__main__':

@@ -53,6 +53,7 @@ from ansible.module_utils._text import to_bytes, to_native
 from jsonpath_ng import jsonpath, parse
 import requests
 
+
 def nae_argument_spec():
     return dict(
         host=dict(type='str', required=True, aliases=['hostname']),
@@ -88,10 +89,10 @@ class NAEModule(object):
     def __del__(self):
         url = 'https://%(host)s:%(port)s/nae/api/v1/logout' % self.params
         resp, auth = fetch_url(self.module, url,
-                        headers=self.http_headers,
-                        data=None,
-                        method='POST')
-        #self.module.fail_json(msg="LOGOUG", **self.result)
+                               headers=self.http_headers,
+                               data=None,
+                               method='POST')
+        # self.module.fail_json(msg="LOGOUG", **self.result)
 
     def login(self):
         url = 'https://%(host)s:%(port)s/nae/api/v1/whoami' % self.params
@@ -204,7 +205,7 @@ class NAEModule(object):
 
     def deleteAG(self):
         ag = self.get_assurance_group(self.params.get('name'))
-        if ag == None:
+        if ag is None:
             self.result['Result'] = "No such Assurance Group exists"
         else:
             self.params['uuid'] = str(
@@ -212,9 +213,9 @@ class NAEModule(object):
                     self.params.get('name'))['uuid'])
             url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/assurance-group/fabric/%(uuid)s' % self.params
             resp, auth = fetch_url(self.module, url,
-                                headers=self.http_headers,
-                                data=None,
-                                method='DELETE')
+                                   headers=self.http_headers,
+                                   data=None,
+                                   method='DELETE')
             if auth.get('status') != 200:
                 if('filename' in self.params):
                     self.params['file'] = self.params['filename']
@@ -273,7 +274,7 @@ class NAEModule(object):
             self.status = auth.get('status')
             try:
                 self.module.fail_json(
-                    msg=str(self.response['messages'][0]['message']) , **self.result)
+                    msg=str(self.response['messages'][0]['message']), **self.result)
             except KeyError:
                 # Connection error
                 self.fail_json(
@@ -285,7 +286,7 @@ class NAEModule(object):
         self.get_all_assurance_groups()
         self.params['ag'] = [ag for ag in self.assuranceGroups if ag['unique_name'] == self.params.get('name')]
         if self.params['ag']:
-            self.module.exit_json(msg="WARNING: An assurance group with the same name already exisit!!!",**self.result)
+            self.module.exit_json(msg="WARNING: An assurance group with the same name already exisit!!!", **self.result)
         # This method creates a new Offline Assurance Group, you only need to
         # pass the AG Name.
 
@@ -320,7 +321,7 @@ class NAEModule(object):
             self.status = auth.get('status')
             try:
                 self.module.fail_json(
-                    msg=str(self.response['messages'][0]['message']) , **self.result)
+                    msg=str(self.response['messages'][0]['message']), **self.result)
             except KeyError:
                 # Connection error
                 self.fail_json(
@@ -443,7 +444,12 @@ class NAEModule(object):
                     msg='Pre-Change Job has not yet completed.', **self.result)
         self.params['epoch_delta_job_id'] = str(
             self.get_pre_change_analysis()['epoch_delta_job_id'])
-        url = 'https://%(host)s:%(port)s/nae/api/v1/epoch-delta-services/assured-networks/%(fabric_id)s/job/%(epoch_delta_job_id)s/health/view/aggregate-table?category=ADC,CHANGE_ANALYSIS,TENANT_ENDPOINT,TENANT_FORWARDING,TENANT_SECURITY,RESOURCE_UTILIZATION,SYSTEM,COMPLIANCE&epoch_status=EPOCH2_ONLY&severity=EVENT_SEVERITY_CRITICAL,EVENT_SEVERITY_MAJOR,EVENT_SEVERITY_MINOR,EVENT_SEVERITY_WARNING,EVENT_SEVERITY_INFO' % self.params
+        url = 'https://%(host)s:%(port)s/nae/api/v1/epoch-delta-services/' \
+              'assured-networks/%(fabric_id)s/job/%(epoch_delta_job_id)s/' \
+              'health/view/aggregate-table?category=ADC,CHANGE_ANALYSIS,' \
+              'TENANT_ENDPOINT,TENANT_FORWARDING,TENANT_SECURITY,RESOURCE_UTILIZATION,' \
+              'SYSTEM,COMPLIANCE&epoch_status=EPOCH2_ONLY&severity=EVENT_SEVERITY_CRITICAL,' \
+              'EVENT_SEVERITY_MAJOR,EVENT_SEVERITY_MINOR,EVENT_SEVERITY_WARNING,EVENT_SEVERITY_INFO' % self.params
         resp, auth = fetch_url(self.module, url,
                                headers=self.http_headers,
                                data=None,
@@ -491,7 +497,13 @@ class NAEModule(object):
                 msg='Delta analysis has not yet completed.', **self.result)
         self.params['uuid'] = str(
             self.get_delta_analysis()['uuid'])
-        url = 'https://%(host)s:%(port)s/nae/api/v1/epoch-delta-services/assured-networks/%(fabric_id)s/job/%(uuid)s/health/view/aggregate-table?category=ADC,CHANGE_ANALYSIS,TENANT_ENDPOINT,TENANT_FORWARDING,TENANT_SECURITY,RESOURCE_UTILIZATION,SYSTEM,COMPLIANCE&epoch_status=EPOCH2_ONLY&severity=EVENT_SEVERITY_CRITICAL,EVENT_SEVERITY_MAJOR,EVENT_SEVERITY_MINOR,EVENT_SEVERITY_WARNING,EVENT_SEVERITY_INFO' % self.params
+        url = 'https://%(host)s:%(port)s/nae/api/v1/epoch-delta-services' \
+              '/assured-networks/%(fabric_id)s/job/%(uuid)s/health/view'\
+              '/aggregate-table?category=ADC,CHANGE_ANALYSIS,TENANT_ENDPOINT,'\
+              'TENANT_FORWARDING,TENANT_SECURITY,RESOURCE_UTILIZATION,SYSTEM,'\
+              'COMPLIANCE&epoch_status=EPOCH2_ONLY&severity=EVENT_SEVERITY_CRITICAL,'\
+              'EVENT_SEVERITY_MAJOR,EVENT_SEVERITY_MINOR,EVENT_SEVERITY_WARNING,'\
+              'EVENT_SEVERITY_INFO' % self.params
         resp, auth = fetch_url(self.module, url,
                                headers=self.http_headers,
                                data=None,
@@ -545,7 +557,7 @@ class NAEModule(object):
                                     "changes": ''' + self.params.get('changes') + ''',
                                     "stop_analysis": false,
                                     "change_type": "CHANGE_LIST"
-                                    }'''                            # The content type of the file
+                                    }'''                           # The content type of the file
                   , 'application/json'))
             }
             url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis' % self.params
@@ -1008,7 +1020,9 @@ class NAEModule(object):
 
     def new_object_selector(self):
         self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
-        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/object-selectors' % self.params
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/'\
+              'assured-networks/%(fabric_uuid)s/model/aci-policy/'\
+              'compliance-requirement/object-selectors' % self.params
         resp, auth = fetch_url(self.module, url,
                                data=self.params['form'],
                                headers=self.http_headers,
@@ -1034,7 +1048,9 @@ class NAEModule(object):
 
     def new_traffic_selector(self):
         self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
-        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/traffic-selectors' % self.params
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
+              'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
+              'compliance-requirement/traffic-selectors' % self.params
         resp, auth = fetch_url(self.module, url,
                                data=self.params['form'],
                                headers=self.http_headers,
@@ -1060,7 +1076,8 @@ class NAEModule(object):
 
     def new_compliance_requirement(self):
         self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
-        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirements' % self.params
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks' \
+              '/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirements' % self.params
         resp, auth = fetch_url(self.module, url,
                                data=self.params['form'],
                                headers=self.http_headers,
@@ -1092,7 +1109,9 @@ class NAEModule(object):
         d['assurance_groups'] = assurance_groups_lists
         self.params['form'] = json.dumps(d)
         self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
-        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirement-sets' % self.params
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
+              'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
+              'compliance-requirement/requirement-sets' % self.params
         resp, auth = fetch_url(self.module, url,
                                data=self.params['form'],
                                headers=self.http_headers,
@@ -1117,7 +1136,9 @@ class NAEModule(object):
 
     def get_all_requirement_sets(self):
         self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
-        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirement-sets' % self.params
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
+              'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
+              'compliance-requirement/requirement-sets' % self.params
         resp, auth = fetch_url(self.module, url,
                                headers=self.http_headers,
                                method='GET')
@@ -1143,7 +1164,9 @@ class NAEModule(object):
 
     def get_all_requirements(self):
         self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
-        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirements' % self.params
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
+              'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
+              'compliance-requirement/requirements' % self.params
         resp, auth = fetch_url(self.module, url,
                                headers=self.http_headers,
                                method='GET')
@@ -1169,7 +1192,9 @@ class NAEModule(object):
 
     def get_all_traffic_selectors(self):
         self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
-        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/traffic-selectors' % self.params
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
+              'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
+              'compliance-requirement/traffic-selectors' % self.params
         resp, auth = fetch_url(self.module, url,
                                headers=self.http_headers,
                                method='GET')
@@ -1195,7 +1220,9 @@ class NAEModule(object):
 
     def get_all_object_selectors(self):
         self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
-        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/object-selectors' % self.params
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
+              'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
+              'compliance-requirement/object-selectors' % self.params
         resp, auth = fetch_url(self.module, url,
                                headers=self.http_headers,
                                method='GET')
@@ -1237,7 +1264,9 @@ class NAEModule(object):
         self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
         self.params['obj_uuid'] = self.get_compliance_object(
             self.params.get('name'))["uuid"]
-        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/object-selectors/%(obj_uuid)s' % self.params
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
+              'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
+              'compliance-requirement/object-selectors/%(obj_uuid)s' % self.params
         resp, auth = fetch_url(self.module, url,
                                headers=self.http_headers,
                                method='DELETE')
@@ -1261,7 +1290,9 @@ class NAEModule(object):
         self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
         self.params['obj_uuid'] = self.get_compliance_object(
             self.params.get('name'))["uuid"]
-        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/traffic-selectors/%(obj_uuid)s' % self.params
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
+              'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
+              'compliance-requirement/traffic-selectors/%(obj_uuid)s' % self.params
         resp, auth = fetch_url(self.module, url,
                                headers=self.http_headers,
                                method='DELETE')
@@ -1285,7 +1316,9 @@ class NAEModule(object):
         self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
         self.params['obj_uuid'] = self.get_compliance_object(
             self.params.get('name'))["uuid"]
-        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirements/%(obj_uuid)s' % self.params
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
+              'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
+              'compliance-requirement/requirements/%(obj_uuid)s' % self.params
         resp, auth = fetch_url(self.module, url,
                                headers=self.http_headers,
                                method='DELETE')
@@ -1309,7 +1342,9 @@ class NAEModule(object):
         self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
         self.params['obj_uuid'] = self.get_compliance_object(
             self.params.get('name'))["uuid"]
-        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirement_set/%(obj_uuid)s' % self.params
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
+              'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
+              'compliance-requirement/requirement_set/%(obj_uuid)s' % self.params
         resp, auth = fetch_url(self.module, url,
                                headers=self.http_headers,
                                method='DELETE')
@@ -1337,7 +1372,7 @@ class NAEModule(object):
         for page in self.get_all_files():
             self.params['file_id'] = [f for f in page if f['unique_name'] == self.params.get('name')]
         if self.params['file_id']:
-            self.module.exit_json(msg="WARNING: file with the same name already exisit!!!",**self.result)
+            self.module.exit_json(msg="WARNING: file with the same name already exisit!!!", **self.result)
 
         self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
         file_upload_uuid = None
@@ -1435,8 +1470,9 @@ class NAEModule(object):
                     args = {"files": files}
                     chunk_headers = self.http_headers.copy()
                     chunk_headers.pop("Content-Type", None)
-                    # Ansible preders us to use fetch_url but does not support binary file uploads so reverting back to requests seems the only thing not working. 
-                    response = requests.post(chunk_uri, data = None, files=args['files'], headers=chunk_headers, verify=False)
+                    # Ansible preders us to use fetch_url but does not support binary file uploads
+                    # so reverting back to requests seems the only thing not working.
+                    response = requests.post(chunk_uri, data=None, files=args['files'], headers=chunk_headers, verify=False)
                     chunk_id += 1
                     if response and response.status_code != 201:
                         self.module.fail_json(
@@ -1537,7 +1573,10 @@ class NAEModule(object):
         # As long as there is more data get it
         while has_more_data:
             # I get data sorter by tcam hists for hitcount-by-rules --> hitcount-by-epgpair-contract-filter
-            url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_id)s/model/aci-policy/tcam/hitcount-by-rules/hitcount-by-epgpair-contract-filter?$epoch_id=%(latest_epoch)s&$page=%(page)s&$sort=-cumulative_count&$view=histogram' % self.params
+            url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
+                  'assured-networks/%(fabric_id)s/model/aci-policy/tcam/' \
+                  'hitcount-by-rules/hitcount-by-epgpair-contract-filter' \
+                  '?$epoch_id=%(latest_epoch)s&$page=%(page)s&$sort=-cumulative_count&$view=histogram' % self.params
             resp, auth = fetch_url(
                 self.module, url, headers=self.http_headers, method='GET')
             if auth.get('status') != 200:
@@ -1609,7 +1648,7 @@ class NAEModule(object):
             self.fabric_uuid = self.get_assurance_group(
                 self.params.get('ag_name'))
 
-            if ag == None:
+            if ag is None:
                 self.module.fail_json(
                     msg="Assurance group does not exist", **self.result)
 
@@ -1642,7 +1681,8 @@ class NAEModule(object):
         self.params['fabric_id'] = str(
             self.get_assurance_group(
                 self.params.get('ag_name'))['uuid'])
-        url = 'https://%(host)s/nae/api/v1/job-services?$page=0&$size=100&$sort=status&$type=EPOCH_DELTA_ANALYSIS&assurance_group_id=%(fabric_id)s' % self.params
+        url = 'https://%(host)s/nae/api/v1/job-services?$page=0&$size=' \
+              '100&$sort=status&$type=EPOCH_DELTA_ANALYSIS&assurance_group_id=%(fabric_id)s' % self.params
         resp, auth = fetch_url(self.module, url, data=None,
                                headers=self.http_headers, method='GET')
         return json.loads(resp.read())['value']['data']
@@ -1704,9 +1744,9 @@ class NAEModule(object):
         while has_more_data:
             url = 'https://%(host)s:%(port)s/nae/api/v1/file-services/upload-file' % self.params
             resp, auth = fetch_url(self.module, url,
-                                headers=self.http_headers,
-                                data=None,
-                                method='GET')
+                                   headers=self.http_headers,
+                                   data=None,
+                                   method='GET')
 
             if auth.get('status') != 200:
                 if('filename' in self.params):
@@ -1726,8 +1766,8 @@ class NAEModule(object):
                 has_more_data = json.loads(r)['value']['data_summary']['has_more_data']
                 self.files.append(json.loads(r)['value']['data'])
             return self.files
-   
-    def delete_file(self):  
+
+    def delete_file(self):
         try:
             for page in self.get_all_files():
                 self.params['file_id'] = [f for f in page if f['unique_name'] == self.params.get('name')][0]['uuid']
@@ -1743,43 +1783,43 @@ class NAEModule(object):
         else:
             fail = "File  deleted failed " + auth.get('msg')
             self.module.fail_json(msg=fail, **self.result)
-   
+
     def newOfflineAnalysis(self):
         if self.isOnDemandAnalysis() or self.isLiveAnalysis():
-            self.module.fail_json(msg="There is currently an  analysis running.",**self.result)
-        
+            self.module.fail_json(msg="There is currently an  analysis running.", **self.result)
+
         if self.get_OfflineAnalysis(self.params.get('name')):
-            self.result['Result']=  'Offline Analysis %(name)s elready exists ' % self.params
-        else:    
+            self.result['Result'] = 'Offline Analysis %(name)s elready exists ' % self.params
+        else:
             self.get_all_files()
             for uploadedFile in self.files:
                 fileID = [f for f in uploadedFile if f['unique_name'] == self.params.get('filename')]
                 if not fileID:
-                    self.module.fail_json(msg="File %(filename)s not found" % self.params ,**self.result) 
+                    self.module.fail_json(msg="File %(filename)s not found" % self.params, **self.result)
             fileID = fileID[0]['uuid']
             fabricID = self.get_assurance_group(self.params.get('ag_name'))
             if not fabricID:
-                self.module.fail_json(msg="Assurace Group %(name)s not found" % self.params ,**self.result) 
+                self.module.fail_json(msg="Assurace Group %(name)s not found" % self.params, **self.result)
             fabricID = self.get_assurance_group(self.params.get('ag_name'))["uuid"]
             form = '''{
             "unique_name": "''' + self.params.get('name') + '''",
-            "file_upload_uuid": "''' + fileID +'''",
+            "file_upload_uuid": "''' + fileID + '''",
             "aci_fabric_uuid": "''' + fabricID + '''",
             "analysis_timeout_in_secs": 3600
             }'''
-            if '4.1' in self.version or '5.0' in  self.version or '5.1' in self.version:
-                #in 4.1 starting an offline analysis is composed of 2 steps
+            if '4.1' in self.version or '5.0' in self.version or '5.1' in self.version:
+                # in 4.1 starting an offline analysis is composed of 2 steps
                 # 1 Create the Offline analysis
-                url ='https://%(host)s/nae/api/v1/config-services/offline-analysis' % self.params
+                url = 'https://%(host)s/nae/api/v1/config-services/offline-analysis' % self.params
 
                 resp, auth = fetch_url(self.module, url, data=form,
-                            headers=self.http_headers, method='POST')
-            
+                                       headers=self.http_headers, method='POST')
+
                 if auth.get('status') == 202:
-                    #Get the analysis UUID:
+                    # Get the analysis UUID:
                     analysis_id = json.loads(resp.read())['value']['data']['uuid']
 
-                    url ='https://%(host)s/nae/api/v1/config-services/analysis' % self.params
+                    url = 'https://%(host)s/nae/api/v1/config-services/analysis' % self.params
 
                     form = '''{
                     "interval": 300,
@@ -1797,9 +1837,9 @@ class NAEModule(object):
                     "iterations": 1
                     }'''
                     resp, auth = fetch_url(self.module, url, data=form,
-                                headers=self.http_headers, method='POST')
-                    if auth.get('status') == 202 or auth.get('status') == 200 :
-                        self.result['Result']=  'Offline Analysis %(name)s successfully created' % self.params
+                                           headers=self.http_headers, method='POST')
+                    if auth.get('status') == 202 or auth.get('status') == 200:
+                        self.result['Result'] = 'Offline Analysis %(name)s successfully created' % self.params
                         if self.params['complete']:
                             status = None
                             while status != "ANALYSIS_COMPLETED":
@@ -1817,9 +1857,9 @@ class NAEModule(object):
         while has_more_data:
             url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/offline-analysis' % self.params
             resp, auth = fetch_url(self.module, url,
-                                headers=self.http_headers,
-                                data=None,
-                                method='GET')
+                                   headers=self.http_headers,
+                                   data=None,
+                                   method='GET')
 
             if auth.get('status') != 200:
                 if('filename' in self.params):
@@ -1835,33 +1875,33 @@ class NAEModule(object):
                 has_more_data = json.loads(r.decode())['value']['data_summary']['has_more_data']
                 self.offlineAnalysis.append(json.loads(r.decode())['value']['data'])
             else:
-                r= resp.read()
+                r = resp.read()
                 has_more_data = json.loads(r)['value']['data_summary']['has_more_data']
                 self.offlineAnalysis.append(json.loads(r)['value']['data'])
             return self.offlineAnalysis
 
     def get_OfflineAnalysis(self, name):
         self.get_all_OfflineAnalysis()
-        #To support multipl pages of returned data 
+        # To support multipl pages of returned data
         for pages in self.offlineAnalysis:
             for oa in pages:
                 if oa['unique_name'] == name:
                     return oa
         return None
-    
-    def deleteOfflineAnalysis(self):  
-            try:
-                for page in self.get_all_OfflineAnalysis():
-                    self.params['OfflineAnalysisId'] = [f for f in page if f['unique_name'] == self.params.get('name')][0]['uuid']
 
-            except IndexError:
-                fail = "Offline Analysis %(name)s does not exist on." % self.params
-                self.module.fail_json(msg=fail, **self.result)
-            url = 'https://%(host)s/nae/api/v1/config-services/offline-analysis/%(OfflineAnalysisId)s' % self.params
-            resp, auth = fetch_url(self.module, url, data=None,
-                                headers=self.http_headers, method='DELETE')
-            if 'OK' in auth.get('msg'):
-                self.result['Result'] = 'Offline Analysis %(name)s successfully deleted' % self.params
-            else:
-                fail = "File  deleted failed " + auth.get('msg')
-                self.module.fail_json(msg=fail, **self.result)
+    def deleteOfflineAnalysis(self):
+        try:
+            for page in self.get_all_OfflineAnalysis():
+                self.params['OfflineAnalysisId'] = [f for f in page if f['unique_name'] == self.params.get('name')][0]['uuid']
+
+        except IndexError:
+            fail = "Offline Analysis %(name)s does not exist on." % self.params
+            self.module.fail_json(msg=fail, **self.result)
+        url = 'https://%(host)s/nae/api/v1/config-services/offline-analysis/%(OfflineAnalysisId)s' % self.params
+        resp, auth = fetch_url(self.module, url, data=None,
+                               headers=self.http_headers, method='DELETE')
+        if 'OK' in auth.get('msg'):
+            self.result['Result'] = 'Offline Analysis %(name)s successfully deleted' % self.params
+        else:
+            fail = "File  deleted failed " + auth.get('msg')
+            self.module.fail_json(msg=fail, **self.result)
