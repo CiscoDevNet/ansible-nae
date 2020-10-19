@@ -116,7 +116,7 @@ def main():
     result = dict(changed=False, resp='')
     argument_spec = nae_argument_spec()
     argument_spec.update(  # Not required for querying all objects
-        name=dict(type='str', aliases=['name']),
+        name=dict(type='str', aliases=['fab_name']),
         description=dict(type='str'),
         apic_hostnames=dict(type='str', default=""),
         apic_username=dict(type='str', default=""),
