@@ -22,7 +22,7 @@ module: nae_delta
 short_description: Delta analysis on Cisco NAE fabrics.
 description:
 - Manage Delta analyses on Cisco NAE fabrics.
-version_added: '2.4'
+version_added: '0.0.2'
 options:
   ag_name:
     description:

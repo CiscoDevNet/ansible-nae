@@ -22,7 +22,7 @@ module: nae_tcam
 short_description: Export tcam stats as csv.
 description:
 - Manage compliance objects  on Cisco NAE fabrics.
-version_added: '2.4'
+version_added: '0.0.2'
 options:
   ag_name:
     description:
@@ -41,13 +41,14 @@ author:
 EXAMPLES = \
     r'''
 - name: Get tcam results
-  nae_tcam:
+  cisco.nae.nae_tcam:
     host: nae
     port: 8080
     username: Admin
     password: 1234
     ag_name: fab1
 - name: Get tcam results and write to local csv file
+  cisco.nae.nae_tcam:
     host: nae
     port: 8080
     username: Admin

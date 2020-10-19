@@ -1,4 +1,3 @@
-
 ---
 # Testing first NAE Ansible Module!!
 # Note: This playbook is only to illustrate all module functionality. Running both add from change list and add from file 
