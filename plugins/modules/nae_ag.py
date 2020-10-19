@@ -120,7 +120,7 @@ def main():
         description=dict(type='str'),
         apic_hostnames=dict(type='str', default=""),
         apic_username=dict(type='str', default=""),
-        apic_password=dict(type='str', default=""),
+        apic_password=dict(type='str', default="", no_log=True),
         online=dict(type='bool', default=False),
         validate_certs=dict(type='bool', default=False),
         state=dict(type='str', default='present', choices=['absent',
