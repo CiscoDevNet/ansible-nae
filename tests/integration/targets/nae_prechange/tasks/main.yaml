@@ -15,5 +15,5 @@
 - name: Verify query 
   assert:
     that:
-    - query_result is false
+    - query_result.msg == "No such Assurance Group exists on this fabric."
 ...
