@@ -92,7 +92,6 @@ class NAEModule(object):
                                headers=self.http_headers,
                                data=None,
                                method='POST')
-        # self.module.fail_json(msg="LOGOUG", **self.result)
 
     def login(self):
         url = 'https://%(host)s:%(port)s/nae/api/v1/whoami' % self.params
@@ -1470,7 +1469,7 @@ class NAEModule(object):
                     args = {"files": files}
                     chunk_headers = self.http_headers.copy()
                     chunk_headers.pop("Content-Type", None)
-                    # Ansible preders us to use fetch_url but does not support binary file uploads
+                    # Ansible prefers us to use fetch_url but does not support binary file uploads
                     # so reverting back to requests seems the only thing not working.
                     response = requests.post(chunk_uri, data=None, files=args['files'], headers=chunk_headers, verify=False)
                     chunk_id += 1
@@ -1882,7 +1881,7 @@ class NAEModule(object):
 
     def get_OfflineAnalysis(self, name):
         self.get_all_OfflineAnalysis()
-        # To support multipl pages of returned data
+        # To support multiple pages of returned data
         for pages in self.offlineAnalysis:
             for oa in pages:
                 if oa['unique_name'] == name:
