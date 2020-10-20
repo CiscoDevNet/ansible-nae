@@ -5,10 +5,6 @@
 # https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
-from ansible_collections.cisco.nae.plugins.module_utils.nae import NAEModule, nae_argument_spec
-from ansible.module_utils.basic import AnsibleModule
-import requests
 __metaclass__ = type
 
 
@@ -137,6 +133,11 @@ resp:
     type: str
     returned: always
 '''
+
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+from ansible_collections.cisco.nae.plugins.module_utils.nae import NAEModule, nae_argument_spec
+from ansible.module_utils.basic import AnsibleModule
+import requests
 
 
 def main():

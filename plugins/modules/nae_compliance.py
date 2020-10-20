@@ -5,10 +5,6 @@
 # https://www.gnu.org/licenses/gpl-3.0.txt)
 
 from __future__ import absolute_import, division, print_function
-from requests.packages.urllib3.exceptions import InsecureRequestWarning
-from ansible_collections.cisco.nae.plugins.module_utils.nae import NAEModule, nae_argument_spec
-from ansible.module_utils.basic import AnsibleModule
-import requests
 __metaclass__ = type
 
 
@@ -53,34 +49,34 @@ EXAMPLES = \
     state: present
     form: |
       {
-    "name": "DataBase",
-    "description": null,
-    "includes": [
-      {
-        "matches": [
+        "name":"DataBase",
+        "description":null,
+        "includes":[
           {
-            "application_epgmatch": {
-              "object_attribute": "DN",
-              "tenant": {
-                "pattern": "NAE_Compliance",
-                "type": "EXACT"
-              },
-              "application_profile": {
-                "pattern": "ComplianceIsGood",
-                "type": "EXACT"
-              },
-              "application_epg": {
-                "pattern": "DataBase",
-                "type": "EXACT"
+            "matches":[
+              {
+                "application_epgmatch":{
+                  "object_attribute":"DN",
+                  "tenant":{
+                    "pattern":"NAE_Compliance",
+                    "type":"EXACT"
+                  },
+                  "application_profile":{
+                    "pattern":"ComplianceIsGood",
+                    "type":"EXACT"
+                  },
+                  "application_epg":{
+                    "pattern":"DataBase",
+                    "type":"EXACT"
+                  }
+                }
               }
-            }
+            ]
           }
-        ]
+        ],
+        "excludes":[],
+        "selector_type":"OST_EPG"
       }
-    ],
-    "excludes": [],
-    "selector_type": "OST_EPG"
-  }
 
 '''
 
@@ -91,6 +87,11 @@ resp:
     type: str
     returned: always
 '''
+
+from requests.packages.urllib3.exceptions import InsecureRequestWarning
+from ansible_collections.cisco.nae.plugins.module_utils.nae import NAEModule, nae_argument_spec
+from ansible.module_utils.basic import AnsibleModule
+import requests
 
 
 def main():
