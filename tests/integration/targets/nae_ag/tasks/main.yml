@@ -16,36 +16,122 @@
       password: '{{ nae_password }}'
       validate_certs: '{{ nae_validate_certs | default(false) }}'
 
-# - name: Create Online Assurance Group (with APIC Configuration Export Polciy)
-#   cisco.nae.nae_ag:
-#     <<: *nae_info
-#     state: present
-#     name: ansible_nae_ap_online
-#     online: True
-#     apic_hostnames: '{{ apic_hostname }}'
-#     apic_username: '{{ apic_username }}'
-#     apic_password: '{{ apic_password }}'
-#     export_apic_policy: True
+- name: Delete ag
+  cisco.nae.nae_ag:
+    <<: *nae_info
+    state: absent
+    name: "{{ item }}"
+  loop:
+    - ansible_ap_online
+    - ansible_ag_offline
 
-- name: Query Online Assurance Group (with APIC Configuration Export Polciy)
+- name: Create online assurance group (with APIC Configuration Export Polciy)
+  cisco.nae.nae_ag:
+    <<: *nae_info
+    state: present
+    name: ansible_ap_online
+    online: True
+    apic_hostnames: '{{ apic_hostname }}'
+    apic_username: '{{ apic_username }}'
+    apic_password: '{{ apic_password }}'
+    export_apic_policy: True
+  register: create_online_ag
+
+- name: Verify create_online_ag
+  assert:
+    that:
+      - create_online_ag is changed
+      - create_online_ag.Result == "Successfully created Assurance Group \"ansible_ap_online\""
+
+- name: Query online assurance group (with APIC Configuration Export Polciy)
   cisco.nae.nae_ag:
     <<: *nae_info
     state: query
-    name: Test
+    name: ansible_ap_online
+  register: query_online_ap
 
-# - name: Create offline ag
-#   cisco.nae.nae_ag:
-#     <<: *nae_info
-#     name: ansible_nae_ag_offline
-#     state: present
+- name: Verify query_online_ap
+  assert:
+    that:
+      - query_online_ap is not changed
+      - query_online_ap.Result.aci_assurance_group_status == "CREATED"
+      - query_online_ap.Result.apic_hostnames == ["173.36.219.25"]
+      - query_online_ap.Result.operational_mode == "ONLINE"
+      - query_online_ap.Result.unique_name == "ansible_ap_online"
 
-# - name: Delete ag
-#   cisco.nae.nae_ag:
-#     <<: *nae_info
-#     state: absent
-#     name: ansible_nae_ag_online
+- name: Create offline ag
+  cisco.nae.nae_ag:
+    <<: *nae_info
+    name: ansible_ag_offline
+    state: present
+  register: create_offline_ag
+
+- name: Verify create_offline_ag
+  assert:
+    that:
+      - create_offline_ag is changed
+      - create_offline_ag.Result == "Successfully created Assurance Group \"ansible_ag_offline\""
+
+- name: Query offline ag
+  cisco.nae.nae_ag:
+    <<: *nae_info
+    state: query
+    name: ansible_ag_offline
+  register: query_offline_ap
+
+- name: Verify query_offline_ap
+  assert:
+    that:
+      - query_offline_ap is not changed
+      - query_offline_ap.Result.aci_assurance_group_status == "CREATED"
+      - query_offline_ap.Result.operational_mode == "OFFLINE"
+      - query_offline_ap.Result.unique_name == "ansible_ag_offline"
 
 - name: View all assurance groups
   cisco.nae.nae_ag:
     <<: *nae_info
     state: query
+  register: query_all
+
+- name: Verify query_all
+  assert:
+    that:
+      - query_all.Result | length >= 2
+
+- name: Delete ag
+  cisco.nae.nae_ag:
+    <<: *nae_info
+    state: absent
+    name: ansible_ap_online
+  register: ap_absent
+
+- name: Verify ap_absent
+  assert:
+    that:
+      - ap_absent is changed
+      - ap_absent.Result == "Assurance Group \"ansible_ap_online\" deleted successfully"
+
+- name: Query deleted ag
+  cisco.nae.nae_ag:
+    <<: *nae_info
+    state: query
+    name: ansible_ap_online
+  register: query_deleted_ag
+
+- name: Verify query_deleted_ag
+  assert:
+    that:
+      - query_deleted_ag is not changed
+      - query_deleted_ag.msg == "No such Assurance Group exists"
+
+- name: Use incorrect parameters
+  cisco.nae.nae_ag:
+    <<: *nae_info
+    state: modify
+  ignore_errors: true
+  register: modify_state
+
+- name: Verify modify_state
+  assert:
+    that:
+      - modify_state.msg == "Incorrect params passed"
