@@ -549,16 +549,15 @@ class NAEModule(object):
 
                   # content to upload
                   '''{
-                                    "name": "''' + self.params.get('name') + '''",
-                                    "fabric_uuid": "''' + self.params.get('fabric_id') + '''",
-                                    "base_epoch_id": "''' + self.params.get('base_epoch_id') + '''",
+                    "name": "''' + self.params.get('name') + '''",
+                    "fabric_uuid": "''' + self.params.get('fabric_id') + '''",
+                    "base_epoch_id": "''' + self.params.get('base_epoch_id') + '''",
 
-                                    "changes": ''' + self.params.get('changes') + ''',
-                                    "stop_analysis": false,
-                                    "change_type": "CHANGE_LIST"
-                                    }'''                           # The content type of the file
-                  , 'application/json'))
-            }
+                    "changes": ''' + self.params.get('changes') + ''',
+                    "stop_analysis": false,
+                    "change_type": "CHANGE_LIST"
+                    }''',                           # The content type of the file
+                  'application/json'))}
             url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis' % self.params
             m = MultipartEncoder(fields=fields)
             h = self.http_headers.copy()
