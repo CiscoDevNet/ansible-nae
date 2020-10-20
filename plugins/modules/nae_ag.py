@@ -107,8 +107,6 @@ from requests.packages.urllib3.exceptions import InsecureRequestWarning
 from ansible_collections.cisco.nae.plugins.module_utils.nae import NAEModule, nae_argument_spec
 from ansible.module_utils.basic import AnsibleModule
 import requests
-# from ansible.module_utils.network.aci.nae import NAEModule, \
-# nae_argument_spec
 
 
 def main():
