@@ -156,15 +156,15 @@ def main():
         module.exit_json(**nae.result)
     elif state == 'absent' and name:
         nae.deleteAG()
-        result['changed'] = True
+        nae.result['changed'] = True
         module.exit_json(**nae.result)
     elif state == 'present' and online:
         nae.newOnlineAG()
-        result['changed'] = True
+        nae.result['changed'] = True
         module.exit_json(**nae.result)
     elif state == 'present' and name:
         nae.newOfflineAG()
-        result['changed'] = True
+        nae.result['changed'] = True
         module.exit_json(**nae.result)
 
     module.fail_json(msg='Incorrect params passed', **nae.result)
