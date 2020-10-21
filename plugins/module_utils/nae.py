@@ -206,6 +206,7 @@ class NAEModule(object):
         ag = self.get_assurance_group(self.params.get('name'))
         if ag is None:
             self.result['Result'] = "No such Assurance Group exists"
+            self.module.fail_json(msg='Assurance group does not exist', **self.result)
         else:
             self.params['uuid'] = str(
                 self.get_assurance_group(
@@ -364,7 +365,7 @@ class NAEModule(object):
                 del x['fabric_uuid']
             if 'base_epoch_id' in x:
                 del x['base_epoch_id']
-            if 'base_epoch_collection_time_rfc3339':
+            if 'base_epoch_collection_time_rfc3339' in x:
                 del x['base_epoch_collection_time_rfc3339']
             if 'pre_change_epoch_uuid' in x:
                 del x['pre_change_epoch_uuid']
@@ -545,19 +546,19 @@ class NAEModule(object):
             f = self.params['file']
             fields = {
                 ('data',
-                 (f,
+                    (f,
+                        # content to upload
+                        '''{
+                        "name": "''' + self.params.get('name') + '''",
+                        "fabric_uuid": "''' + self.params.get('fabric_id') + '''",
+                        "base_epoch_id": "''' + self.params.get('base_epoch_id') + '''",
 
-                  # content to upload
-                  '''{
-                    "name": "''' + self.params.get('name') + '''",
-                    "fabric_uuid": "''' + self.params.get('fabric_id') + '''",
-                    "base_epoch_id": "''' + self.params.get('base_epoch_id') + '''",
-
-                    "changes": ''' + self.params.get('changes') + ''',
-                    "stop_analysis": false,
-                    "change_type": "CHANGE_LIST"
-                    }''',                           # The content type of the file
-                  'application/json'))}
+                        "changes": ''' + self.params.get('changes') + ''',
+                        "stop_analysis": false,
+                        "change_type": "CHANGE_LIST"
+                        }''',                           # The content type of the file
+                        'application/json'))
+            }
             url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis' % self.params
             m = MultipartEncoder(fields=fields)
             h = self.http_headers.copy()
@@ -711,13 +712,15 @@ class NAEModule(object):
                 if depth == 0:
                     if len(buffer.strip()) > 0:
                         j = json.loads(buffer)
-                        assert isinstance(j, list)
+                        if not isinstance(j, list):
+                            raise AssertionError("")
                         items += j
                     buffer = ""
 
                 i += 1
 
-        assert depth == 0
+        if depth != 0:
+            raise AssertionError("Error in loading input json")
         return items
 
     def parse_path(self, dn):
@@ -766,9 +769,11 @@ class NAEModule(object):
 
         for item in item_list:
             for nm, desc in item.items():
-                assert 'attributes' in desc
+                if 'attributes' not in desc:
+                    raise AssertionError("attributes not in desc")
                 attr = desc['attributes']
-                assert 'dn' in attr
+                if 'dn' not in attr:
+                    raise AssertionError("dn not in desc")
                 if 'children' in desc:
                     existing_children = desc['children']
                     self.params['cmap'][attr['dn']] = existing_children
@@ -1392,8 +1397,6 @@ class NAEModule(object):
         except Exception as e:
             self.module.fail_json(msg='Failed to upload file chunks', **self.result)
 
-        return all_files_status
-
     def start_upload(self, uri, upload_type):
         """
         Pass metadata to api and trigger start of upload file.
@@ -1646,7 +1649,7 @@ class NAEModule(object):
             self.fabric_uuid = self.get_assurance_group(
                 self.params.get('ag_name'))
 
-            if ag is None:
+            if self.params.get('fabric_uuid') is None:
                 self.module.fail_json(
                     msg="Assurance group does not exist", **self.result)
 

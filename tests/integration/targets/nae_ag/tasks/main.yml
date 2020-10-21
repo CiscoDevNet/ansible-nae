@@ -21,6 +21,7 @@
     <<: *nae_info
     state: absent
     name: "{{ item }}"
+  ignore_errors: yes
   loop:
     - ansible_ap_online
     - ansible_ag_offline
@@ -135,3 +136,11 @@
   assert:
     that:
       - modify_state.msg == "Incorrect params passed"
+
+- name: Query non_existing ag
+  cisco.nae.nae_ag:
+    <<: *nae_info
+    state: query
+    name: non_existing_ag
+  ignore_errors: true
+  register: query_non_existing_ag
