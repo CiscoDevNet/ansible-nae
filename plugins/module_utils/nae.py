@@ -526,9 +526,14 @@ class NAEModule(object):
         self.send_manual_payload()
 
     def send_manual_payload(self):
-        self.params['fabric_id'] = str(
-            self.get_assurance_group(
-                self.params.get('ag_name'))['uuid'])
+        try:
+            self.params['fabric_id'] = str(
+                self.get_assurance_group(
+                    self.params.get('ag_name'))['uuid'])
+        except Exception:
+                # No AG exists
+                self.module.fail_json(
+                    msg='Assurange group %s does not exists' % self.params.get('ag_name'), **self.result)            
         self.params['base_epoch_id'] = str(self.get_epochs()[0]["epoch_id"])
         if '4.1' in self.version:
             f = self.params['file']
@@ -571,7 +576,7 @@ class NAEModule(object):
 
             self.result['Result'] = "Pre-change analysis %(name)s successfully created." % self.params
 
-        elif '5.0' in self.version:
+        elif '5.0' in self.version or '5.1' in self.version:
             url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/manual-changes?action=RUN' % self.params
             form = '''{
                                     "name": "''' + self.params.get('name') + '''",
@@ -1027,8 +1032,12 @@ class NAEModule(object):
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         else:
+            if resp.headers['Content-Encoding'] == "gzip":
+                r = gzip.decompress(resp.read())
+            else:
+                r = resp.read()
             final_msg = "Object Selector " + \
-                str(json.loads(resp.read())['value']
+                str(json.loads(r)['value']
                     ['data']['name']) + " created"
             self.result['Result'] = final_msg
 
@@ -1138,8 +1147,9 @@ class NAEModule(object):
                 r = gzip.decompress(resp.read())
                 self.result['Result'] = json.loads(r.decode())['value']['data']
                 return json.loads(r.decode())['value']['data']
-            self.result['Result'] = json.loads(resp.read())['value']['data']
-            return json.loads(resp.read())['value']['data']
+            r = resp.read()
+            self.result['Result'] = json.loads(r)['value']['data']
+            return json.loads(r)['value']['data']
 
     def get_all_requirements(self):
         self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
@@ -1164,8 +1174,9 @@ class NAEModule(object):
                 r = gzip.decompress(resp.read())
                 self.result['Result'] = json.loads(r.decode())['value']['data']
                 return json.loads(r.decode())['value']['data']
-            self.result['Result'] = json.loads(resp.read())['value']['data']
-            return json.loads(resp.read())['value']['data']
+            r = resp.read()
+            self.result['Result'] = json.loads(r)['value']['data']
+            return json.loads(r)['value']['data']
 
     def get_all_traffic_selectors(self):
         self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
@@ -1190,8 +1201,9 @@ class NAEModule(object):
                 r = gzip.decompress(resp.read())
                 self.result['Result'] = json.loads(r.decode())['value']['data']
                 return json.loads(r.decode())['value']['data']
-            self.result['Result'] = json.loads(resp.read())['value']['data']
-            return json.loads(resp.read())['value']['data']
+            r = resp.read()
+            self.result['Result'] = json.loads(r)['value']['data']
+            return json.loads(r)['value']['data']
 
     def get_all_object_selectors(self):
         self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
@@ -1216,8 +1228,9 @@ class NAEModule(object):
                 r = gzip.decompress(resp.read())
                 self.result['Result'] = json.loads(r.decode())['value']['data']
                 return json.loads(r.decode())['value']['data']
-            self.result['Result'] = json.loads(resp.read())['value']['data']
-            return json.loads(r.decode())['value']['data']
+            r = resp.read()
+            self.result['Result'] = json.loads(r)['value']['data']
+            return json.loads(r)['value']['data']
 
     def get_compliance_object(self, name):
         if self.params.get('selector') == 'object':
@@ -1229,7 +1242,7 @@ class NAEModule(object):
         elif self.params.get('selector') == 'requirement':
             objs = self.get_all_requirements()
             return [x for x in objs if x['name'] == name][0]
-        elif self.params.get('selector') == 'requirement_sets':
+        elif self.params.get('selector') == 'requirement_set':
             objs = self.get_all_requirement_sets()
             return [x for x in objs if x['name'] == name][0]
 
@@ -1309,7 +1322,7 @@ class NAEModule(object):
         self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
         self.params['obj_uuid'] = self.get_compliance_object(
             self.params.get('name'))["uuid"]
-        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirement_set/%(obj_uuid)s' % self.params
+        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirement-sets/%(obj_uuid)s' % self.params
         resp, auth = fetch_url(self.module, url,
                                headers=self.http_headers,
                                method='DELETE')
