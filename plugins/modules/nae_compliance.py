@@ -54,7 +54,6 @@ EXAMPLES = \
     form: |
       {
     "name": "DataBase",
-    "selector": object
     "description": null,
     "includes": [
       {
