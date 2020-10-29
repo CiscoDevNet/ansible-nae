@@ -1116,9 +1116,15 @@ class NAEModule(object):
         d['assurance_groups'] = assurance_groups_lists
         self.params['form'] = json.dumps(d)
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
-        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
-              'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
-              'compliance-requirement/requirement-sets' % self.params
+        if '5.1' in self.version:
+            url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
+                  'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
+                  'compliance-requirement/requirement-sets/' % self.params
+        else:
+            url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
+                  'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
+                  'compliance-requirement/requirement_set/%(obj_uuid)' % self.params
+
         resp, auth = fetch_url(self.module, url,
                                data=self.params.get('form'),
                                headers=self.http_headers,
@@ -1353,13 +1359,9 @@ class NAEModule(object):
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         self.params['obj_uuid'] = self.get_compliance_object(
             self.params.get('name'))["uuid"]
-<<<<<<< HEAD
         url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
               'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
-              'compliance-requirement/requirement_set/%(obj_uuid)s' % self.params
-=======
-        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirement-sets/%(obj_uuid)s' % self.params
->>>>>>> Various Fixes for NAE 5.1 compatibility
+              'compliance-requirement/requirement-sets/%(obj_uuid)s' % self.params
         resp, auth = fetch_url(self.module, url,
                                headers=self.http_headers,
                                method='DELETE')
