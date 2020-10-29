@@ -55,6 +55,7 @@ EXAMPLES = \
     username: Admin
     password: 1234
     ag_name: fab1
+    name: Delta_Analysis_1
     state: present
 - name: Query delta analysis results
   nae_delta:
@@ -64,7 +65,7 @@ EXAMPLES = \
     password: 1234
     ag_name: fab1
     state: query
-    name: delta2
+    name: Delta_Analysis_1
 '''
 
 RETURN = \
