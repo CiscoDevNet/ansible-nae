@@ -983,7 +983,7 @@ class NAEModule(object):
             payload['changes'] = self.params.get('changes')
             url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis' % self.params
 
-        elif '5.0' in self.version:
+        elif '5.0' in self.version or '5.1' in self.version:
             payload['allow_unsupported_object_modification'] = 'true'
             payload['uploaded_file_name'] = str(self.params.get('filename'))
             url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/file-changes' % self.params
