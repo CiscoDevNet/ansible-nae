@@ -56,6 +56,12 @@ options:
   changes:
     description:
     - Optional parameter if creating new pre-change analysis from change-list (manual)
+  ignore_sm:
+    description: 
+    - Optional list of Smart Event Mnomonics that should be ignored
+    type: list
+    required: no
+
 author:
 - Shantanu Kulkarni (@shan_kulk)
 '''
@@ -114,6 +120,19 @@ EXAMPLES = r'''
     name: Analysis1
     state: query
   delegate_to: localhost
+- name: Query a pre-change analysis and ignore some smart_events
+  nae_prechange:
+    host: nae
+    port: 8080
+    username: Admin
+    password: C@ndidadmin1234
+    ag_name: FAB2
+    name: Analysis1
+    state: query
+    ignore_sm: 
+      - APP_EPG_NOT_DEPLOYED
+      - APP_EPG_HAS_NO_CONTRACT_IN_ENFORCED_VRF
+  delegate_to: localhost
 - name: Query all pre-change analyses
   nae_prechange:
     host: nae
@@ -149,6 +168,7 @@ def main():
         name=dict(type='str', aliases=['name']),
         description=dict(type='str'),
         changes=dict(type='str'),
+        ignore_sm=dict(type='list'),
         verify=dict(type='bool', default=False),
         file=dict(type='str', default=None),
         validate_certs=dict(type='bool', default=False),
