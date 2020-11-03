@@ -386,7 +386,7 @@ class NAEModule(object):
                 del x['stop_analysis']
             if 'submitter_domain' in x:
                 del x['submitter_domain']
-
+            
             m = str(x['base_epoch_collection_timestamp'])[:10]
             dt_object = datetime.fromtimestamp(int(m))
             x['base_epoch_collection_timestamp'] = dt_object
@@ -465,8 +465,11 @@ class NAEModule(object):
             result = json.loads(resp.read())['value']['data']
         count = 0
         for x in result:
+            suppressed_event_list = self.params.get('ignore_sm')
             if int(x['count']) > 0:
                 if str(x['epoch2_details']['severity']) == "EVENT_SEVERITY_INFO":
+                    continue
+                elif str(x['epoch2_details']['mnemonic']) in suppressed_event_list:
                     continue
                     # with open("output.txt",
                 count = count + 1
