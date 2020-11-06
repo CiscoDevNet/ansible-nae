@@ -217,7 +217,7 @@ class NAEModule(object):
                                    method='DELETE')
             if auth.get('status') != 200:
                 if('filename' in self.params):
-                    self.params['file'] = self.params['filename']
+                    self.params['file'] = self.params.get('filename')
                     del self.params['filename']
                 self.response = auth.get('msg')
                 self.status = auth.get('status')
@@ -283,9 +283,9 @@ class NAEModule(object):
 
     def newOfflineAG(self):
         self.get_all_assurance_groups()
-        self.params['ag'] = [ag for ag in self.assuranceGroups if ag['unique_name'] == self.params.get('name')]
+        self.params['ag'] = [ag for ag in self.assuranceGroups if ag.get('unique_name') == self.params.get('name')]
         if self.params['ag']:
-            self.module.exit_json(msg="WARNING: An assurance group with the same name already exisit!!!", **self.result)
+            self.module.exit_json(msg="WARNING: An assurance group with the same name already exist!!!", **self.result)
         # This method creates a new Offline Assurance Group, you only need to
         # pass the AG Name.
 
@@ -766,11 +766,11 @@ class NAEModule(object):
             for nm, desc in item.items():
                 if 'attributes' not in desc:
                     raise AssertionError("attributes not in desc")
-                attr = desc['attributes']
+                attr = desc.get('attributes')
                 if 'dn' not in attr:
                     raise AssertionError("dn not in desc")
                 if 'children' in desc:
-                    existing_children = desc['children']
+                    existing_children = desc.get('children')
                     self.params['cmap'][attr['dn']] = existing_children
                 path = self.parse_path(attr['dn'])
                 cursor = tree
@@ -1017,12 +1017,12 @@ class NAEModule(object):
         self.result['Result'] = "Pre-change analysis %(name)s successfully created." % self.params
 
     def new_object_selector(self):
-        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/'\
               'assured-networks/%(fabric_uuid)s/model/aci-policy/'\
               'compliance-requirement/object-selectors' % self.params
         resp, auth = fetch_url(self.module, url,
-                               data=self.params['form'],
+                               data=self.params.get('form'),
                                headers=self.http_headers,
                                method='POST')
         if auth.get('status') != 200:
@@ -1050,7 +1050,7 @@ class NAEModule(object):
               'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
               'compliance-requirement/traffic-selectors' % self.params
         resp, auth = fetch_url(self.module, url,
-                               data=self.params['form'],
+                               data=self.params.get('form'),
                                headers=self.http_headers,
                                method='POST')
         if auth.get('status') != 200:
@@ -1077,7 +1077,7 @@ class NAEModule(object):
         url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks' \
               '/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirements' % self.params
         resp, auth = fetch_url(self.module, url,
-                               data=self.params['form'],
+                               data=self.params.get('form'),
                                headers=self.http_headers,
                                method='POST')
         if auth.get('status') != 200:
@@ -1106,12 +1106,12 @@ class NAEModule(object):
         assurance_groups_lists.append(dict(active=True, fabric_uuid=ag))
         d['assurance_groups'] = assurance_groups_lists
         self.params['form'] = json.dumps(d)
-        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
               'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
               'compliance-requirement/requirement-sets' % self.params
         resp, auth = fetch_url(self.module, url,
-                               data=self.params['form'],
+                               data=self.params.get('form'),
                                headers=self.http_headers,
                                method='POST')
         if auth.get('status') != 200:
@@ -1133,7 +1133,7 @@ class NAEModule(object):
             self.result['Result'] = final_msg
 
     def get_all_requirement_sets(self):
-        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
               'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
               'compliance-requirement/requirement-sets' % self.params
@@ -1161,7 +1161,7 @@ class NAEModule(object):
             return json.loads(resp.read())['value']['data']
 
     def get_all_requirements(self):
-        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
               'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
               'compliance-requirement/requirements' % self.params
@@ -1189,7 +1189,7 @@ class NAEModule(object):
             return json.loads(resp.read())['value']['data']
 
     def get_all_traffic_selectors(self):
-        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
               'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
               'compliance-requirement/traffic-selectors' % self.params
@@ -1217,7 +1217,7 @@ class NAEModule(object):
             return json.loads(resp.read())['value']['data']
 
     def get_all_object_selectors(self):
-        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
               'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
               'compliance-requirement/object-selectors' % self.params
@@ -1259,7 +1259,7 @@ class NAEModule(object):
             return [x for x in objs if x['name'] == name][0]
 
     def delete_object_selector(self):
-        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         self.params['obj_uuid'] = self.get_compliance_object(
             self.params.get('name'))["uuid"]
         url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
@@ -1285,7 +1285,7 @@ class NAEModule(object):
                 self.params.get('name') + " deleted"
 
     def delete_traffic_selector(self):
-        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         self.params['obj_uuid'] = self.get_compliance_object(
             self.params.get('name'))["uuid"]
         url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
@@ -1311,7 +1311,7 @@ class NAEModule(object):
                 self.params.get('name') + " deleted"
 
     def delete_requirement(self):
-        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         self.params['obj_uuid'] = self.get_compliance_object(
             self.params.get('name'))["uuid"]
         url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
@@ -1337,7 +1337,7 @@ class NAEModule(object):
                 self.params.get('name') + " deleted"
 
     def delete_requirement_set(self):
-        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         self.params['obj_uuid'] = self.get_compliance_object(
             self.params.get('name'))["uuid"]
         url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
@@ -1368,11 +1368,11 @@ class NAEModule(object):
 
     def upload_file(self):
         for page in self.get_all_files():
-            self.params['file_id'] = [f for f in page if f['unique_name'] == self.params.get('name')]
-        if self.params['file_id']:
+            self.params['file_id'] = [f for f in page if f.get('unique_name') == self.params.get('name')]
+        if self.params.get('file_id') is not None:
             self.module.exit_json(msg="WARNING: file with the same name already exisit!!!", **self.result)
 
-        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         file_upload_uuid = None
         uri = 'https://%(host)s:%(port)s/nae/api/v1/file-services/upload-file' % self.params
         try:
@@ -1468,7 +1468,7 @@ class NAEModule(object):
                     chunk_headers.pop("Content-Type", None)
                     # Ansible prefers us to use fetch_url but does not support binary file uploads
                     # so reverting back to requests seems the only thing not working.
-                    response = requests.post(chunk_uri, data=None, files=args['files'], headers=chunk_headers, verify=False)
+                    response = requests.post(chunk_uri, data=None, files=args.get('files'), headers=chunk_headers, verify=False)
                     chunk_id += 1
                     if response and response.status_code != 201:
                         self.module.fail_json(
@@ -1789,7 +1789,7 @@ class NAEModule(object):
         else:
             self.get_all_files()
             for uploadedFile in self.files:
-                fileID = [f for f in uploadedFile if f['unique_name'] == self.params.get('filename')]
+                fileID = [f for f in uploadedFile if f.get('unique_name') == self.params.get('filename')]
                 if not fileID:
                     self.module.fail_json(msg="File %(filename)s not found" % self.params, **self.result)
             fileID = fileID[0]['uuid']
@@ -1836,7 +1836,7 @@ class NAEModule(object):
                                            headers=self.http_headers, method='POST')
                     if auth.get('status') == 202 or auth.get('status') == 200:
                         self.result['Result'] = 'Offline Analysis %(name)s successfully created' % self.params
-                        if self.params['complete']:
+                        if self.params.get('complete') is not None:
                             status = None
                             while status != "ANALYSIS_COMPLETED":
                                 status = self.get_OfflineAnalysis(self.params.get('name'))['status']
@@ -1881,14 +1881,14 @@ class NAEModule(object):
         # To support multiple pages of returned data
         for pages in self.offlineAnalysis:
             for oa in pages:
-                if oa['unique_name'] == name:
+                if oa.get('unique_name') == name:
                     return oa
         return None
 
     def deleteOfflineAnalysis(self):
         try:
             for page in self.get_all_OfflineAnalysis():
-                self.params['OfflineAnalysisId'] = [f for f in page if f['unique_name'] == self.params.get('name')][0]['uuid']
+                self.params['OfflineAnalysisId'] = [f for f in page if f.get('unique_name') == self.params.get('name')][0]['uuid']
 
         except IndexError:
             fail = "Offline Analysis %(name)s does not exist on." % self.params
