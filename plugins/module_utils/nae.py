@@ -51,7 +51,6 @@ from ansible.module_utils.parsing.convert_bool import boolean
 from ansible.module_utils.urls import fetch_url
 from ansible.module_utils._text import to_bytes, to_native
 from jsonpath_ng import jsonpath, parse
-import requests
 
 
 def nae_argument_spec():
@@ -544,20 +543,16 @@ class NAEModule(object):
         self.params['base_epoch_id'] = str(self.get_epochs()[0]["epoch_id"])
         if '4.1' in self.version:
             f = self.params['file']
+            content_json = {
+                "name": self.params.get('name'),
+                "fabric_uuid": str(self.params.get('fabric_id')),
+                "base_epoch_id": str(self.params.get('base_epoch_id')),
+                "changes": self.params.get('changes'),
+                "stop_analysis": False,
+                "change_type": "CHANGE_LIST"
+            }
             fields = {
-                ('data',
-                    (f,
-                        # content to upload
-                        '''{
-                        "name": "''' + self.params.get('name') + '''",
-                        "fabric_uuid": "''' + self.params.get('fabric_id') + '''",
-                        "base_epoch_id": "''' + self.params.get('base_epoch_id') + '''",
-
-                        "changes": ''' + self.params.get('changes') + ''',
-                        "stop_analysis": false,
-                        "change_type": "CHANGE_LIST"
-                        }''',                           # The content type of the file
-                        'application/json'))
+                "data": (f, json.dumps(content_json), 'application/json')
             }
             url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis' % self.params
             m = MultipartEncoder(fields=fields)
@@ -664,7 +659,7 @@ class NAEModule(object):
         for dn, children in cmap.items():
             aci_class = self.get_aci_class(
                 (self.parse_path(dn)[-1]).split("-")[0])
-            json_path_expr_search = parse(f'$..children.[*].{aci_class}')
+            json_path_expr_search = parse('$..children.[*].{0}'.format(aci_class))
             json_path_expr_update = parse(str([str(match.full_path) for match in json_path_expr_search.find(
                 tree) if match.value['attributes']['dn'] == dn][0]))
             curr_obj = [
@@ -706,7 +701,7 @@ class NAEModule(object):
                     if not in_str:
                         depth -= 1
                 elif c == '\\':
-                    buffer += f[i + 1]
+                    buffer += c[i + 1]
                     i += 1
 
                 if depth == 0:
@@ -1640,11 +1635,11 @@ class NAEModule(object):
         runningOnDemand = self.isOnDemandAnalysis()
         if runningLive:
             self.module.fail_json(
-                msg=f'There is currently a Live analysis on {runningLive} please stop it manually and try again', **self.result)
+                msg='There is currently a Live analysis on {0} please stop it manually and try again'.format(runningLive), **self.result)
 
         elif runningOnDemand:
             self.module.fail_json(
-                msg=f'There is currently an OnDemand analysis running on {runningOnDemand} please stop it manually and try again', **self.result)
+                msg='There is currently an OnDemand analysis running on {0} please stop it manually and try again'.format(runningOnDemand), **self.result)
         else:
             self.fabric_uuid = self.get_assurance_group(
                 self.params.get('ag_name'))
