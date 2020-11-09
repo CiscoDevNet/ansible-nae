@@ -284,7 +284,7 @@ class NAEModule(object):
     def newOfflineAG(self):
         self.get_all_assurance_groups()
         self.params['ag'] = [ag for ag in self.assuranceGroups if ag.get('unique_name') == self.params.get('name')]
-        if self.params.get('ag') is not None:
+        if self.params.get('ag') != []:
             self.module.exit_json(msg="WARNING: An assurance group with the same name already exist!!!", **self.result)
         # This method creates a new Offline Assurance Group, you only need to
         # pass the AG Name.
@@ -424,7 +424,7 @@ class NAEModule(object):
             self.module.fail_json(
                 msg='No such Pre-Change Job exists.',
                 **self.result)
-        if self.params.get('verify') is not None:
+        if self.params.get('verify'):
             status = None
             while status != "COMPLETED":
                 try:
@@ -620,7 +620,7 @@ class NAEModule(object):
         f = open(self.params.get('file'), "rb")
         if self.is_json(f.read()) is True:
             no_parse = True
-        if self.params.get('verify') is not None and no_parse is False:
+        if self.params.get('verify') and no_parse is False:
             # # Input file is not parsed.
             self.params['cmap'] = {}
             data = self.load(open(self.params.get('file')))
