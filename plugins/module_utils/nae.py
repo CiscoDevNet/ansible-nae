@@ -100,7 +100,7 @@ class NAEModule(object):
 
         if auth.get('status') != 200:
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.response = auth.get('msg')
             self.status = auth.get('status')
@@ -126,7 +126,7 @@ class NAEModule(object):
 
         if auth.get('status') != 200:
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.module.exit_json(
                 msg=json.loads(
@@ -145,7 +145,7 @@ class NAEModule(object):
             self.module, url, headers=self.http_headers, data=None, method='GET')
         if auth.get('status') != 200:
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.response = auth.get('msg')
             self.status = auth.get('status')
@@ -181,7 +181,7 @@ class NAEModule(object):
 
         if auth.get('status') != 200:
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.module.exit_json(
                 msg=json.loads(
@@ -267,7 +267,7 @@ class NAEModule(object):
 
         if auth.get('status') != 201:
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.response = json.loads(auth.get('body'))
             self.status = auth.get('status')
@@ -284,7 +284,7 @@ class NAEModule(object):
     def newOfflineAG(self):
         self.get_all_assurance_groups()
         self.params['ag'] = [ag for ag in self.assuranceGroups if ag.get('unique_name') == self.params.get('name')]
-        if self.params['ag']:
+        if self.params.get('ag') is not None:
             self.module.exit_json(msg="WARNING: An assurance group with the same name already exist!!!", **self.result)
         # This method creates a new Offline Assurance Group, you only need to
         # pass the AG Name.
@@ -314,7 +314,7 @@ class NAEModule(object):
 
         if auth.get('status') != 201:
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.response = json.loads(auth.get('body'))
             self.status = auth.get('status')
@@ -341,7 +341,7 @@ class NAEModule(object):
         # self.module.fail_json(msg="err", **self.result)
         if auth.get('status') != 200:
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.module.exit_json(
                 msg=json.loads(
@@ -424,7 +424,7 @@ class NAEModule(object):
             self.module.fail_json(
                 msg='No such Pre-Change Job exists.',
                 **self.result)
-        if self.params['verify']:
+        if self.params.get('verify') is not None:
             status = None
             while status != "COMPLETED":
                 try:
@@ -542,7 +542,7 @@ class NAEModule(object):
                 self.params.get('ag_name'))['uuid'])
         self.params['base_epoch_id'] = str(self.get_epochs()[0]["epoch_id"])
         if '4.1' in self.version:
-            f = self.params['file']
+            f = self.params.get('file')
             content_json = {
                 "name": self.params.get('name'),
                 "fabric_uuid": str(self.params.get('fabric_id')),
@@ -565,14 +565,14 @@ class NAEModule(object):
 
             if auth.get('status') != 200:
                 if('filename' in self.params):
-                    self.params['file'] = self.params['filename']
+                    self.params['file'] = self.params.get('filename')
                     del self.params['filename']
                 self.result['status'] = auth['status']
                 self.module.exit_json(msg=json.loads(
                     auth.get('body'))['messages'][0]['message'], **self.result)
 
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
 
             self.result['Result'] = "Pre-change analysis %(name)s successfully created." % self.params
@@ -596,14 +596,14 @@ class NAEModule(object):
 
             if auth.get('status') != 200:
                 if('filename' in self.params):
-                    self.params['file'] = self.params['filename']
+                    self.params['file'] = self.params.get('filename')
                     del self.params['filename']
                 self.result['status'] = auth['status']
                 self.module.exit_json(msg=json.loads(
                     auth.get('body'))['messages'][0]['message'], **self.result)
 
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
 
             self.result['Result'] = "Pre-change analysis %(name)s successfully created." % self.params
@@ -620,7 +620,7 @@ class NAEModule(object):
         f = open(self.params.get('file'), "rb")
         if self.is_json(f.read()) is True:
             no_parse = True
-        if self.params['verify'] and no_parse is False:
+        if self.params.get('verify') is not None and no_parse is False:
             # # Input file is not parsed.
             self.params['cmap'] = {}
             data = self.load(open(self.params.get('file')))
@@ -655,7 +655,7 @@ class NAEModule(object):
         Copies existing children objects to the built tree
 
         '''
-        cmap = self.params['cmap']
+        cmap = self.params.get('cmap')
         for dn, children in cmap.items():
             aci_class = self.get_aci_class(
                 (self.parse_path(dn)[-1]).split("-")[0])
@@ -927,7 +927,7 @@ class NAEModule(object):
 
         if auth.get('status') != 200:
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.module.exit_json(
                 msg=json.loads(
@@ -948,7 +948,7 @@ class NAEModule(object):
 
         if auth.get('status') != 200:
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.module.exit_json(
                 msg=json.loads(
@@ -1004,14 +1004,14 @@ class NAEModule(object):
 
         if auth.get('status') != 200:
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.result['status'] = auth['status']
             self.module.exit_json(msg=json.loads(
                 auth.get('body'))['messages'][0]['message'], **self.result)
 
         if('filename' in self.params):
-            self.params['file'] = self.params['filename']
+            self.params['file'] = self.params.get('filename')
             del self.params['filename']
 
         self.result['Result'] = "Pre-change analysis %(name)s successfully created." % self.params
@@ -1027,7 +1027,7 @@ class NAEModule(object):
                                method='POST')
         if auth.get('status') != 200:
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.status = auth.get('status')
             try:
@@ -1045,7 +1045,7 @@ class NAEModule(object):
             self.result['Result'] = final_msg
 
     def new_traffic_selector(self):
-        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
               'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
               'compliance-requirement/traffic-selectors' % self.params
@@ -1055,7 +1055,7 @@ class NAEModule(object):
                                method='POST')
         if auth.get('status') != 200:
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.status = auth.get('status')
             try:
@@ -1073,7 +1073,7 @@ class NAEModule(object):
             self.result['Result'] = final_msg
 
     def new_compliance_requirement(self):
-        self.params['fabric_uuid'] = self.getFirstAG()["uuid"]
+        self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks' \
               '/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirements' % self.params
         resp, auth = fetch_url(self.module, url,
@@ -1082,7 +1082,7 @@ class NAEModule(object):
                                method='POST')
         if auth.get('status') != 200:
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.status = auth.get('status')
             try:
@@ -1101,7 +1101,7 @@ class NAEModule(object):
 
     def new_compliance_requirement_set(self):
         ag = self.get_assurance_group(self.params.get('ag_name'))["uuid"]
-        d = json.loads(self.params['form'])
+        d = json.loads(self.params.get('form'))
         assurance_groups_lists = []
         assurance_groups_lists.append(dict(active=True, fabric_uuid=ag))
         d['assurance_groups'] = assurance_groups_lists
@@ -1116,7 +1116,7 @@ class NAEModule(object):
                                method='POST')
         if auth.get('status') != 200:
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.status = auth.get('status')
             try:
@@ -1142,7 +1142,7 @@ class NAEModule(object):
                                method='GET')
         if auth.get('status') != 200:
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.status = auth.get('status')
             try:
@@ -1170,7 +1170,7 @@ class NAEModule(object):
                                method='GET')
         if auth.get('status') != 200:
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.status = auth.get('status')
             try:
@@ -1198,7 +1198,7 @@ class NAEModule(object):
                                method='GET')
         if auth.get('status') != 200:
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.status = auth.get('status')
             try:
@@ -1226,7 +1226,7 @@ class NAEModule(object):
                                method='GET')
         if auth.get('status') != 200:
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.status = auth.get('status')
             try:
@@ -1256,7 +1256,7 @@ class NAEModule(object):
             return [x for x in objs if x['name'] == name][0]
         elif self.params.get('selector') == 'requirement_sets':
             objs = self.get_all_requirement_sets()
-            return [x for x in objs if x['name'] == name][0]
+            return [x for x in objs if x.get('name') == name][0]
 
     def delete_object_selector(self):
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
@@ -1270,7 +1270,7 @@ class NAEModule(object):
                                method='DELETE')
         if auth.get('status') != 200:
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.status = auth.get('status')
             try:
@@ -1296,7 +1296,7 @@ class NAEModule(object):
                                method='DELETE')
         if auth.get('status') != 200:
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.status = auth.get('status')
             try:
@@ -1322,7 +1322,7 @@ class NAEModule(object):
                                method='DELETE')
         if auth.get('status') != 200:
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.status = auth.get('status')
             try:
@@ -1348,7 +1348,7 @@ class NAEModule(object):
                                method='DELETE')
         if auth.get('status') != 200:
             if('filename' in self.params):
-                self.params['file'] = self.params['filename']
+                self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.status = auth.get('status')
             try:
@@ -1588,7 +1588,7 @@ class NAEModule(object):
                 has_more_data = json.loads(resp.read())[
                     'value']['data_summary']['has_more_data']
                 tcam_data.append(json.loads(resp.read())['value']['data'])
-            self.params['page'] = self.params['page'] + 1
+            self.params['page'] = self.params.get('page') + 1
 
         self.result['Result'] = 'Pages extracted %(page)s ' % self.params
         return tcam_data
@@ -1746,7 +1746,7 @@ class NAEModule(object):
 
             if auth.get('status') != 200:
                 if('filename' in self.params):
-                    self.params['file'] = self.params['filename']
+                    self.params['file'] = self.params.get('filename')
                     del self.params['filename']
                 self.module.exit_json(
                     msg=json.loads(
@@ -1859,7 +1859,7 @@ class NAEModule(object):
 
             if auth.get('status') != 200:
                 if('filename' in self.params):
-                    self.params['file'] = self.params['filename']
+                    self.params['file'] = self.params.get('filename')
                     del self.params['filename']
                 self.module.exit_json(
                     msg=json.loads(
