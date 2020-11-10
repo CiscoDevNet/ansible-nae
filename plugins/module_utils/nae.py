@@ -188,7 +188,7 @@ class NAEModule(object):
                     auth.get('body'))['messages'][0]['message'],
                 **self.result)
 
-        if resp.headers['Content-Encoding'] == "gzip":
+        if resp.headers.get('Content-Encoding') == "gzip":
             r = gzip.decompress(resp.read())
             self.assuranceGroups = json.loads(r.decode())['value']['data']
             return
@@ -348,7 +348,7 @@ class NAEModule(object):
                     auth.get('body'))['messages'][0]['message'],
                 **self.result)
 
-        if resp.headers['Content-Encoding'] == "gzip":
+        if resp.headers.get('Content-Encoding') == "gzip":
             r = gzip.decompress(resp.read())
             return json.loads(r.decode())['value']['data']
         return json.loads(resp.read())['value']['data']
@@ -386,7 +386,7 @@ class NAEModule(object):
                 del x['stop_analysis']
             if 'submitter_domain' in x:
                 del x['submitter_domain']
-            
+
             m = str(x['base_epoch_collection_timestamp'])[:10]
             dt_object = datetime.fromtimestamp(int(m))
             x['base_epoch_collection_timestamp'] = dt_object
@@ -458,7 +458,7 @@ class NAEModule(object):
                 msg=json.loads(
                     auth.get('body'))['messages'][0]['message'],
                 **self.result)
-        if resp.headers['Content-Encoding'] == "gzip":
+        if resp.headers.get('Content-Encoding') == "gzip":
             r = gzip.decompress(resp.read())
             result = json.loads(r.decode())['value']['data']
         else:
@@ -467,11 +467,8 @@ class NAEModule(object):
         for x in result:
             suppressed_event_list = self.params.get('ignore_sm')
             if int(x['count']) > 0:
-                if str(x['epoch2_details']['severity']) == "EVENT_SEVERITY_INFO":
+                if str(x['epoch2_details']['severity']) == "EVENT_SEVERITY_INFO" or str(x['epoch2_details']['mnemonic']) in suppressed_event_list:
                     continue
-                elif str(x['epoch2_details']['mnemonic']) in suppressed_event_list:
-                    continue
-                    # with open("output.txt",
                 count = count + 1
         if(count != 0):
             self.result['Later Epoch Smart Events'] = result
@@ -515,7 +512,7 @@ class NAEModule(object):
                 msg=json.loads(
                     auth.get('body'))['messages'][0]['message'],
                 **self.result)
-        if resp.headers['Content-Encoding'] == "gzip":
+        if resp.headers.get('Content-Encoding') == "gzip":
             r = gzip.decompress(resp.read())
             result = json.loads(r.decode())['value']['data']
         else:
@@ -545,9 +542,9 @@ class NAEModule(object):
                 self.get_assurance_group(
                     self.params.get('ag_name'))['uuid'])
         except Exception:
-                # No AG exists
-                self.module.fail_json(
-                    msg='Assurange group %s does not exists' % self.params.get('ag_name'), **self.result)            
+            # No AG exists
+            self.module.fail_json(
+                msg='Assurange group %s does not exists' % self.params.get('ag_name'), **self.result)
         self.params['base_epoch_id'] = str(self.get_epochs()[0]["epoch_id"])
         if '4.1' in self.version:
             f = self.params.get('file')
@@ -963,7 +960,7 @@ class NAEModule(object):
                     auth.get('body'))['messages'][0]['message'],
                 **self.result)
 
-        if resp.headers['Content-Encoding'] == "gzip":
+        if resp.headers.get('Content-Encoding') == "gzip":
             r = gzip.decompress(resp.read())
             return json.loads(r.decode())['value']['data']
         return json.loads(resp.read())['value']['data']
@@ -1047,7 +1044,7 @@ class NAEModule(object):
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         else:
-            if resp.headers['Content-Encoding'] == "gzip":
+            if resp.headers.get('Content-Encoding') == "gzip":
                 r = gzip.decompress(resp.read())
             else:
                 r = resp.read()
@@ -1126,7 +1123,7 @@ class NAEModule(object):
         else:
             url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
                   'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
-                  'compliance-requirement/requirement_set/%(obj_uuid)' % self.params
+                  'compliance-requirement/requirement_set/%(obj_uuid)s' % self.params
 
         resp, auth = fetch_url(self.module, url,
                                data=self.params.get('form'),
@@ -1171,7 +1168,7 @@ class NAEModule(object):
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         else:
-            if resp.headers['Content-Encoding'] == "gzip":
+            if resp.headers.get('Content-Encoding') == "gzip":
                 r = gzip.decompress(resp.read())
                 self.result['Result'] = json.loads(r.decode())['value']['data']
                 return json.loads(r.decode())['value']['data']
@@ -1200,7 +1197,7 @@ class NAEModule(object):
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         else:
-            if resp.headers['Content-Encoding'] == "gzip":
+            if resp.headers.get('Content-Encoding') == "gzip":
                 r = gzip.decompress(resp.read())
                 self.result['Result'] = json.loads(r.decode())['value']['data']
                 return json.loads(r.decode())['value']['data']
@@ -1229,7 +1226,7 @@ class NAEModule(object):
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         else:
-            if resp.headers['Content-Encoding'] == "gzip":
+            if resp.headers.get('Content-Encoding') == "gzip":
                 r = gzip.decompress(resp.read())
                 self.result['Result'] = json.loads(r.decode())['value']['data']
                 return json.loads(r.decode())['value']['data']
@@ -1258,7 +1255,7 @@ class NAEModule(object):
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         else:
-            if resp.headers['Content-Encoding'] == "gzip":
+            if resp.headers.get('Content-Encoding') == "gzip":
                 r = gzip.decompress(resp.read())
                 self.result['Result'] = json.loads(r.decode())['value']['data']
                 return json.loads(r.decode())['value']['data']
@@ -1601,7 +1598,7 @@ class NAEModule(object):
                 self.result['Error'] = auth.get('msg')
                 self.result['url'] = url
                 self.module.fail_json(msg="Error getting TCAM", **self.result)
-            if resp.headers['Content-Encoding'] == "gzip":
+            if resp.headers.get('Content-Encoding') == "gzip":
                 r = gzip.decompress(resp.read())
                 has_more_data = json.loads(r.decode())[
                     'value']['data_summary']['has_more_data']
@@ -1775,7 +1772,7 @@ class NAEModule(object):
                         auth.get('body'))['messages'][0]['message'],
                     **self.result)
 
-            if resp.headers['Content-Encoding'] == "gzip":
+            if resp.headers.get('Content-Encoding') == "gzip":
                 r = gzip.decompress(resp.read())
                 has_more_data = json.loads(r.decode())['value']['data_summary']['has_more_data']
                 self.files.append(json.loads(r.decode())['value']['data'])
@@ -1888,7 +1885,7 @@ class NAEModule(object):
                         auth.get('body'))['messages'][0]['message'],
                     **self.result)
 
-            if resp.headers['Content-Encoding'] == "gzip":
+            if resp.headers.get('Content-Encoding') == "gzip":
                 r = gzip.decompress(resp.read())
                 has_more_data = json.loads(r.decode())['value']['data_summary']['has_more_data']
                 self.offlineAnalysis.append(json.loads(r.decode())['value']['data'])

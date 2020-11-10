@@ -36,13 +36,11 @@ options:
     description:
     - Description for the pre-change analysis.
     type: str
-    required: no
     aliases: [ descr ]
   verify:
     description:
     - Flag specifying if pre-change analysis is made from aci config dump.
     type: bool
-    required: no
   state:
     description:
     - Use C(present) or C(absent) for adding or removing.
@@ -57,10 +55,9 @@ options:
     description:
     - Optional parameter if creating new pre-change analysis from change-list (manual)
   ignore_sm:
-    description: 
+    description:
     - Optional list of Smart Event Mnomonics that should be ignored
     type: list
-    required: no
 
 author:
 - Shantanu Kulkarni (@shan_kulk)
@@ -129,7 +126,7 @@ EXAMPLES = r'''
     ag_name: FAB2
     name: Analysis1
     state: query
-    ignore_sm: 
+    ignore_sm:
       - APP_EPG_NOT_DEPLOYED
       - APP_EPG_HAS_NO_CONTRACT_IN_ENFORCED_VRF
   delegate_to: localhost

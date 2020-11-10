@@ -23,13 +23,11 @@ options:
     description:
     - Unique name of offline analysis
     type: str
-    required: no
     aliases: [ unique_name ]
   filename:
     description:
     - The uploaded file name
     type: str
-    required: no
     aliases: [ file_name ]
   state:
     description:
