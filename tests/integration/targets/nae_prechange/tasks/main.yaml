@@ -10,10 +10,11 @@
     password: '{{ nae_password }}'
     validate_certs: False
   register: query_result
+  ignore_errors: true
 - debug:
     var: query_result
 - name: Verify query 
   assert:
     that:
-    - query_result.msg == "No such Assurance Group exists on this fabric."
+    - query_result.msg == "Assurance group FAB2 does not exist"
 ...

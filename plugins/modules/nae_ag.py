@@ -143,7 +143,7 @@ def main():
         ag = nae.get_assurance_group(name)
         if ag is None:
             module.exit_json(
-                msg='No such Assurance Group exists',
+                msg='Assurance group {0} does not exist'.format(name),
                 **nae.result)
         nae.result['Result'] = ag
         module.exit_json(**nae.result)

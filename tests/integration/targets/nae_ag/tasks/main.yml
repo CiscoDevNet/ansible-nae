@@ -123,7 +123,7 @@
   assert:
     that:
       - query_deleted_ag is not changed
-      - query_deleted_ag.msg == "No such Assurance Group exists"
+      - query_deleted_ag.msg == "Assurance group ansible_ap_online does not exist"
 
 - name: Use incorrect parameters
   cisco.nae.nae_ag:
