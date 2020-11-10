@@ -121,19 +121,19 @@ def main():
     nae = NAEModule(module)
     if state == 'present' and form and selector == 'object':
         nae.new_object_selector()
-        result['changed'] = True
+        nae.result['changed'] = True
         module.exit_json(**nae.result)
     elif state == 'present' and form and selector == 'traffic':
         nae.new_traffic_selector()
-        result['changed'] = True
+        nae.result['changed'] = True
         module.exit_json(**nae.result)
     elif state == 'present' and form and selector == 'requirement':
         nae.new_compliance_requirement()
-        result['changed'] = True
+        nae.result['changed'] = True
         module.exit_json(**nae.result)
     elif state == 'present' and form and selector == 'requirement_set':
         nae.new_compliance_requirement_set()
-        result['changed'] = True
+        nae.result['changed'] = True
         module.exit_json(**nae.result)
     elif state == 'query' and selector == 'object':
         nae.get_all_object_selectors()
@@ -149,19 +149,19 @@ def main():
         module.exit_json(**nae.result)
     elif state == 'absent' and selector == 'object':
         nae.delete_object_selector()
-        result['changed'] = True
+        nae.result['changed'] = True
         module.exit_json(**nae.result)
     elif state == 'absent' and selector == 'traffic':
         nae.delete_traffic_selector()
-        result['changed'] = True
+        nae.result['changed'] = True
         module.exit_json(**nae.result)
     elif state == 'absent' and selector == 'requirement':
         nae.delete_requirement()
-        result['changed'] = True
+        nae.result['changed'] = True
         module.exit_json(**nae.result)
     elif state == 'absent' and selector == 'requirement_set':
         nae.delete_requirement_set()
-        result['changed'] = True
+        nae.result['changed'] = True
         module.exit_json(**nae.result)
     module.fail_json(msg='Incorrect params passed', **nae.result)
 
