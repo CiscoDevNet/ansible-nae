@@ -29,7 +29,6 @@ options:
     description:
     - Path to file to write tcam data to (csv)
     type: str
-    required: no
 author:
 - Shantanu Kulkarni (@shan_kulk)
 '''

@@ -23,13 +23,11 @@ options:
     description:
     - Unique name of file upload
     type: str
-    required: no
     aliases: [ unique_name ]
   file:
     description:
     - The absolute path of the file
     type: str
-    required: no
     aliases: [ file_name ]
   state:
     description:

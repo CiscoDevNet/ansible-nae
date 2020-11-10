@@ -32,7 +32,6 @@ options:
     description:
     - Description for the assurance group  analysis.
     type: str
-    required: no
     aliases: [ descr ]
   state:
     description:

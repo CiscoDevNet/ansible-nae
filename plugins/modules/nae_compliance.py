@@ -24,7 +24,6 @@ options:
     description:
     - Pre formatted input form for compliance object.
     type: str
-    required: no
   state:
     description:
     - Use C(present) or C(absent) for adding or removing.
