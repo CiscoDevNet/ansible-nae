@@ -23,7 +23,7 @@
     selector: object
     form: |
         {
-        "name": "ansible_object_selector",
+        "name": "ansible_object_selector_test",
         "description": null,
         "includes": [
             {
@@ -52,33 +52,33 @@
         "selector_type": "OST_EPG"
         }
 
-- name: Create a compliance requirement
-  nae_compliance:
-    <<: *nae_info
-    state: present
-    selector: requirement
-    form: |
-    {
-        "name": "ansible_comp_requirement",
-        "config_compliance_parameter": {
-        },
-        "epg_selector_a": "FrontEnd",
-        "epg_selector_b": "DataBase",
-        "requirement_type": "SEGMENTATION",
-        "communication_type": "MUST_NOT",
-        "is_all_traffic": false
-    }
+# - name: Create a compliance requirement
+#   nae_compliance:
+#     <<: *nae_info
+#     state: present
+#     selector: requirement
+#     form: |
+#     {
+#         "name": "ansible_comp_requirement",
+#         "config_compliance_parameter": {
+#         },
+#         "epg_selector_a": "FrontEnd",
+#         "epg_selector_b": "DataBase",
+#         "requirement_type": "SEGMENTATION",
+#         "communication_type": "MUST_NOT",
+#         "is_all_traffic": false
+#     }
 
-- name: Create a compliance requirement set
-  nae_compliance:
-    <<: *nae_info
-    state: present
-    selector: requirement_set
-    ag_name: FAB2
-    form: |
-    {
-        "name": "ansible_comp_requirement_set",
-        "requirements": [
-            "Segmentation"
-        ]
-    }
+# - name: Create a compliance requirement set
+#   nae_compliance:
+#     <<: *nae_info
+#     state: present
+#     selector: requirement_set
+#     ag_name: FAB2
+#     form: |
+#     {
+#         "name": "ansible_comp_requirement_set",
+#         "requirements": [
+#             "Segmentation"
+#         ]
+#     }
