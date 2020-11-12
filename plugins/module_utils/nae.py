@@ -1118,7 +1118,7 @@ class NAEModule(object):
         assurance_groups_lists.append(dict(active=True, fabric_uuid=ag.get('uuid')))
         d['assurance_groups'] = assurance_groups_lists
         self.params['form'] = json.dumps(d)
-        if '5.1' in self.version:
+        if '5.1' in self.version or '5.0' in self.version:
             url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
                   'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
                   'compliance-requirement/requirement-sets/' % self.params
@@ -1390,7 +1390,7 @@ class NAEModule(object):
     def upload_file(self):
         for page in self.get_all_files():
             self.params['file_id'] = [f for f in page if f.get('unique_name') == self.params.get('name')]
-        if self.params.get('file_id') is not None:
+        if self.params.get('file_id') != []:
             self.module.exit_json(msg="WARNING: file with the same name already exisit!!!", **self.result)
 
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
