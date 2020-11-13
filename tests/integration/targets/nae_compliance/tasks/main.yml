@@ -16,6 +16,13 @@
       password: '{{ nae_password }}'
       validate_certs: '{{ nae_validate_certs | default(false) }}'
 
+- name: Delete pre existing object selector
+  nae_compliance:
+    <<: *nae_info
+    state: absent
+    selector: object
+    name: ansible_object_selector
+
 - name: Create an object selector
   nae_compliance:
     <<: *nae_info
@@ -23,7 +30,7 @@
     selector: object
     form: |
         {
-        "name": "ansible_object_selector_test",
+        "name": "ansible_object_selector",
         "description": null,
         "includes": [
             {
@@ -52,33 +59,48 @@
         "selector_type": "OST_EPG"
         }
 
-# - name: Create a compliance requirement
-#   nae_compliance:
-#     <<: *nae_info
-#     state: present
-#     selector: requirement
-#     form: |
-#     {
-#         "name": "ansible_comp_requirement",
-#         "config_compliance_parameter": {
-#         },
-#         "epg_selector_a": "FrontEnd",
-#         "epg_selector_b": "DataBase",
-#         "requirement_type": "SEGMENTATION",
-#         "communication_type": "MUST_NOT",
-#         "is_all_traffic": false
-#     }
+- name: Create a compliance requirement
+  nae_compliance:
+    <<: *nae_info
+    state: present
+    selector: requirement
+    form: |
+        {
+        "name": "ansible_comp_requirement",
+        "config_compliance_parameter": {
+        },
+        "epg_selector_a": "FrontEnd",
+        "epg_selector_b": "DataBase",
+        "requirement_type": "SEGMENTATION",
+        "communication_type": "MUST_NOT",
+        "is_all_traffic": false
+        }
 
-# - name: Create a compliance requirement set
-#   nae_compliance:
-#     <<: *nae_info
-#     state: present
-#     selector: requirement_set
-#     ag_name: FAB2
-#     form: |
-#     {
-#         "name": "ansible_comp_requirement_set",
-#         "requirements": [
-#             "Segmentation"
-#         ]
-#     }
+- name: Create a compliance requirement set
+  nae_compliance:
+    <<: *nae_info
+    state: present
+    selector: requirement_set
+    ag_name: non_existing_ag
+    form: |
+        {
+        "name": "ansible_comp_requirement_set",
+        "requirements": [
+            "Segmentation"
+        ]
+        }
+  ignore_errors: yes
+
+- name: Create a compliance requirement set
+  nae_compliance:
+    <<: *nae_info
+    state: present
+    selector: requirement_set
+    ag_name: ansible_ag_offline
+    form: |
+        {
+        "name": "ansible_comp_requirement_set",
+        "requirements": [
+            "Segmentation"
+        ]
+        }
