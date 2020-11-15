@@ -34,9 +34,12 @@
 - name: Delete Requirement Sets
   cisco.nae.nae_compliance:
     <<: *nae_info
-    name: NAE Requirements
+    name: "{{ item }}"
     state: absent
     selector: requirement_set
+  loop:
+    - ansible_comp_requirement_set_2
+    - ansible_comp_requirement_set
   ignore_errors: yes
 
 - name: Delete Requirements
@@ -63,11 +66,11 @@
     - bds_in_nonProd
   ignore_errors: yes
 
-# - name: Create AG
-#   cisco.nae.nae_ag:
-#     <<: *nae_info
-#     name: ansible_offline_ag
-#     state: present
+- name: Create AG
+  cisco.nae.nae_ag:
+    <<: *nae_info
+    name: ansible_offline_ag
+    state: present
 
 - name: Upload Files
   cisco.nae.nae_file_management:
@@ -264,7 +267,7 @@
     ag_name: Change Management
     form: |
       {
-        "name": "test",
+        "name": "ansible_comp_requirement_set",
         "description": "",
         "requirements": [
             "bd_config_requirement",
@@ -272,16 +275,16 @@
         ]
       }
 
-# - name: Create a compliance requirement set
-#   nae_compliance:
-#     <<: *nae_info
-#     state: present
-#     selector: requirement_set
-#     ag_name: ansible_ag_offline
-#     form: |
-#         {
-#         "name": "ansible_comp_requirement_set",
-#         "requirements": [
-#             "Segmentation"
-#         ]
-#         }
+- name: Create another compliance requirement set
+  nae_compliance:
+    <<: *nae_info
+    state: present
+    selector: requirement_set
+    ag_name: ansible_ag_offline
+    form: |
+        {
+        "name": "ansible_comp_requirement_set_2",
+        "requirements": [
+            "bd_config_requirement"
+        ]
+        }
