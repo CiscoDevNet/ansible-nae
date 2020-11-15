@@ -16,15 +16,71 @@
       password: '{{ nae_password }}'
       validate_certs: '{{ nae_validate_certs | default(false) }}'
 
-- name: Delete pre existing object selector
-  nae_compliance:
+- name: Get NAE Uploaded Files
+  cisco.nae.nae_file_management:
     <<: *nae_info
+    state: query
+  register: nae_files
+
+#This will delete any file that contains 'ChangeMgmt' or 'DcOps' in the name
+- name: Delete Demo Files 
+  cisco.nae.nae_file_management:
+    <<: *nae_info
+    name: "{{ item.display_name }}"
+    state: absent
+  with_items: "{{ nae_files.Result }}"
+  when: "('ChangeMgmt' in item.display_name or 'DcOps' in item.display_name)"
+
+- name: Delete Requirement Sets
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    name: NAE Requirements
+    state: absent
+    selector: requirement_set
+  ignore_errors: yes
+
+- name: Delete Requirements
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    name: "{{ item }}"
+    state: absent
+    selector: requirement
+  with_items:
+    - ansible_comp_requirement
+    - bd_config_requirement
+  ignore_errors: yes
+
+- name: Delete object selectors
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    name: "{{ item }}"
     state: absent
     selector: object
-    name: ansible_object_selector
+  with_items:
+    - DataBase
+    - Web
+    - ansible_object_selector
+    - bds_in_nonProd
+  ignore_errors: yes
+
+# - name: Create AG
+#   cisco.nae.nae_ag:
+#     <<: *nae_info
+#     name: ansible_offline_ag
+#     state: present
+
+- name: Upload Files
+  cisco.nae.nae_file_management:
+    <<: *nae_info
+    file: "{{ item }}"
+    #Get the file name and remove the date i.e. a file name is somehting like this aci/files/datasets/ChangeMgmt2_2020-09-03_23_22_28.tar.gz
+    name: "{{ item.split('/')[-1].split('_')[0] }}" 
+    state: present
+  with_fileglob:
+    - "{{ role_path }}/datasets/*.tar.gz"
 
 - name: Create an object selector
-  nae_compliance:
+  cisco.nae.nae_compliance:
     <<: *nae_info
     state: present
     selector: object
@@ -59,8 +115,106 @@
         "selector_type": "OST_EPG"
         }
 
+- name: Create object selector for DataBase Tier
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: present
+    form: |
+        {
+        "name": "DataBase",
+        "description": null,
+        "includes": [
+          {
+            "matches": [
+              {
+                "application_epgmatch": {
+                  "object_attribute": "DN",
+                  "tenant": {
+                    "pattern": "nae-non-prod",
+                    "type": "EXACT"
+                  },
+                  "application_profile": {
+                    "pattern": "payroll-ap",
+                    "type": "EXACT"
+                  },
+                  "application_epg": {
+                    "pattern": "payroll-db-tier-epg",
+                    "type": "EXACT"
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "excludes": [],
+        "selector_type": "OST_EPG"
+        }
+
+- name: Create object selector for Web Tier
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: present
+    selector: object
+    form: |
+        {
+        "name": "Web",
+        "description": null,
+        "includes": [
+          {
+            "matches": [
+              {
+                "application_epgmatch": {
+                  "object_attribute": "DN",
+                  "tenant": {
+                    "pattern": "nae-non-prod",
+                    "type": "EXACT"
+                  },
+                  "application_profile": {
+                    "pattern": "payroll-ap",
+                    "type": "EXACT"
+                  },
+                  "application_epg": {
+                    "pattern": "payroll-web-tier-epg",
+                    "type": "EXACT"
+                  }
+                }
+              }
+            ]
+          }
+        ],
+        "excludes": [],
+        "selector_type": "OST_EPG"
+        }
+
+- name: Create object selector for Bridge Domains
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: present
+    form: |
+      {
+                    "name": "bds_in_nonProd",
+                    "description": null,
+                    "includes": [
+                      {
+                        "matches": [
+                          {
+                            "tenant_match": {
+                              "object_attribute": "DN",
+                              "tenant": {
+                                "pattern": "nae-non-prod",
+                                "type": "EXACT"
+                              }
+                            }
+                          }
+                        ]
+                      }
+                    ],
+                    "excludes": [],
+                    "selector_type": "OST_BD"
+                  }
+
 - name: Create a compliance requirement
-  nae_compliance:
+  cisco.nae.nae_compliance:
     <<: *nae_info
     state: present
     selector: requirement
@@ -69,38 +223,65 @@
         "name": "ansible_comp_requirement",
         "config_compliance_parameter": {
         },
-        "epg_selector_a": "FrontEnd",
+        "epg_selector_a": "Web",
         "epg_selector_b": "DataBase",
         "requirement_type": "SEGMENTATION",
         "communication_type": "MUST_NOT",
         "is_all_traffic": false
         }
 
-- name: Create a compliance requirement set
-  nae_compliance:
+- name: Create Config Compliance Requirement for Web to DB communication 
+  cisco.nae.nae_compliance:
     <<: *nae_info
     state: present
-    selector: requirement_set
-    ag_name: non_existing_ag
+    selector: requirement
     form: |
-        {
-        "name": "ansible_comp_requirement_set",
-        "requirements": [
-            "Segmentation"
-        ]
+      {
+        "name": "bd_config_requirement",
+        "requirement_type": "CONFIGURATION_COMPLIANCE",
+        "epg_selector_a": "bds_in_nonProd",
+        "config_compliance_parameter": {
+          "and_parameters": [
+            {
+              "parameter": "CCP_L2_UNKNOWN_UNICAST",
+              "value": "Hardware Proxy",
+              "operator": "EQUAL_TO"
+            },
+            {
+              "parameter": "CCP_LIMIT_IP_LEARNING_TO_SUBNET",
+              "value": "Yes",
+              "operator": "EQUAL_TO"
+            }
+          ]
         }
-  ignore_errors: yes
+      }
 
 - name: Create a compliance requirement set
   nae_compliance:
     <<: *nae_info
     state: present
     selector: requirement_set
-    ag_name: ansible_ag_offline
+    ag_name: Change Management
     form: |
-        {
-        "name": "ansible_comp_requirement_set",
+      {
+        "name": "test",
+        "description": "",
         "requirements": [
-            "Segmentation"
+            "bd_config_requirement",
+            "ansible_comp_requirement"
         ]
-        }
+      }
+
+# - name: Create a compliance requirement set
+#   nae_compliance:
+#     <<: *nae_info
+#     state: present
+#     selector: requirement_set
+#     ag_name: ansible_ag_offline
+#     form: |
+#         {
+#         "name": "ansible_comp_requirement_set",
+#         "requirements": [
+#             "Segmentation"
+#         ]
+#         }
