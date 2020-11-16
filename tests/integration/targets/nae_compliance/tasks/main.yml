@@ -16,20 +16,20 @@
       password: '{{ nae_password }}'
       validate_certs: '{{ nae_validate_certs | default(false) }}'
 
-- name: Get NAE Uploaded Files
-  cisco.nae.nae_file_management:
-    <<: *nae_info
-    state: query
-  register: nae_files
+# - name: Get NAE Uploaded Files
+#   cisco.nae.nae_file_management:
+#     <<: *nae_info
+#     state: query
+#   register: nae_files
 
-#This will delete any file that contains 'ChangeMgmt' or 'DcOps' in the name
-- name: Delete Demo Files 
-  cisco.nae.nae_file_management:
-    <<: *nae_info
-    name: "{{ item.display_name }}"
-    state: absent
-  with_items: "{{ nae_files.Result }}"
-  when: "('ChangeMgmt' in item.display_name or 'DcOps' in item.display_name)"
+# #This will delete any file that contains 'ChangeMgmt' or 'DcOps' in the name
+# - name: Delete Demo Files 
+#   cisco.nae.nae_file_management:
+#     <<: *nae_info
+#     name: "{{ item.display_name }}"
+#     state: absent
+#   with_items: "{{ nae_files.Result }}"
+#   when: "('ChangeMgmt' in item.display_name or 'DcOps' in item.display_name)"
 
 - name: Delete Requirement Sets
   cisco.nae.nae_compliance:
@@ -66,21 +66,32 @@
     - bds_in_nonProd
   ignore_errors: yes
 
-- name: Create AG
-  cisco.nae.nae_ag:
+- name: Delete traffic selectors
+  cisco.nae.nae_compliance:
     <<: *nae_info
-    name: ansible_offline_ag
-    state: present
+    name: "{{ item }}"
+    state: absent
+    selector: traffic
+  with_items:
+    - traffic_selector
+    - FCOE_traffic_selector
+  ignore_errors: yes
 
-- name: Upload Files
-  cisco.nae.nae_file_management:
-    <<: *nae_info
-    file: "{{ item }}"
-    #Get the file name and remove the date i.e. a file name is somehting like this aci/files/datasets/ChangeMgmt2_2020-09-03_23_22_28.tar.gz
-    name: "{{ item.split('/')[-1].split('_')[0] }}" 
-    state: present
-  with_fileglob:
-    - "{{ role_path }}/datasets/*.tar.gz"
+# - name: Create AG
+#   cisco.nae.nae_ag:
+#     <<: *nae_info
+#     name: ansible_offline_ag
+#     state: present
+
+# - name: Upload Files
+#   cisco.nae.nae_file_management:
+#     <<: *nae_info
+#     file: "{{ item }}"
+#     #Get the file name and remove the date i.e. a file name is somehting like this aci/files/datasets/ChangeMgmt2_2020-09-03_23_22_28.tar.gz
+#     name: "{{ item.split('/')[-1].split('_')[0] }}" 
+#     state: present
+#   with_fileglob:
+#     - "{{ role_path }}/datasets/*.tar.gz"
 
 - name: Create an object selector
   cisco.nae.nae_compliance:
@@ -260,7 +271,7 @@
       }
 
 - name: Create a compliance requirement set
-  nae_compliance:
+  cisco.nae.nae_compliance:
     <<: *nae_info
     state: present
     selector: requirement_set
@@ -276,7 +287,7 @@
       }
 
 - name: Create another compliance requirement set
-  nae_compliance:
+  cisco.nae.nae_compliance:
     <<: *nae_info
     state: present
     selector: requirement_set
@@ -288,3 +299,198 @@
             "bd_config_requirement"
         ]
         }
+
+- name: Create a traffic selector
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: present
+    selector: traffic
+    form: |
+      {
+        "name": "traffic_selector",
+        "description": "This is a description",
+        "includes": {
+          "selectors": [
+              {
+                  "selectors": [
+                    {
+                      "ether_type": "ARP"
+                    },
+                    {
+                      "ether_type": "FCOE"
+                    },
+                    {
+                      "ether_type": "IP",
+                      "ip_protocol": "EGP"
+                    },
+                    {
+                      "ether_type": "MAC_SECURITY"
+                    },
+                    {
+                      "ether_type": "MPLS_UNICAST"
+                    },
+                    {
+                      "ether_type": "TRILL"
+                    }
+                  ]
+              }
+          ]
+        }
+      }
+
+- name: Create a traffic selector
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: present
+    selector: traffic
+    form: |
+      {
+        "name": "FCOE_traffic_selector",
+        "description": "This is a description",
+        "includes": {
+          "selectors": [
+              {
+                  "selectors": [
+                    {
+                      "ether_type": "FCOE"
+                    }
+                  ]
+              }
+          ]
+        }
+      }
+
+- name: Query for all object selectors
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: query
+
+- name: Query for all traffic selectors
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: query
+    selector: traffic
+
+- name: Query for all requirements
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: query
+    selector: requirement
+
+- name: Query for all requirement sets
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: query
+    selector: requirement_set
+
+- name: Query for specific object selector
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: query
+    name: ansible_object_selector
+
+- name: Query for specific traffic selector
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: query
+    selector: traffic
+    name: traffic_selector
+
+- name: Query for specific requirement
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: query
+    selector: requirement
+    name: ansible_comp_requirement
+
+- name: Query for specific requirement set
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: query
+    selector: requirement_set
+    name: ansible_comp_requirement_set
+
+- name: Remove traffic selector
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: absent
+    selector: traffic
+    name: traffic_selector
+
+- name: Remove requirement set
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: absent
+    selector: requirement_set
+    name: ansible_comp_requirement_set
+
+- name: Remove requirement
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: absent
+    selector: requirement
+    name: ansible_comp_requirement
+
+- name: Remove object selector
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: absent
+    name: ansible_object_selector
+
+- name: Query for non_existing object selector
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: query
+    name: non_existing_selector
+
+- name: Query for non_existing traffic selector
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: query
+    selector: traffic
+    name: non_existing_traffic_selector
+
+- name: Query for non_existing requirement
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: query
+    selector: requirement
+    name: non_existing_ansible_comp_requirement
+
+- name: Query for non_existing requirement set
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: query
+    selector: requirement_set
+    name: non_existing_ansible_comp_requirement_set
+
+- name: Remove for non_existing object selector
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: absent
+    name: non_existing_selector
+  ignore_errors: yes
+
+- name: Remove for non_existing traffic selector
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: absent
+    selector: traffic
+    name: non_existing_traffic_selector
+  ignore_errors: yes
+
+- name: Remove for non_existing requirement
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: absent
+    selector: requirement
+    name: non_existing_ansible_comp_requirement
+  ignore_errors: yes
+
+- name: Remove for non_existing requirement set
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: absent
+    selector: requirement_set
+    name: non_existing_ansible_comp_requirement_set
+  ignore_errors: yes
