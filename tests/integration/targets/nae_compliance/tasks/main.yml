@@ -41,7 +41,7 @@
     - ansible_comp_requirement_set_2
     - ansible_comp_requirement_set
     #- requirement_set_associated_ag
-  ignore_errors: yes
+  #ignore_errors: yes
 
 - name: Delete Requirements
   cisco.nae.nae_compliance:
@@ -52,7 +52,7 @@
   with_items:
     - ansible_comp_requirement
     - bd_config_requirement
-  ignore_errors: yes
+  #ignore_errors: yes
 
 - name: Delete object selectors
   cisco.nae.nae_compliance:
@@ -65,7 +65,7 @@
     - Web
     - ansible_object_selector
     - bds_in_nonProd
-  ignore_errors: yes
+  #ignore_errors: yes
 
 - name: Delete traffic selectors
   cisco.nae.nae_compliance:
@@ -76,7 +76,7 @@
   with_items:
     - traffic_selector
     - FCOE_traffic_selector
-  ignore_errors: yes
+  #ignore_errors: yes
 
 # - name: Create AG
 #   cisco.nae.nae_ag:
@@ -504,7 +504,6 @@
     <<: *nae_info
     state: absent
     name: non_existing_selector
-  ignore_errors: yes
 
 - name: Remove for non_existing traffic selector
   cisco.nae.nae_compliance:
@@ -512,7 +511,6 @@
     state: absent
     selector: traffic
     name: non_existing_traffic_selector
-  ignore_errors: yes
 
 - name: Remove for non_existing requirement
   cisco.nae.nae_compliance:
@@ -520,7 +518,6 @@
     state: absent
     selector: requirement
     name: non_existing_ansible_comp_requirement
-  ignore_errors: yes
 
 - name: Remove for non_existing requirement set
   cisco.nae.nae_compliance:
@@ -528,4 +525,3 @@
     state: absent
     selector: requirement_set
     name: non_existing_ansible_comp_requirement_set
-  ignore_errors: yes
