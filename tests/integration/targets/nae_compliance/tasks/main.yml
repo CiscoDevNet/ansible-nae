@@ -41,7 +41,6 @@
     - ansible_comp_requirement_set_2
     - ansible_comp_requirement_set
     #- requirement_set_associated_ag
-  #ignore_errors: yes
 
 - name: Delete Requirements
   cisco.nae.nae_compliance:
@@ -52,7 +51,6 @@
   with_items:
     - ansible_comp_requirement
     - bd_config_requirement
-  #ignore_errors: yes
 
 - name: Delete object selectors
   cisco.nae.nae_compliance:
@@ -65,7 +63,6 @@
     - Web
     - ansible_object_selector
     - bds_in_nonProd
-  #ignore_errors: yes
 
 - name: Delete traffic selectors
   cisco.nae.nae_compliance:
@@ -76,7 +73,6 @@
   with_items:
     - traffic_selector
     - FCOE_traffic_selector
-  #ignore_errors: yes
 
 # - name: Create AG
 #   cisco.nae.nae_ag:
@@ -129,6 +125,13 @@
         "excludes": [],
         "selector_type": "OST_EPG"
         }
+  register: create_obj_selector
+
+- name: Verify create_obj_selector
+  assert:
+    that:
+      - create_obj_selector is changed
+      - create_obj_selector.Result == "Object Selector ansible_object_selector created"
 
 - name: Create object selector for DataBase Tier
   cisco.nae.nae_compliance:
@@ -164,6 +167,7 @@
         "excludes": [],
         "selector_type": "OST_EPG"
         }
+  register: create_db_selector
 
 - name: Create object selector for Web Tier
   cisco.nae.nae_compliance:
@@ -200,6 +204,7 @@
         "excludes": [],
         "selector_type": "OST_EPG"
         }
+  register: create_web_selector
 
 - name: Create object selector for Bridge Domains
   cisco.nae.nae_compliance:
@@ -227,6 +232,17 @@
                     "excludes": [],
                     "selector_type": "OST_BD"
                   }
+  register: create_bd_selector
+
+- name: Verify create_db_selector, create_web_selector and create_bd_selector
+  assert:
+    that:
+    - create_db_selector is changed
+    - create_web_selector is changed
+    - create_bd_selector is changed
+    - create_db_selector.Result == "Object Selector DataBase created"
+    - create_web_selector.Result == "Object Selector Web created"
+    - create_bd_selector.Result == "Object Selector bds_in_nonProd created"
 
 - name: Create a compliance requirement
   cisco.nae.nae_compliance:
@@ -244,6 +260,7 @@
         "communication_type": "MUST_NOT",
         "is_all_traffic": false
         }
+  register: create_req
 
 - name: Create Config Compliance Requirement for Web to DB communication 
   cisco.nae.nae_compliance:
@@ -270,6 +287,15 @@
           ]
         }
       }
+  register: create_bd_requirement
+
+- name: Verify create_req and create_bd_requirement
+  assert:
+    that:
+      - create_req is changed
+      - create_req.Result == "Compliance requirement ansible_comp_requirement created"
+      - create_bd_requirement is changed
+      - create_bd_requirement.Result == "Compliance requirement bd_config_requirement created"
 
 - name: Create a compliance requirement set (not associated to ag)
   cisco.nae.nae_compliance:
@@ -287,38 +313,39 @@
             "ansible_comp_requirement"
         ]
       }
+  register: create_req_set
 
-# - name: Create a compliance requirement set (associated to ag and not active)
-#   cisco.nae.nae_compliance:
-#     <<: *nae_info
-#     state: present
-#     selector: requirement_set
-#     ag_name: Change Management
-#     active: false
-#     form: |
-#       {
-#         "name": "requirement_set_associated_ag",
-#         "description": "",
-#         "requirements": [
-#             "bd_config_requirement"
-#         ]
-#       }
+# # - name: Create a compliance requirement set (associated to ag and not active)
+# #   cisco.nae.nae_compliance:
+# #     <<: *nae_info
+# #     state: present
+# #     selector: requirement_set
+# #     ag_name: Change Management
+# #     active: false
+# #     form: |
+# #       {
+# #         "name": "requirement_set_associated_ag",
+# #         "description": "",
+# #         "requirements": [
+# #             "bd_config_requirement"
+# #         ]
+# #       }
 
-# - name: Update the compliance requirement set (associated to ag)
-#   cisco.nae.nae_compliance:
-#     <<: *nae_info
-#     state: present
-#     selector: requirement_set
-#     ag_name: Change Management
-#     association_to_ag: False
-#     form: |
-#       {
-#         "name": "requirement_set_associated_ag",
-#         "description": "",
-#         "requirements": [
-#             "bd_config_requirement"
-#         ]
-#       }
+# # - name: Update the compliance requirement set (associated to ag)
+# #   cisco.nae.nae_compliance:
+# #     <<: *nae_info
+# #     state: present
+# #     selector: requirement_set
+# #     ag_name: Change Management
+# #     association_to_ag: False
+# #     form: |
+# #       {
+# #         "name": "requirement_set_associated_ag",
+# #         "description": "",
+# #         "requirements": [
+# #             "bd_config_requirement"
+# #         ]
+# #       }
 
 - name: Create another compliance requirement set (not associated to ag)
   cisco.nae.nae_compliance:
@@ -334,6 +361,15 @@
             "bd_config_requirement"
         ]
         }
+  register: create_req_set_2
+
+- name: Verify create_req_set and create_req_set_2
+  assert:
+    that:
+      - create_req_set is changed
+      - create_req_set_2 is changed
+      - create_req_set.Result == "Compliance requirement set ansible_comp_requirement_set created"
+      - create_req_set_2.Result == "Compliance requirement set ansible_comp_requirement_set_2 created"
 
 - name: Create a traffic selector
   cisco.nae.nae_compliance:
@@ -372,8 +408,9 @@
           ]
         }
       }
+  register: create_traffic_selector
 
-- name: Create a traffic selector
+- name: Create another traffic selector
   cisco.nae.nae_compliance:
     <<: *nae_info
     state: present
@@ -394,56 +431,79 @@
           ]
         }
       }
+  register: create_another_traffic_selector
+
+- name: Verify create_traffic_selector and create_another_traffic_selector
+  assert:
+    that:
+      - create_another_traffic_selector is changed
+      - create_traffic_selector is changed
+      - create_traffic_selector.Result == "Traffic Selector traffic_selector created"
+      - create_another_traffic_selector.Result == "Traffic Selector FCOE_traffic_selector created"
 
 - name: Query for all object selectors
   cisco.nae.nae_compliance:
     <<: *nae_info
     state: query
+  register: query_all_obj
 
 - name: Query for all traffic selectors
   cisco.nae.nae_compliance:
     <<: *nae_info
     state: query
     selector: traffic
+  register: query_all_selector
 
 - name: Query for all requirements
   cisco.nae.nae_compliance:
     <<: *nae_info
     state: query
     selector: requirement
+  register: query_all_req
 
 - name: Query for all requirement sets
   cisco.nae.nae_compliance:
     <<: *nae_info
     state: query
     selector: requirement_set
+  register: query_all_req_set
 
-- name: Query for specific object selector
-  cisco.nae.nae_compliance:
-    <<: *nae_info
-    state: query
-    name: ansible_object_selector
+- name: Verify query_all_obj, query_all_req, query_all_req_set and query_all_selector
+  assert:
+    that:
+      - query_all_obj is not changed
+      - query_all_obj.Result | length >= 3
+      - query_all_req is not changed
+      - query_all_req.Result | length >= 2
+      - query_all_req_set is not changed
+      - query_all_req_set.Result | length >= 2
 
-- name: Query for specific traffic selector
-  cisco.nae.nae_compliance:
-    <<: *nae_info
-    state: query
-    selector: traffic
-    name: traffic_selector
+# # - name: Query for specific object selector
+# #   cisco.nae.nae_compliance:
+# #     <<: *nae_info
+# #     state: query
+# #     name: ansible_object_selector
 
-- name: Query for specific requirement
-  cisco.nae.nae_compliance:
-    <<: *nae_info
-    state: query
-    selector: requirement
-    name: ansible_comp_requirement
+# # - name: Query for specific traffic selector
+# #   cisco.nae.nae_compliance:
+# #     <<: *nae_info
+# #     state: query
+# #     selector: traffic
+# #     name: traffic_selector
 
-- name: Query for specific requirement set
-  cisco.nae.nae_compliance:
-    <<: *nae_info
-    state: query
-    selector: requirement_set
-    name: ansible_comp_requirement_set
+# # - name: Query for specific requirement
+# #   cisco.nae.nae_compliance:
+# #     <<: *nae_info
+# #     state: query
+# #     selector: requirement
+# #     name: ansible_comp_requirement
+
+# # - name: Query for specific requirement set
+# #   cisco.nae.nae_compliance:
+# #     <<: *nae_info
+# #     state: query
+# #     selector: requirement_set
+# #     name: ansible_comp_requirement_set
 
 - name: Remove traffic selector
   cisco.nae.nae_compliance:
@@ -525,3 +585,10 @@
     state: absent
     selector: requirement_set
     name: non_existing_ansible_comp_requirement_set
+
+- name: Use incorrect params
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: modify
+    selector: traffic
+  ignore_errors: yes
