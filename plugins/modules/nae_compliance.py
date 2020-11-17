@@ -121,7 +121,7 @@ def main():
     state = module.params.get('state')
     form = module.params.get('form')
     association_to_ag = module.params.get('association_to_ag')
-    #active = module.params.get('active')
+    active = module.params.get('active')
     nae = NAEModule(module)
     if state == 'present' and form and selector == 'object':
         nae.new_object_selector()
