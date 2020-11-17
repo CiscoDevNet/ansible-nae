@@ -40,6 +40,7 @@
   loop:
     - ansible_comp_requirement_set_2
     - ansible_comp_requirement_set
+    #- requirement_set_associated_ag
   ignore_errors: yes
 
 - name: Delete Requirements
@@ -270,12 +271,13 @@
         }
       }
 
-- name: Create a compliance requirement set
+- name: Create a compliance requirement set (not associated to ag)
   cisco.nae.nae_compliance:
     <<: *nae_info
     state: present
     selector: requirement_set
     ag_name: Change Management
+    association_to_ag: False
     form: |
       {
         "name": "ansible_comp_requirement_set",
@@ -286,12 +288,44 @@
         ]
       }
 
-- name: Create another compliance requirement set
+- name: Create a compliance requirement set (associated to ag)
   cisco.nae.nae_compliance:
     <<: *nae_info
     state: present
     selector: requirement_set
-    ag_name: ansible_ag_offline
+    ag_name: Change Management
+    form: |
+      {
+        "name": "requirement_set_associated_ag",
+        "description": "",
+        "requirements": [
+            "bd_config_requirement"
+        ]
+      }
+
+# - name: Update the compliance requirement set (associated to ag)
+#   cisco.nae.nae_compliance:
+#     <<: *nae_info
+#     state: present
+#     selector: requirement_set
+#     ag_name: Change Management
+#     association_to_ag: False
+#     form: |
+#       {
+#         "name": "requirement_set_associated_ag",
+#         "description": "",
+#         "requirements": [
+#             "bd_config_requirement"
+#         ]
+#       }
+
+- name: Create another compliance requirement set (not associated to ag)
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: present
+    selector: requirement_set
+    ag_name: Change Management
+    association_to_ag: False
     form: |
         {
         "name": "ansible_comp_requirement_set_2",

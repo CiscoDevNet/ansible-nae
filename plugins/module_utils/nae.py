@@ -1115,7 +1115,8 @@ class NAEModule(object):
         self.params['fabric_uuid'] = str(ag.get('uuid'))
         d = json.loads(self.params.get('form'))
         assurance_groups_lists = []
-        assurance_groups_lists.append(dict(active=True, fabric_uuid=ag.get('uuid')))
+        if self.params.get('association_to_ag'):
+            assurance_groups_lists.append(dict(active=True, fabric_uuid=ag.get('uuid')))
         d['assurance_groups'] = assurance_groups_lists
         self.params['form'] = json.dumps(d)
         if '5.1' in self.version or '5.0' in self.version:
