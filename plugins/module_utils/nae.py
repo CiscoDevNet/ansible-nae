@@ -1269,16 +1269,32 @@ class NAEModule(object):
     def get_compliance_object(self, name):
         if self.params.get('selector') == 'object':
             objs = self.get_all_object_selectors()
-            return [x for x in objs if x['name'] == name][0]
+            obj = [x for x in objs if x['name'] == name]
+            if obj != []:
+                return obj[0]
+            else:
+                self.module.exit_json(msg="WARNING: Object selector {0} does not exist!!!".format(self.params.get('name')), **self.result)
         elif self.params.get('selector') == 'traffic':
             objs = self.get_all_traffic_selectors()
-            return [x for x in objs if x['name'] == name][0]
+            obj = [x for x in objs if x['name'] == name]
+            if obj != []:
+                return obj[0]
+            else:
+                self.module.exit_json(msg="WARNING: Traffic selector {0} does not exist!!!".format(self.params.get('name')), **self.result)
         elif self.params.get('selector') == 'requirement':
             objs = self.get_all_requirements()
-            return [x for x in objs if x['name'] == name][0]
+            obj = [x for x in objs if x['name'] == name]
+            if obj != []:
+                return obj[0]
+            else:
+                self.module.exit_json(msg="WARNING: Requirement {0} does not exist!!!".format(self.params.get('name')), **self.result)
         elif self.params.get('selector') == 'requirement_set':
             objs = self.get_all_requirement_sets()
-            return [x for x in objs if x.get('name') == name][0]
+            obj = [x for x in objs if x['name'] == name]
+            if obj != []:
+                return obj[0]
+            else:
+                self.module.exit_json(msg="WARNING: Requirement set {0} does not exist!!!".format(self.params.get('name')), **self.result)
 
     def delete_object_selector(self):
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
@@ -1308,8 +1324,8 @@ class NAEModule(object):
 
     def delete_traffic_selector(self):
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
-        self.params['obj_uuid'] = self.get_compliance_object(
-            self.params.get('name'))["uuid"]
+
+        self.params['obj_uuid'] = self.get_compliance_object(self.params.get('name'))["uuid"]
         url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
               'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
               'compliance-requirement/traffic-selectors/%(obj_uuid)s' % self.params
@@ -1392,7 +1408,7 @@ class NAEModule(object):
         for page in self.get_all_files():
             self.params['file_id'] = [f for f in page if f.get('unique_name') == self.params.get('name')]
         if self.params.get('file_id') != []:
-            self.module.exit_json(msg="WARNING: file with the same name already exisit!!!", **self.result)
+            self.module.exit_json(msg="WARNING: file with the same name already exist!!!", **self.result)
 
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         file_upload_uuid = None
