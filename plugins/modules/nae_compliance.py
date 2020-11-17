@@ -100,6 +100,7 @@ def main():
     argument_spec.update(  # Not required for querying all objects
         name=dict(type='str', aliases=['name']),
         description=dict(type='str'),
+        association_to_ag=dict(type='bool', default=True),
         selector=dict(type='str', default='object', choices=['object', 'traffic', 'requirement', 'requirement_set']),
         validate_certs=dict(type='bool', default=False),
         state=dict(type='str', default='present', choices=['absent',
@@ -118,6 +119,7 @@ def main():
     name = module.params.get('name')
     state = module.params.get('state')
     form = module.params.get('form')
+    association_to_ag = module.params.get('association_to_ag')
     nae = NAEModule(module)
     if state == 'present' and form and selector == 'object':
         nae.new_object_selector()
