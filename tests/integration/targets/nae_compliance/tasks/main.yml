@@ -288,20 +288,21 @@
         ]
       }
 
-- name: Create a compliance requirement set (associated to ag)
-  cisco.nae.nae_compliance:
-    <<: *nae_info
-    state: present
-    selector: requirement_set
-    ag_name: Change Management
-    form: |
-      {
-        "name": "requirement_set_associated_ag",
-        "description": "",
-        "requirements": [
-            "bd_config_requirement"
-        ]
-      }
+# - name: Create a compliance requirement set (associated to ag and not active)
+#   cisco.nae.nae_compliance:
+#     <<: *nae_info
+#     state: present
+#     selector: requirement_set
+#     ag_name: Change Management
+#     active: false
+#     form: |
+#       {
+#         "name": "requirement_set_associated_ag",
+#         "description": "",
+#         "requirements": [
+#             "bd_config_requirement"
+#         ]
+#       }
 
 # - name: Update the compliance requirement set (associated to ag)
 #   cisco.nae.nae_compliance:

@@ -101,6 +101,7 @@ def main():
         name=dict(type='str', aliases=['name']),
         description=dict(type='str'),
         association_to_ag=dict(type='bool', default=True),
+        active=dict(type='bool', default=True),
         selector=dict(type='str', default='object', choices=['object', 'traffic', 'requirement', 'requirement_set']),
         validate_certs=dict(type='bool', default=False),
         state=dict(type='str', default='present', choices=['absent',
@@ -120,6 +121,7 @@ def main():
     state = module.params.get('state')
     form = module.params.get('form')
     association_to_ag = module.params.get('association_to_ag')
+    #active = module.params.get('active')
     nae = NAEModule(module)
     if state == 'present' and form and selector == 'object':
         nae.new_object_selector()
