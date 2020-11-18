@@ -1,0 +1,40 @@
+- name: Test that we have an NAE host, NAE username and NAE password
+  fail:
+    msg: 'Please define the following variables: nae_host, nae_username and nae_password.'
+  when: nae_host is not defined or nae_username is not defined or nae_password is not defined
+
+- name: Set vars
+  set_fact: 
+    nae_info: &nae_info
+      host: '{{ nae_host }}'
+      username: '{{ nae_username }}'
+      password: '{{ nae_password }}'
+      validate_certs: '{{ nae_validate_certs | default(false) }}'
+
+- name: Create AG
+  cisco.nae.nae_ag:
+    <<: *nae_info
+    name: Change Management
+    state: present
+
+- name: Upload Files
+  cisco.nae.nae_file_management:
+    <<: *nae_info
+    file: "{{ item }}"
+    #Get the file name and remove the date i.e. a file name is somehting like this aci/files/datasets/ChangeMgmt2_2020-09-03_23_22_28.tar.gz
+    name: "{{ item.split('/')[-1].split('_')[0] }}" 
+    state: present
+  with_fileglob:
+    - "{{ role_path }}/datasets/*.tar.gz"
+
+- name: Do Offline Analysis
+  cisco.nae.nae_offline_analysis:
+    <<: *nae_info
+    state: present
+    complete: true
+    name: "{{ item.split('/')[-1].split('_')[0] }}"
+    ag_name: "Change Management"
+    filename: "{{ item.split('/')[-1].split('_')[0] }}"
+  with_fileglob:
+    - "{{ role_path }}/datasets/*.tar.gz"
+  when: "'ChangeMgmt' in item"

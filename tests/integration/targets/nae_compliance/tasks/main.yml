@@ -22,15 +22,6 @@
     state: query
   register: nae_files
 
-#This will delete any file that contains 'ChangeMgmt' or 'DcOps' in the name
-- name: Delete Demo Files 
-  cisco.nae.nae_file_management:
-    <<: *nae_info
-    name: "{{ item.display_name }}"
-    state: absent
-  with_items: "{{ nae_files.Result }}"
-  when: "('ChangeMgmt' in item.display_name or 'DcOps' in item.display_name)"
-
 - name: Delete Requirement Sets
   cisco.nae.nae_compliance:
     <<: *nae_info
@@ -40,7 +31,6 @@
   loop:
     - ansible_comp_requirement_set_2
     - ansible_comp_requirement_set
-    #- requirement_set_associated_ag
 
 - name: Delete Requirements
   cisco.nae.nae_compliance:
@@ -74,28 +64,16 @@
     - traffic_selector
     - FCOE_traffic_selector
 
-- name: Delete AG
+- name: Check whether AG Change Management exists
   cisco.nae.nae_ag:
     <<: *nae_info
-    name: ansible_offline_ag
-    state: absent
-  ignore_errors: yes
+    name: Change Management
+    state: query
+  register: check_ag
 
-- name: Create AG
-  cisco.nae.nae_ag:
-    <<: *nae_info
-    name: ansible_offline_ag
-    state: present
-
-- name: Upload Files
-  cisco.nae.nae_file_management:
-    <<: *nae_info
-    file: "{{ item }}"
-    #Get the file name and remove the date i.e. a file name is somehting like this aci/files/datasets/ChangeMgmt2_2020-09-03_23_22_28.tar.gz
-    name: "{{ item.split('/')[-1].split('_')[0] }}" 
-    state: present
-  with_fileglob:
-    - "{{ role_path }}/datasets/*.tar.gz"
+- name: Create AG Change Management and do offline analysis if not existing
+  include_tasks: create_ag.yml
+  when: check_ag.msg is defined and check_ag.msg == "Assurance group Change Management does not exist"
 
 - name: Create an object selector
   cisco.nae.nae_compliance:
@@ -552,6 +530,8 @@
       - rm_req_set.Result == "Requirement set ansible_comp_requirement_set deleted"
       - rm_req is changed
       - rm_req.Result == "Requirement ansible_comp_requirement deleted"
+      - rm_obj_selector is changed
+      - rm_obj_selector.Result == "Object selector ansible_object_selector deleted"
 
 # - name: Query for non_existing object selector
 #   cisco.nae.nae_compliance:
@@ -580,36 +560,63 @@
 #     selector: requirement_set
 #     name: non_existing_ansible_comp_requirement_set
 
-# - name: Remove for non_existing object selector
-#   cisco.nae.nae_compliance:
-#     <<: *nae_info
-#     state: absent
-#     name: non_existing_selector
+- name: Remove for non_existing object selector
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: absent
+    name: non_existing_selector
+  register: rm_non_existing_obj_selector
 
-# - name: Remove for non_existing traffic selector
-#   cisco.nae.nae_compliance:
-#     <<: *nae_info
-#     state: absent
-#     selector: traffic
-#     name: non_existing_traffic_selector
+- name: Remove for non_existing traffic selector
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: absent
+    selector: traffic
+    name: non_existing_traffic_selector
+  register: rm_non_existing_traffic_selector
 
-# - name: Remove for non_existing requirement
-#   cisco.nae.nae_compliance:
-#     <<: *nae_info
-#     state: absent
-#     selector: requirement
-#     name: non_existing_ansible_comp_requirement
+- name: Remove for non_existing requirement
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: absent
+    selector: requirement
+    name: non_existing_ansible_comp_requirement
+  register: rm_non_existing_req
 
-# - name: Remove for non_existing requirement set
-#   cisco.nae.nae_compliance:
-#     <<: *nae_info
-#     state: absent
-#     selector: requirement_set
-#     name: non_existing_ansible_comp_requirement_set
+- name: Remove for non_existing requirement set
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: absent
+    selector: requirement_set
+    name: non_existing_ansible_comp_requirement_set
+  register: rm_non_existing_req_set
 
-# - name: Use incorrect params
-#   cisco.nae.nae_compliance:
-#     <<: *nae_info
-#     state: modify
-#     selector: traffic
-#   ignore_errors: yes
+- name: Use incorrect params
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: modify
+    selector: traffic
+  ignore_errors: yes
+  register: incorrect_params
+
+- name: Verify removing non_existing selectors
+  assert:
+    that:
+      - rm_non_existing_obj_selector is not changed
+      - rm_non_existing_obj_selector.Result == []
+      - rm_non_existing_obj_selector.msg == "WARNING{{':'}} Object selector non_existing_selector does not exist!!!"
+      - rm_non_existing_req is not changed
+      - rm_non_existing_req.Result == []
+      - rm_non_existing_req.msg == "WARNING{{':'}} Requirement non_existing_ansible_comp_requirement does not exist!!!"
+      - rm_non_existing_traffic_selector is not changed
+      - rm_non_existing_traffic_selector.Result == []
+      - rm_non_existing_traffic_selector.msg == "WARNING{{':'}} Traffic selector non_existing_traffic_selector does not exist!!!"
+      - rm_non_existing_req_set is not changed
+      - rm_non_existing_req_set.Result == []
+      - rm_non_existing_req_set.msg == "WARNING{{':'}} Requirement set non_existing_ansible_comp_requirement_set does not exist!!!"
+
+- name: Verify incorrect_params
+  assert:
+    that:
+      - incorrect_params is not changed
+      - incorrect_params.msg == "Incorrect params passed"
