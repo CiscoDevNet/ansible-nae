@@ -1273,6 +1273,7 @@ class NAEModule(object):
             if obj != []:
                 return obj[0]
             else:
+                self.result['Result'] = []
                 self.module.exit_json(msg="WARNING: Object selector {0} does not exist!!!".format(self.params.get('name')), **self.result)
         elif self.params.get('selector') == 'traffic':
             objs = self.get_all_traffic_selectors()
@@ -1280,6 +1281,7 @@ class NAEModule(object):
             if obj != []:
                 return obj[0]
             else:
+                self.result['Result'] = []
                 self.module.exit_json(msg="WARNING: Traffic selector {0} does not exist!!!".format(self.params.get('name')), **self.result)
         elif self.params.get('selector') == 'requirement':
             objs = self.get_all_requirements()
@@ -1287,6 +1289,7 @@ class NAEModule(object):
             if obj != []:
                 return obj[0]
             else:
+                self.result['Result'] = []
                 self.module.exit_json(msg="WARNING: Requirement {0} does not exist!!!".format(self.params.get('name')), **self.result)
         elif self.params.get('selector') == 'requirement_set':
             objs = self.get_all_requirement_sets()
@@ -1294,6 +1297,7 @@ class NAEModule(object):
             if obj != []:
                 return obj[0]
             else:
+                self.result['Result'] = []
                 self.module.exit_json(msg="WARNING: Requirement set {0} does not exist!!!".format(self.params.get('name')), **self.result)
 
     def delete_object_selector(self):
