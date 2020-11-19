@@ -139,14 +139,26 @@ def main():
         nae.new_compliance_requirement_set()
         nae.result['changed'] = True
         module.exit_json(**nae.result)
+    elif state == 'query' and selector == 'object' and name:
+        nae.get_compliance_object(name)
+        module.exit_json(**nae.result)
     elif state == 'query' and selector == 'object':
         nae.get_all_object_selectors()
+        module.exit_json(**nae.result)
+    elif state == 'query' and selector == 'traffic' and name:
+        nae.get_compliance_object(name)
         module.exit_json(**nae.result)
     elif state == 'query' and selector == 'traffic':
         nae.get_all_traffic_selectors()
         module.exit_json(**nae.result)
+    elif state == 'query' and selector == 'requirement' and name:
+        nae.get_compliance_object(name)
+        module.exit_json(**nae.result)
     elif state == 'query' and selector == 'requirement':
         nae.get_all_requirements()
+        module.exit_json(**nae.result)
+    elif state == 'query' and selector == 'requirement_set' and name:
+        nae.get_compliance_object(name)
         module.exit_json(**nae.result)
     elif state == 'query' and selector == 'requirement_set':
         nae.get_all_requirement_sets()
