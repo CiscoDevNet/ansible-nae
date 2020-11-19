@@ -1271,6 +1271,7 @@ class NAEModule(object):
             objs = self.get_all_object_selectors()
             obj = [x for x in objs if x['name'] == name]
             if obj != []:
+                self.result['Result'] = obj[0]
                 return obj[0]
             else:
                 self.result['Result'] = []
@@ -1279,6 +1280,7 @@ class NAEModule(object):
             objs = self.get_all_traffic_selectors()
             obj = [x for x in objs if x['name'] == name]
             if obj != []:
+                self.result['Result'] = obj[0]
                 return obj[0]
             else:
                 self.result['Result'] = []
@@ -1287,6 +1289,7 @@ class NAEModule(object):
             objs = self.get_all_requirements()
             obj = [x for x in objs if x['name'] == name]
             if obj != []:
+                self.result['Result'] = obj[0]
                 return obj[0]
             else:
                 self.result['Result'] = []
@@ -1295,6 +1298,7 @@ class NAEModule(object):
             objs = self.get_all_requirement_sets()
             obj = [x for x in objs if x['name'] == name]
             if obj != []:
+                self.result['Result'] = obj[0]
                 return obj[0]
             else:
                 self.result['Result'] = []

@@ -463,32 +463,59 @@
       - query_all_req_set is not changed
       - query_all_req_set.Result | length >= 2
 
-# # - name: Query for specific object selector
-# #   cisco.nae.nae_compliance:
-# #     <<: *nae_info
-# #     state: query
-# #     name: ansible_object_selector
+- name: Query for specific object selector
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: query
+    name: DataBase
+  register: query_obj_selector
 
-# # - name: Query for specific traffic selector
-# #   cisco.nae.nae_compliance:
-# #     <<: *nae_info
-# #     state: query
-# #     selector: traffic
-# #     name: traffic_selector
+- name: Query for specific traffic selector
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: query
+    selector: traffic
+    name: traffic_selector
+  register: query_traffic_selector
 
-# # - name: Query for specific requirement
-# #   cisco.nae.nae_compliance:
-# #     <<: *nae_info
-# #     state: query
-# #     selector: requirement
-# #     name: ansible_comp_requirement
+- name: Query for specific requirement
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: query
+    selector: requirement
+    name: ansible_comp_requirement
+  register: query_req
 
-# # - name: Query for specific requirement set
-# #   cisco.nae.nae_compliance:
-# #     <<: *nae_info
-# #     state: query
-# #     selector: requirement_set
-# #     name: ansible_comp_requirement_set
+- name: Query for specific requirement set
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: query
+    selector: requirement_set
+    name: ansible_comp_requirement_set
+  register: query_req_set
+
+- name: Verify query
+  assert:
+    that:
+    - query_obj_selector is not changed
+    - query_traffic_selector is not changed
+    - query_req is not changed
+    - query_req_set is not changed
+    - query_obj_selector.Result.name == "DataBase"
+    - query_obj_selector.Result.associated_requirements == ["ansible_comp_requirement"]
+    - query_traffic_selector.Result.associated_requirements == []
+    - query_traffic_selector.Result.description == "This is a description"
+    - query_traffic_selector.Result.name == "traffic_selector"
+    - query_req.Result.communication_type == "MUST_NOT"
+    - query_req.Result.epg_selector_a == "Web"
+    - query_req.Result.epg_selector_b == "DataBase"
+    - query_req.Result.name == "ansible_comp_requirement"
+    - query_req.Result.requirement_type == "SEGMENTATION"
+    - query_req_set.Result.associated == "no"
+    - query_req_set.Result.assurance_groups == []
+    - query_req_set.Result.name == "ansible_comp_requirement_set"
+    - query_req_set.Result.requirements | length == 2
+    - query_req_set.Result.status == "inactive"
 
 - name: Remove traffic selector
   cisco.nae.nae_compliance:
@@ -533,32 +560,32 @@
       - rm_obj_selector is changed
       - rm_obj_selector.Result == "Object selector ansible_object_selector deleted"
 
-# - name: Query for non_existing object selector
-#   cisco.nae.nae_compliance:
-#     <<: *nae_info
-#     state: query
-#     name: non_existing_selector
+- name: Query for non_existing object selector
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: query
+    name: non_existing_selector
 
-# - name: Query for non_existing traffic selector
-#   cisco.nae.nae_compliance:
-#     <<: *nae_info
-#     state: query
-#     selector: traffic
-#     name: non_existing_traffic_selector
+- name: Query for non_existing traffic selector
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: query
+    selector: traffic
+    name: non_existing_traffic_selector
 
-# - name: Query for non_existing requirement
-#   cisco.nae.nae_compliance:
-#     <<: *nae_info
-#     state: query
-#     selector: requirement
-#     name: non_existing_ansible_comp_requirement
+- name: Query for non_existing requirement
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: query
+    selector: requirement
+    name: non_existing_ansible_comp_requirement
 
-# - name: Query for non_existing requirement set
-#   cisco.nae.nae_compliance:
-#     <<: *nae_info
-#     state: query
-#     selector: requirement_set
-#     name: non_existing_ansible_comp_requirement_set
+- name: Query for non_existing requirement set
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: query
+    selector: requirement_set
+    name: non_existing_ansible_comp_requirement_set
 
 - name: Remove for non_existing object selector
   cisco.nae.nae_compliance:
