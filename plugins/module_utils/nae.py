@@ -1267,42 +1267,31 @@ class NAEModule(object):
             return json.loads(r)['value']['data']
 
     def get_compliance_object(self, name):
+        type_map = {
+            'object': 'Object selector',
+            'traffic': 'Traffic selector',
+            'requirement': 'Requirement',
+            'requirement_set': 'Requirement set'
+        }
         if self.params.get('selector') == 'object':
             objs = self.get_all_object_selectors()
             obj = [x for x in objs if x['name'] == name]
-            if obj != []:
-                self.result['Result'] = obj[0]
-                return obj[0]
-            else:
-                self.result['Result'] = []
-                self.module.exit_json(msg="WARNING: Object selector {0} does not exist!!!".format(self.params.get('name')), **self.result)
         elif self.params.get('selector') == 'traffic':
             objs = self.get_all_traffic_selectors()
             obj = [x for x in objs if x['name'] == name]
-            if obj != []:
-                self.result['Result'] = obj[0]
-                return obj[0]
-            else:
-                self.result['Result'] = []
-                self.module.exit_json(msg="WARNING: Traffic selector {0} does not exist!!!".format(self.params.get('name')), **self.result)
         elif self.params.get('selector') == 'requirement':
             objs = self.get_all_requirements()
             obj = [x for x in objs if x['name'] == name]
-            if obj != []:
-                self.result['Result'] = obj[0]
-                return obj[0]
-            else:
-                self.result['Result'] = []
-                self.module.exit_json(msg="WARNING: Requirement {0} does not exist!!!".format(self.params.get('name')), **self.result)
         elif self.params.get('selector') == 'requirement_set':
             objs = self.get_all_requirement_sets()
             obj = [x for x in objs if x['name'] == name]
-            if obj != []:
-                self.result['Result'] = obj[0]
-                return obj[0]
-            else:
-                self.result['Result'] = []
-                self.module.exit_json(msg="WARNING: Requirement set {0} does not exist!!!".format(self.params.get('name')), **self.result)
+        if obj != []:
+            self.result['Result'] = obj[0]
+            return obj[0]
+        else:
+            self.result['Result'] = []
+            self.module.exit_json(
+                msg="WARNING: {0} {1} does not exist!!!".format(type_map.get(self.params.get('selector')), self.params.get('name')), **self.result)
 
     def delete_object_selector(self):
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
