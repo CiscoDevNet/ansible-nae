@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+# Copyright: (c) 2020, Cindy Zhao (@cizhao) <cizhao@cisco.com>
 
 # GNU General Public License v3.0+ (see COPYING or
 # https://www.gnu.org/licenses/gpl-3.0.txt)
@@ -179,7 +180,7 @@ def main():
         nae.delete_requirement_set()
         nae.result['changed'] = True
         module.exit_json(**nae.result)
-    module.fail_json(msg='Incorrect params passed', **nae.result)
+    module.fail_json(msg='Incorrect parameters passed', **nae.result)
 
 
 if __name__ == '__main__':
