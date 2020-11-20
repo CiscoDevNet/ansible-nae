@@ -197,7 +197,7 @@
     state: present
     form: |
       {
-                    "name": "bds_in_nonProd",
+                    "name": "bds_in_non_prod",
                     "description": null,
                     "includes": [
                       {
@@ -227,7 +227,7 @@
     - create_bd_selector is changed
     - create_db_selector.Result == "Object Selector DataBase created"
     - create_web_selector.Result == "Object Selector Web created"
-    - create_bd_selector.Result == "Object Selector bds_in_nonProd created"
+    - create_bd_selector.Result == "Object Selector bds_in_non_prod created"
 
 - name: Create a compliance requirement
   cisco.nae.nae_compliance:
@@ -256,7 +256,7 @@
       {
         "name": "bd_config_requirement",
         "requirement_type": "CONFIGURATION_COMPLIANCE",
-        "epg_selector_a": "bds_in_nonProd",
+        "epg_selector_a": "bds_in_non_prod",
         "config_compliance_parameter": {
           "and_parameters": [
             {
@@ -646,4 +646,4 @@
   assert:
     that:
       - incorrect_params is not changed
-      - incorrect_params.msg == "Incorrect params passed"
+      - incorrect_params.msg == "Incorrect parameters passed"
