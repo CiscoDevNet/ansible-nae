@@ -1321,7 +1321,6 @@ class NAEModule(object):
 
     def delete_traffic_selector(self):
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
-
         self.params['obj_uuid'] = self.get_compliance_object(self.params.get('name'))["uuid"]
         url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
               'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
