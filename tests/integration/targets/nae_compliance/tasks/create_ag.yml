@@ -24,8 +24,19 @@
 
 - name: Download files
   get_url:
-        url: https://github.com/xinyuezhao/dataset/blob/main/ChangeMgmtCorrectScopeOverlappingSubnet_2020-10-22_22_36_21.tar.gz
+        url: "https://github.com/xinyuezhao/dataset/blob/main/{{item}}"
         dest: ./datasets
+  loop:
+    - ChangeMgmtCorrectScopeOverlappingSubnet_2020-10-22_22_36_21.tar.gz
+    - ChangeMgmtCorrect_2020-10-22_22_38_14.tar.gz
+    - ChangeMgmtSegmentationCompliance_2020-10-22_22_40_40.tar.gz
+    - ChangeMgmtWrongScope_2020-10-22_22_34_03.tar.gz
+    - DcOpsDupIP_2020-10-22_22_27_48.tar.gz
+    - DcOpsNoDupIP_2020-10-22_22_30_09.tar.gz
+    - DcOpsNoFilter_2020-10-22_22_32_08.tar.gz
+    - EpochDeltaDupIP_2020-10-22_22_42_53.tar.gz
+    - EpochDeltaNoDupIP.tar.gz
+    - Migrations1_.tar.gz
 
 - name: Upload Files
   cisco.nae.nae_file_management:
