@@ -17,15 +17,10 @@
     name: Change Management
     state: present
 
-- name: ansible create directory example
-  file:
-    path: ./datasets
-    state: directory
-
 - name: Download files
   get_url:
         url: "https://github.com/xinyuezhao/dataset/blob/main/{{item}}"
-        dest: ./datasets
+        dest: /tmp/
   loop:
     - ChangeMgmtCorrectScopeOverlappingSubnet_2020-10-22_22_36_21.tar.gz
     - ChangeMgmtCorrect_2020-10-22_22_38_14.tar.gz
@@ -46,7 +41,7 @@
     name: "{{ item.split('/')[-1].split('_')[0] }}" 
     state: present
   with_fileglob:
-    - ./datasets/*.tar.gz
+    - /tmp/*.tar.gz
 
 - name: Do Offline Analysis
   cisco.nae.nae_offline_analysis:
