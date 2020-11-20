@@ -52,7 +52,7 @@
     - DataBase
     - Web
     - ansible_object_selector
-    - bds_in_nonProd
+    - bds_in_non_prod
 
 - name: Delete traffic selectors
   cisco.nae.nae_compliance:
