@@ -57,5 +57,5 @@
     ag_name: "Change Management"
     filename: "{{ item.split('/')[-1].split('_')[0] }}"
   with_fileglob:
-    - "{{ role_path }}/datasets/*.tar.gz"
+    - /tmp/*.tar.gz
   when: "'ChangeMgmt' in item"
