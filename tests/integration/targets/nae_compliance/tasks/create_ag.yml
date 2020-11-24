@@ -24,7 +24,7 @@
 
 - name: Download files
   get_url:
-        url: "https://github.com/xinyuezhao/dataset/blob/main/{{item}}"
+        url: "https://github.com/CiscoDevNet/ansible-nae/raw/datasets/{{item}}"
         dest: /tmp/
   loop:
     - ChangeMgmtCorrectScopeOverlappingSubnet_2020-10-22_22_36_21.tar.gz
