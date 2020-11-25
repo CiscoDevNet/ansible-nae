@@ -12,7 +12,7 @@ v1.0.0
 Release Summary
 ---------------
 
-This is the first official release of the ``cisco.mso`` collection on 2020-11-25. This changelog describes all changes made to the modules and plugins included in this collection since Ansible 2.9.0. 
+This is the first official release of the ``cisco.nae`` collection on 2020-11-25.
 
 Major Changes
 -------------
@@ -21,9 +21,9 @@ Major Changes
 - Add function getFirstAG() to get an Assurance Group for some API calls
 - Add function send_manual_payload() to create pre-change from manual changes
 - Add module nae_compliance to manage compliance objects
+- Add module nae_delta to manage delta analysis
 - Add module nae_file_management to manage NAE file
-- Add moudle nae_delta to manage delta analysis
-- Add moudle nae_offline_analysis to manage NAE offline analysis
+- Add module nae_offline_analysis to manage NAE offline analysis
 - Add requirements in network-integration.requirements.txt
 
 Minor Changes
@@ -50,7 +50,7 @@ Bugfixes
 
 - Fix NAE file upload
 - Fix all API call endpoints
-- Fix crash in deleteAG() when moving a non_existing AG
+- Fix crash in deleteAG() when using a non_existing AG
 - Fix delay while querying existing PCV analysis
 - Fix failing of pre-change analysis when there are only INFO severity events
 - Fix idempotency issue for nae_ag module
