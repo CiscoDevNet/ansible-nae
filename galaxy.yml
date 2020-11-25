@@ -2,7 +2,7 @@
 namespace: cisco
 name: nae
 # The version of the collection. Must be compatible with semantic versioning
-version: 0.0.1
+version: 1.0.0
 readme: README.md
 authors:
 - Shantanu Kulkarni (@Shan-KulK) <shankul@cisco.com, shantanu.kulkarni9@hotmail.com>
