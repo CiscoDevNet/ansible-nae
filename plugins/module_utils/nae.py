@@ -1293,6 +1293,27 @@ class NAEModule(object):
             self.module.exit_json(
                 msg="WARNING: {0} {1} does not exist!!!".format(type_map.get(self.params.get('selector')), self.params.get('name')), **self.result)
 
+    def query_compliance_object(self, name):
+        type_map = {
+            'object': 'Object selector',
+            'traffic': 'Traffic selector',
+            'requirement': 'Requirement',
+            'requirement_set': 'Requirement set'
+        }
+        if self.params.get('selector') == 'object':
+            objs = self.get_all_object_selectors()
+            obj = [x for x in objs if x['name'] == name]
+        elif self.params.get('selector') == 'traffic':
+            objs = self.get_all_traffic_selectors()
+            obj = [x for x in objs if x['name'] == name]
+        elif self.params.get('selector') == 'requirement':
+            objs = self.get_all_requirements()
+            obj = [x for x in objs if x['name'] == name]
+        elif self.params.get('selector') == 'requirement_set':
+            objs = self.get_all_requirement_sets()
+            obj = [x for x in objs if x['name'] == name]
+        return obj
+
     def delete_object_selector(self):
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         self.params['obj_uuid'] = self.get_compliance_object(
