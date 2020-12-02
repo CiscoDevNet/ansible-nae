@@ -1021,6 +1021,9 @@ class NAEModule(object):
         self.result['Result'] = "Pre-change analysis %(name)s successfully created." % self.params
 
     def new_object_selector(self):
+        obj = self.query_compliance_object(json.loads(self.params.get('form')).get('name'))
+        if obj != []:
+            self.module.exit_json(msg="WARNING: An object selector with the same name already exist!!!", **self.result)
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/'\
               'assured-networks/%(fabric_uuid)s/model/aci-policy/'\
@@ -1053,6 +1056,9 @@ class NAEModule(object):
             self.result['Result'] = final_msg
 
     def new_traffic_selector(self):
+        obj = self.query_compliance_object(json.loads(self.params.get('form')).get('name'))
+        if obj != []:
+            self.module.exit_json(msg="WARNING: A traffic selector with the same name already exist!!!", **self.result)
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
               'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
@@ -1081,6 +1087,9 @@ class NAEModule(object):
             self.result['Result'] = final_msg
 
     def new_compliance_requirement(self):
+        obj = self.query_compliance_object(json.loads(self.params.get('form')).get('name'))
+        if obj != []:
+            self.module.exit_json(msg="WARNING: A compliance requirement with the same name already exist!!!", **self.result)
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks' \
               '/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirements' % self.params
@@ -1108,6 +1117,9 @@ class NAEModule(object):
             self.result['Result'] = final_msg
 
     def new_compliance_requirement_set(self):
+        obj = self.query_compliance_object(json.loads(self.params.get('form')).get('name'))
+        if obj != []:
+            self.module.exit_json(msg="WARNING: A compliance requirement set with the same name already exist!!!", **self.result)
         ag = self.get_assurance_group(self.params.get('ag_name'))
         if ag is None:
             self.result['Result'] = "No such Assurance Group exists"
