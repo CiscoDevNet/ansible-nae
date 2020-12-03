@@ -1020,10 +1020,21 @@ class NAEModule(object):
 
         self.result['Result'] = "Pre-change analysis %(name)s successfully created." % self.params
 
-    def new_object_selector(self):
-        obj = self.query_compliance_object(json.loads(self.params.get('form')).get('name'))
+    def check_existing(self):
+        try:
+            form = json.loads(self.params.get('form'))
+        except Exception:
+            self.fail_json(msg='The form can not be loaded properly')
+        if form is None:
+            self.fail_json(msg='The form is empty')
+        elif form.get('name') is None:
+            self.fail_json(msg='The name should not be empty')
+        obj, type_map = self.query_compliance_object(form.get('name'))
         if obj != []:
-            self.module.exit_json(msg="WARNING: An object selector with the same name already exist!!!", **self.result)
+            self.module.exit_json(msg="WARNING: The {0} with the same name already exist!!!".format(type_map.get(self.params.get('selector'))), **self.result)
+
+    def new_object_selector(self):
+        self.check_existing()
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/'\
               'assured-networks/%(fabric_uuid)s/model/aci-policy/'\
@@ -1056,9 +1067,7 @@ class NAEModule(object):
             self.result['Result'] = final_msg
 
     def new_traffic_selector(self):
-        obj = self.query_compliance_object(json.loads(self.params.get('form')).get('name'))
-        if obj != []:
-            self.module.exit_json(msg="WARNING: A traffic selector with the same name already exist!!!", **self.result)
+        self.check_existing()
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
               'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
@@ -1087,9 +1096,7 @@ class NAEModule(object):
             self.result['Result'] = final_msg
 
     def new_compliance_requirement(self):
-        obj = self.query_compliance_object(json.loads(self.params.get('form')).get('name'))
-        if obj != []:
-            self.module.exit_json(msg="WARNING: A compliance requirement with the same name already exist!!!", **self.result)
+        self.check_existing()
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks' \
               '/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirements' % self.params
@@ -1117,9 +1124,7 @@ class NAEModule(object):
             self.result['Result'] = final_msg
 
     def new_compliance_requirement_set(self):
-        obj = self.query_compliance_object(json.loads(self.params.get('form')).get('name'))
-        if obj != []:
-            self.module.exit_json(msg="WARNING: A compliance requirement set with the same name already exist!!!", **self.result)
+        self.check_existing()
         ag = self.get_assurance_group(self.params.get('ag_name'))
         if ag is None:
             self.result['Result'] = "No such Assurance Group exists"
@@ -1278,33 +1283,6 @@ class NAEModule(object):
             self.result['Result'] = json.loads(r)['value']['data']
             return json.loads(r)['value']['data']
 
-    def get_compliance_object(self, name):
-        type_map = {
-            'object': 'Object selector',
-            'traffic': 'Traffic selector',
-            'requirement': 'Requirement',
-            'requirement_set': 'Requirement set'
-        }
-        if self.params.get('selector') == 'object':
-            objs = self.get_all_object_selectors()
-            obj = [x for x in objs if x['name'] == name]
-        elif self.params.get('selector') == 'traffic':
-            objs = self.get_all_traffic_selectors()
-            obj = [x for x in objs if x['name'] == name]
-        elif self.params.get('selector') == 'requirement':
-            objs = self.get_all_requirements()
-            obj = [x for x in objs if x['name'] == name]
-        elif self.params.get('selector') == 'requirement_set':
-            objs = self.get_all_requirement_sets()
-            obj = [x for x in objs if x['name'] == name]
-        if obj != []:
-            self.result['Result'] = obj[0]
-            return obj[0]
-        else:
-            self.result['Result'] = []
-            self.module.exit_json(
-                msg="WARNING: {0} {1} does not exist!!!".format(type_map.get(self.params.get('selector')), self.params.get('name')), **self.result)
-
     def query_compliance_object(self, name):
         type_map = {
             'object': 'Object selector',
@@ -1324,7 +1302,17 @@ class NAEModule(object):
         elif self.params.get('selector') == 'requirement_set':
             objs = self.get_all_requirement_sets()
             obj = [x for x in objs if x['name'] == name]
-        return obj
+        return obj, type_map
+
+    def get_compliance_object(self, name):
+        obj, type_map = self.query_compliance_object(name)
+        if obj != []:
+            self.result['Result'] = obj[0]
+            return obj[0]
+        else:
+            self.result['Result'] = []
+            self.module.exit_json(
+                msg="WARNING: {0} {1} does not exist!!!".format(type_map.get(self.params.get('selector')), self.params.get('name')), **self.result)
 
     def delete_object_selector(self):
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
