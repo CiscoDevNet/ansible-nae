@@ -158,7 +158,7 @@
 - name: Verify create_obj_selector_again
   assert:
     that:
-      - create_obj_selector_again.msg == "WARNING{{':'}} An object selector with the same name already exist!!!"
+      - create_obj_selector_again.msg == "WARNING{{':'}} The Object selector with the same name already exist!!!"
 
 - name: Create object selector for DataBase Tier
   cisco.nae.nae_compliance:
@@ -310,7 +310,7 @@
 - name: Verify create_req_again
   assert:
     that:
-      - create_req_again.msg == "WARNING{{':'}} A compliance requirement with the same name already exist!!!"
+      - create_req_again.msg == "WARNING{{':'}} The Requirement with the same name already exist!!!"
 
 - name: Create Config Compliance Requirement for Web to DB communication 
   cisco.nae.nae_compliance:
@@ -440,7 +440,7 @@
 - name: Verify create_req_set_again
   assert:
     that:
-      - create_req_set_again.msg == "WARNING{{':'}} A compliance requirement set with the same name already exist!!!"
+      - create_req_set_again.msg == "WARNING{{':'}} The Requirement set with the same name already exist!!!"
 
 - name: Create a traffic selector
   cisco.nae.nae_compliance:
@@ -523,7 +523,7 @@
 - name: Verify create_traffic_selector_again
   assert:
     that:
-      - create_traffic_selector_again.msg == "WARNING{{':'}} A traffic selector with the same name already exist!!!"
+      - create_traffic_selector_again.msg == "WARNING{{':'}} The Traffic selector with the same name already exist!!!"
 
 - name: Create another traffic selector
   cisco.nae.nae_compliance:
