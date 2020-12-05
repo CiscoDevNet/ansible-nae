@@ -538,6 +538,10 @@ class NAEModule(object):
             self.result['Result'] = "No such Assurance Group exists"
             self.module.fail_json(msg='Assurance group {0} does not exist'.format(self.params.get('ag_name')), **self.result)
         self.params['fabric_id'] = str(ag.get('uuid'))
+        epochs = self.get_epochs()
+        if not epochs:
+            self.result['Result'] = "No Epochs found in Assurance group {0}".format(self.params.get('ag_name'))
+            self.module.fail_json(msg='No Epochs found in Assurance group {0}'.format(self.params.get('ag_name')), **self.result)
         self.params['base_epoch_id'] = str(self.get_epochs()[0]["epoch_id"])
         if '4.1' in self.version:
             f = self.params.get('file')
@@ -576,7 +580,8 @@ class NAEModule(object):
             self.result['Result'] = "Pre-change analysis %(name)s successfully created." % self.params
 
         elif '5.0' in self.version or '5.1' in self.version:
-            url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/manual-changes?action=RUN' % self.params
+            # job_id = self.params.get('job_id') # necessary to PUT method
+            url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/manual-changes?action=%(action)s' % self.params
             form = '''{
                                     "name": "''' + self.params.get('name') + '''",
                                     "allow_unsupported_object_modification": true,

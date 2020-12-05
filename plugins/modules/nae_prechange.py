@@ -165,8 +165,9 @@ def main():
         name=dict(type='str', aliases=['name']),
         description=dict(type='str'),
         changes=dict(type='str'),
-        ignore_sm=dict(type='list'),
+        ignore_sm=dict(type='list', default=[]),
         verify=dict(type='bool', default=False),
+        save=dict(type='bool', default=False),
         file=dict(type='str', default=None),
         validate_certs=dict(type='bool', default=False),
         state=dict(type='str', default='present', choices=['absent',
@@ -184,7 +185,12 @@ def main():
     state = module.params.get('state')
     ag_name = module.params.get('ag_name')
     name = module.params.get('name')
+    save = module.params.get('save')
     nae = NAEModule(module)
+
+    module.params['action'] = 'RUN'
+    if save:
+        module.params['action'] = 'SAVE'
 
     if state == 'present' and change_file:
         nae.create_pre_change_from_file()
