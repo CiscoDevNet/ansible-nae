@@ -1024,25 +1024,38 @@ class NAEModule(object):
         try:
             form = json.loads(self.params.get('form'))
         except Exception:
-            self.fail_json(msg='The form can not be loaded properly')
+            self.module.fail_json(msg='The form can not be loaded properly')
         if form is None:
-            self.fail_json(msg='The form is empty')
+            self.module.fail_json(msg='The form is empty')
         elif form.get('name') is None:
-            self.fail_json(msg='The name should not be empty')
+            self.module.fail_json(msg='The name should not be empty')
         obj, type_map = self.query_compliance_object(form.get('name'))
-        if obj != []:
-            self.module.exit_json(msg="WARNING: The {0} with the same name already exist!!!".format(type_map.get(self.params.get('selector'))), **self.result)
+        #if obj != []:
+            #self.module.exit_json(msg="WARNING: The {0} with the same name already exist!!!".format(type_map.get(self.params.get('selector'))), **self.result)
+            #return True
+        return obj, form
 
     def new_object_selector(self):
-        self.check_existing()
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
-        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/'\
-              'assured-networks/%(fabric_uuid)s/model/aci-policy/'\
-              'compliance-requirement/object-selectors' % self.params
+        obj, form = self.check_existing()
+        if obj != []:
+            url = 'https://{0}:{1}/nae/api/v1/event-services/'\
+                  'assured-networks/{2}/model/aci-policy/'\
+                  'compliance-requirement/object-selectors/{3}'.format(self.params.get('host'), self.params.get('port'), self.params.get('fabric_uuid'), str(obj[0].get('uuid')))
+            method = 'PUT'
+            form['uuid'] = obj[0].get('uuid')
+            self.params['form'] = json.dumps(form)
+            #self.module.exit_json(msg="form is {0}".format(str(form)), **self.result)
+        else:
+            url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/'\
+                  'assured-networks/%(fabric_uuid)s/model/aci-policy/'\
+                  'compliance-requirement/object-selectors' % self.params
+            method = 'POST'
+            #self.module.exit_json(msg="url is {0}----method is {1}".format(url, method), **self.result)
         resp, auth = fetch_url(self.module, url,
-                               data=self.params.get('form'),
+                               data=json.dumps(form),
                                headers=self.http_headers,
-                               method='POST')
+                               method=method)
         if auth.get('status') != 200:
             if('filename' in self.params):
                 self.params['file'] = self.params.get('filename')
@@ -1053,7 +1066,7 @@ class NAEModule(object):
                                       'messages'][0]['message'], **self.result)
             except KeyError:
                 # Connection error
-                self.fail_json(
+                self.module.fail_json(
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         else:
@@ -1065,13 +1078,24 @@ class NAEModule(object):
                 str(json.loads(r)['value']
                     ['data']['name']) + " created"
             self.result['Result'] = final_msg
+            self.result['Content'] = str(json.loads(r)['value']['data'])
 
     def new_traffic_selector(self):
-        self.check_existing()
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
-        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
-              'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
-              'compliance-requirement/traffic-selectors' % self.params
+        obj, form = self.check_existing()
+        if obj != []:
+            url = 'https://{0}:{1}/nae/api/v1/event-services/'\
+                  'assured-networks/{2}/model/aci-policy/'\
+                  'compliance-requirement/traffic-selectors/{3}'.format(self.params.get('host'), self.params.get('port'), self.params.get('fabric_uuid'), str(obj[0].get('uuid')))
+            method = 'PUT'
+            form['uuid'] = obj[0].get('uuid')
+            self.params['form'] = json.dumps(form)
+            self.result['stdout'] = 'url is {0}---form is {1}'.format(url, form)
+        else:
+            url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
+                  'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
+                  'compliance-requirement/traffic-selectors' % self.params
+            method = 'POST'
         resp, auth = fetch_url(self.module, url,
                                data=self.params.get('form'),
                                headers=self.http_headers,
@@ -1096,10 +1120,20 @@ class NAEModule(object):
             self.result['Result'] = final_msg
 
     def new_compliance_requirement(self):
-        self.check_existing()
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
-        url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks' \
-              '/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirements' % self.params
+        obj, form = self.check_existing()
+        if obj != []:
+            url = 'https://{0}:{1}/nae/api/v1/event-services/'\
+                  'assured-networks/{2}/model/aci-policy/'\
+                  'compliance-requirement/requirements/{3}'.format(self.params.get('host'), self.params.get('port'), self.params.get('fabric_uuid'), str(obj[0].get('uuid')))
+            method = 'PUT'
+            form['uuid'] = obj[0].get('uuid')
+            self.params['form'] = json.dumps(form)
+            self.result['stdout'] = 'url is {0}---form is {1}'.format(url, form)
+        else:
+            url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks' \
+                  '/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirements' % self.params
+            method = 'POST'
         resp, auth = fetch_url(self.module, url,
                                data=self.params.get('form'),
                                headers=self.http_headers,

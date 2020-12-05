@@ -126,7 +126,7 @@
     form: |
         {
         "name": "ansible_object_selector",
-        "description": null,
+        "description": "update obj selector",
         "includes": [
             {
             "matches": [
@@ -158,7 +158,7 @@
 - name: Verify create_obj_selector_again
   assert:
     that:
-      - create_obj_selector_again.msg == "WARNING{{':'}} The Object selector with the same name already exist!!!"
+      - create_obj_selector_again.Result == "Object Selector ansible_object_selector created"
 
 - name: Create object selector for DataBase Tier
   cisco.nae.nae_compliance:
@@ -297,13 +297,11 @@
     form: |
         {
         "name": "ansible_comp_requirement",
-        "config_compliance_parameter": {
-        },
-        "epg_selector_a": "Web",
-        "epg_selector_b": "DataBase",
         "requirement_type": "SEGMENTATION",
-        "communication_type": "MUST_NOT",
-        "is_all_traffic": false
+        "epg_selector_a": "Web",
+        "description":"update compliance req",
+        "epg_selector_b": "DataBase",
+        "communication_type": "MUST_NOT"
         }
   register: create_req_again
 
@@ -421,26 +419,26 @@
       - create_req_set.Result == "Compliance requirement set ansible_comp_requirement_set created"
       - create_req_set_2.Result == "Compliance requirement set ansible_comp_requirement_set_2 created"
 
-- name: Create compliance requirement set again
-  cisco.nae.nae_compliance:
-    <<: *nae_info
-    state: present
-    selector: requirement_set
-    ag_name: Change Management
-    association_to_ag: False
-    form: |
-        {
-        "name": "ansible_comp_requirement_set_2",
-        "requirements": [
-            "bd_config_requirement"
-        ]
-        }
-  register: create_req_set_again
+# - name: Create compliance requirement set again
+#   cisco.nae.nae_compliance:
+#     <<: *nae_info
+#     state: present
+#     selector: requirement_set
+#     ag_name: Change Management
+#     association_to_ag: False
+#     form: |
+#         {
+#         "name": "ansible_comp_requirement_set_2",
+#         "requirements": [
+#             "bd_config_requirement"
+#         ]
+#         }
+#   register: create_req_set_again
 
-- name: Verify create_req_set_again
-  assert:
-    that:
-      - create_req_set_again.msg == "WARNING{{':'}} The Requirement set with the same name already exist!!!"
+# - name: Verify create_req_set_again
+#   assert:
+#     that:
+#       - create_req_set_again.msg == "WARNING{{':'}} The Requirement set with the same name already exist!!!"
 
 - name: Create a traffic selector
   cisco.nae.nae_compliance:
@@ -481,49 +479,49 @@
       }
   register: create_traffic_selector
 
-- name: Create the traffic selector again
-  cisco.nae.nae_compliance:
-    <<: *nae_info
-    state: present
-    selector: traffic
-    form: |
-      {
-        "name": "traffic_selector",
-        "description": "This is a description",
-        "includes": {
-          "selectors": [
-              {
-                  "selectors": [
-                    {
-                      "ether_type": "ARP"
-                    },
-                    {
-                      "ether_type": "FCOE"
-                    },
-                    {
-                      "ether_type": "IP",
-                      "ip_protocol": "EGP"
-                    },
-                    {
-                      "ether_type": "MAC_SECURITY"
-                    },
-                    {
-                      "ether_type": "MPLS_UNICAST"
-                    },
-                    {
-                      "ether_type": "TRILL"
-                    }
-                  ]
-              }
-          ]
-        }
-      }
-  register: create_traffic_selector_again
+# - name: Create the traffic selector again
+#   cisco.nae.nae_compliance:
+#     <<: *nae_info
+#     state: present
+#     selector: traffic
+#     form: |
+#       {
+#         "name": "traffic_selector",
+#         "description": "Update description",
+#         "includes": {
+#           "selectors": [
+#               {
+#                   "selectors": [
+#                     {
+#                       "ether_type": "ARP"
+#                     },
+#                     {
+#                       "ether_type": "FCOE"
+#                     },
+#                     {
+#                       "ether_type": "IP",
+#                       "ip_protocol": "EGP"
+#                     },
+#                     {
+#                       "ether_type": "MAC_SECURITY"
+#                     },
+#                     {
+#                       "ether_type": "MPLS_UNICAST"
+#                     },
+#                     {
+#                       "ether_type": "TRILL"
+#                     }
+#                   ]
+#               }
+#           ]
+#         }
+#       }
+#   register: create_traffic_selector_again
 
-- name: Verify create_traffic_selector_again
-  assert:
-    that:
-      - create_traffic_selector_again.msg == "WARNING{{':'}} The Traffic selector with the same name already exist!!!"
+# - name: Verify create_traffic_selector_again
+#   assert:
+#     that:
+#       - create_traffic_selector_again.msg == "WARNING{{':'}} The Traffic selector with the same name already exist!!!"
 
 - name: Create another traffic selector
   cisco.nae.nae_compliance:
