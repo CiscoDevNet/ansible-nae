@@ -2,6 +2,8 @@
 
 - name: playbook for testing anp's and epg's
   hosts: all
+  collections:
+  - cisco.aci
   connection: local
   gather_facts: no
   vars:
@@ -21,7 +23,7 @@
           <<: *aci_login
           name: AnsibleTest 
           descr: 'tenant by Ansible'
-          filename: 'dump.json'
+          output_path: 'dump.json'
 
     - pause:
         prompt: "Press a key to continue"
@@ -32,7 +34,7 @@
           tenant: AnsibleTest
           name: AnsibleTest_VRF
           state: present
-          filename: 'dump.json'
+          output_path: 'dump.json'
 
     - name: ensure bridge domain 1 exists
       aci_bd:
@@ -41,7 +43,7 @@
         vrf: AnsibleTest_VRF 
         tenant: AnsibleTest 
         state: present 
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
     - name: add subnet to BD
       aci_bd_subnet: 
@@ -52,7 +54,7 @@
         gateway: 10.10.10.1 
         mask: 24
         state: present 
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
     - name: ensure bridge domain 2 exists
       aci_bd: 
@@ -61,7 +63,7 @@
         vrf: AnsibleTest_VRF 
         tenant: AnsibleTest 
         state: present 
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
     - name: add subnet to BD
       aci_bd_subnet: 
@@ -72,7 +74,7 @@
         gateway: 20.20.20.1 
         mask: 24  
         state: present 
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
     - name: ensure web filter exists
       aci_filter: 
@@ -80,7 +82,7 @@
         name: Web_Filter 
         tenant: AnsibleTest 
         state: present 
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
     - name: entry for web filter
       aci_filter_entry: 
@@ -92,7 +94,7 @@
         filter: Web_Filter
         dst_port: 80
         state: present 
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
     - name: ensure app filter exists
       aci_filter: 
@@ -100,7 +102,7 @@
         name: App_Filter 
         tenant: AnsibleTest
         state: present 
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
     - name: entry for app filter
       aci_filter_entry:
@@ -112,7 +114,7 @@
         filter: App_Filter
         dst_port: 1433
         state: present 
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
     - name: ensure db filter exists
       aci_filter: 
@@ -120,7 +122,7 @@
         name: DB_Filter 
         tenant: AnsibleTest 
         state: present 
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
     - name: entry for db filter
       aci_filter_entry: 
@@ -132,14 +134,14 @@
         filter: DB_Filter
         dst_port: 1521
         state: present 
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
     - name: ensure contracts exist
       aci_contract:       
         <<: *aci_login
         name: '{{ item }}'
         tenant: AnsibleTest 
-        filename: 'dump.json'
+        output_path: 'dump.json'
       with_items:
         - Web_Con
         - App_Con
@@ -152,7 +154,7 @@
         subject: web_subject
         contract: Web_Con 
         tenant: AnsibleTest 
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
     - name: ensure subject exists for web contract
       aci_contract_subject:
@@ -160,7 +162,7 @@
         subject: app_subject
         contract: App_Con 
         tenant: AnsibleTest 
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
     - name: ensure subject exists for web contract
       aci_contract_subject: 
@@ -168,7 +170,7 @@
         subject: db_subject 
         contract: DB_Con  
         tenant: AnsibleTest 
-        filename: 'dump.json'
+        output_path: 'dump.json'
     
     - name: ensure filter exists for web contract
       aci_contract_subject_to_filter: 
@@ -177,7 +179,7 @@
         contract: Web_Con 
         filter: Web_Filter 
         tenant: AnsibleTest 
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
     - name: ensure filter exists for web contract
       aci_contract_subject_to_filter: 
@@ -186,7 +188,7 @@
         contract: App_Con 
         filter: App_Filter 
         tenant: AnsibleTest 
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
     - name: ensure filter exists for web contract
       aci_contract_subject_to_filter: 
@@ -195,7 +197,7 @@
         contract: DB_Con 
         filter: DB_Filter 
         tenant: AnsibleTest 
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
     # TESTING APP NET PROFILES AND EPGS
 
@@ -205,7 +207,7 @@
         name: 3Tier_App 
         tenant: AnsibleTest 
         state: present 
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
     - name: ensure web epg exists
       aci_epg:
@@ -215,7 +217,7 @@
         ap: 3Tier_App
         tenant: AnsibleTest
         state: present
-        filename: 'dump.json'
+        output_path: 'dump.json'
     
     - name: Map web epg to VMM Domain
       aci_epg_to_domain:
@@ -227,7 +229,7 @@
         vm_provider: kubernetes
         domain: KubeSpray
         state: present
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
 
     - name: Add contracts to  web epg
@@ -239,7 +241,7 @@
         contract: Web_Con
         contract_type: consumer
         state: present
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
     - name: Add contracts to  web epg
       aci_epg_to_contract:
@@ -250,7 +252,7 @@
         contract: App_Con
         contract_type: provider
         state: present
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
 
     - name: ensure app epg exists
@@ -261,7 +263,7 @@
         ap: 3Tier_App
         tenant: AnsibleTest
         state: present
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
     - name: Map app epg to VMM Domain
       aci_epg_to_domain:
@@ -273,7 +275,7 @@
         vm_provider: vmware
         domain: ACI
         state: present        
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
     - name: Add contracts to  app epg
       aci_epg_to_contract:
@@ -284,7 +286,7 @@
         contract: App_Con
         contract_type: consumer
         state: present
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
     - name: Add contracts to  app epg
       aci_epg_to_contract:
@@ -295,7 +297,7 @@
         contract: DB_Con
         contract_type: provider
         state: present
-        filename: 'dump.json'
+        output_path: 'dump.json'
         
 
     - name: ensure db epg exists
@@ -306,7 +308,7 @@
         ap: 3Tier_App
         tenant: AnsibleTest
         state: present
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
     - name: Map  epg to VMM Domain
       aci_epg_to_domain:
@@ -318,7 +320,7 @@
         vm_provider: vmware
         domain: ACI
         state: present        
-        filename: 'dump.json'
+        output_path: 'dump.json'
 
 
     - name: Add contracts to  app epg
@@ -330,5 +332,5 @@
         contract: DB_Con
         contract_type: consumer
         state: present
-        filename: 'dump.json'
+        output_path: 'dump.json'
  

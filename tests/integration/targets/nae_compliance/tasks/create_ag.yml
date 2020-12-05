@@ -42,7 +42,7 @@
   cisco.nae.nae_file_management:
     <<: *nae_info
     file: "{{ item }}"
-    #Get the file name and remove the date i.e. a file name is somehting like this aci/files/datasets/ChangeMgmt2_2020-09-03_23_22_28.tar.gz
+    #Get the file name and remove the date i.e. a file name is something like this aci/files/datasets/ChangeMgmt2_2020-09-03_23_22_28.tar.gz
     name: "{{ item.split('/')[-1].split('_')[0] }}" 
     state: present
   with_fileglob:
