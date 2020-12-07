@@ -1078,7 +1078,7 @@ class NAEModule(object):
                 str(json.loads(r)['value']
                     ['data']['name']) + " created"
             self.result['Result'] = final_msg
-            self.result['Content'] = str(json.loads(r)['value']['data'])
+            self.result['Current'] = str(json.loads(r)['value']['data'])
 
     def new_traffic_selector(self):
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
@@ -1118,6 +1118,7 @@ class NAEModule(object):
                 str(json.loads(resp.read())['value']
                     ['data']['name']) + " created"
             self.result['Result'] = final_msg
+            self.result['Current'] = str(json.loads(r)['value']['data'])
 
     def new_compliance_requirement(self):
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
@@ -1156,6 +1157,7 @@ class NAEModule(object):
                 str(json.loads(resp.read())['value']
                     ['data']['name']) + " created"
             self.result['Result'] = final_msg
+            self.result['Current'] = str(json.loads(r)['value']['data'])
 
     def new_compliance_requirement_set(self):
         self.check_existing()
@@ -1200,6 +1202,7 @@ class NAEModule(object):
                 str(json.loads(resp.read())['value']
                     ['data']['name']) + " created"
             self.result['Result'] = final_msg
+            self.result['Current'] = str(json.loads(r)['value']['data'])
 
     def get_all_requirement_sets(self):
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
