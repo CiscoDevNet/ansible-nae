@@ -1091,16 +1091,15 @@ class NAEModule(object):
             method = 'PUT'
             form['uuid'] = obj[0].get('uuid')
             self.params['form'] = json.dumps(form)
-            self.result['stdout'] = 'url is {0}---form is {1}'.format(url, form)
         else:
             url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
                   'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
                   'compliance-requirement/traffic-selectors' % self.params
             method = 'POST'
         resp, auth = fetch_url(self.module, url,
-                               data=self.params.get('form'),
+                               data=json.dumps(form),
                                headers=self.http_headers,
-                               method='POST')
+                               method=method)
         if auth.get('status') != 200:
             if('filename' in self.params):
                 self.params['file'] = self.params.get('filename')
@@ -1115,8 +1114,12 @@ class NAEModule(object):
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         else:
+            if resp.headers.get('Content-Encoding') == "gzip":
+                r = gzip.decompress(resp.read())
+            else:
+                r = resp.read()
             final_msg = "Traffic Selector " + \
-                str(json.loads(resp.read())['value']
+                str(json.loads(r)['value']
                     ['data']['name']) + " created"
             self.result['Result'] = final_msg
             self.result['Current'] = str(json.loads(r)['value']['data'])
@@ -1139,9 +1142,9 @@ class NAEModule(object):
                   '/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirements' % self.params
             method = 'POST'
         resp, auth = fetch_url(self.module, url,
-                               data=self.params.get('form'),
+                               data=json.dumps(form),
                                headers=self.http_headers,
-                               method='POST')
+                               method=method)
         if auth.get('status') != 200:
             if('filename' in self.params):
                 self.params['file'] = self.params.get('filename')
@@ -1156,8 +1159,12 @@ class NAEModule(object):
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         else:
+            if resp.headers.get('Content-Encoding') == "gzip":
+                r = gzip.decompress(resp.read())
+            else:
+                r = resp.read()
             final_msg = "Compliance requirement " + \
-                str(json.loads(resp.read())['value']
+                str(json.loads(r)['value']
                     ['data']['name']) + " created"
             self.result['Result'] = final_msg
             self.result['Current'] = str(json.loads(r)['value']['data'])
@@ -1208,8 +1215,12 @@ class NAEModule(object):
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         else:
+            if resp.headers.get('Content-Encoding') == "gzip":
+                r = gzip.decompress(resp.read())
+            else:
+                r = resp.read()
             final_msg = "Compliance requirement set " + \
-                str(json.loads(resp.read())['value']
+                str(json.loads(r)['value']
                     ['data']['name']) + " created"
             self.result['Result'] = final_msg
             self.result['Current'] = str(json.loads(r)['value']['data'])
