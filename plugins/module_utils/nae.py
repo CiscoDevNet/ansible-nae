@@ -1030,9 +1030,6 @@ class NAEModule(object):
         elif form.get('name') is None:
             self.module.fail_json(msg='The name should not be empty')
         obj, type_map = self.query_compliance_object(form.get('name'))
-        #if obj != []:
-            #self.module.exit_json(msg="WARNING: The {0} with the same name already exist!!!".format(type_map.get(self.params.get('selector'))), **self.result)
-            #return True
         return obj, form
 
     def new_object_selector(self):
@@ -1041,17 +1038,18 @@ class NAEModule(object):
         if obj != []:
             url = 'https://{0}:{1}/nae/api/v1/event-services/'\
                   'assured-networks/{2}/model/aci-policy/'\
-                  'compliance-requirement/object-selectors/{3}'.format(self.params.get('host'), self.params.get('port'), self.params.get('fabric_uuid'), str(obj[0].get('uuid')))
+                  'compliance-requirement/object-selectors/{3}'.format(self.params.get('host'),
+                                                                       self.params.get('port'),
+                                                                       self.params.get('fabric_uuid'),
+                                                                       str(obj[0].get('uuid')))
             method = 'PUT'
             form['uuid'] = obj[0].get('uuid')
             self.params['form'] = json.dumps(form)
-            #self.module.exit_json(msg="form is {0}".format(str(form)), **self.result)
         else:
             url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/'\
                   'assured-networks/%(fabric_uuid)s/model/aci-policy/'\
                   'compliance-requirement/object-selectors' % self.params
             method = 'POST'
-            #self.module.exit_json(msg="url is {0}----method is {1}".format(url, method), **self.result)
         resp, auth = fetch_url(self.module, url,
                                data=json.dumps(form),
                                headers=self.http_headers,
@@ -1086,7 +1084,10 @@ class NAEModule(object):
         if obj != []:
             url = 'https://{0}:{1}/nae/api/v1/event-services/'\
                   'assured-networks/{2}/model/aci-policy/'\
-                  'compliance-requirement/traffic-selectors/{3}'.format(self.params.get('host'), self.params.get('port'), self.params.get('fabric_uuid'), str(obj[0].get('uuid')))
+                  'compliance-requirement/traffic-selectors/{3}'.format(self.params.get('host'),
+                                                                        self.params.get('port'),
+                                                                        self.params.get('fabric_uuid'),
+                                                                        str(obj[0].get('uuid')))
             method = 'PUT'
             form['uuid'] = obj[0].get('uuid')
             self.params['form'] = json.dumps(form)
@@ -1126,11 +1127,13 @@ class NAEModule(object):
         if obj != []:
             url = 'https://{0}:{1}/nae/api/v1/event-services/'\
                   'assured-networks/{2}/model/aci-policy/'\
-                  'compliance-requirement/requirements/{3}'.format(self.params.get('host'), self.params.get('port'), self.params.get('fabric_uuid'), str(obj[0].get('uuid')))
+                  'compliance-requirement/requirements/{3}'.format(self.params.get('host'),
+                                                                   self.params.get('port'),
+                                                                   self.params.get('fabric_uuid'),
+                                                                   str(obj[0].get('uuid')))
             method = 'PUT'
             form['uuid'] = obj[0].get('uuid')
             self.params['form'] = json.dumps(form)
-            self.result['stdout'] = 'url is {0}---form is {1}'.format(url, form)
         else:
             url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks' \
                   '/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirements' % self.params
@@ -1160,31 +1163,38 @@ class NAEModule(object):
             self.result['Current'] = str(json.loads(r)['value']['data'])
 
     def new_compliance_requirement_set(self):
-        self.check_existing()
+        obj, form = self.check_existing()
         ag = self.get_assurance_group(self.params.get('ag_name'))
         if ag is None:
             self.result['Result'] = "No such Assurance Group exists"
             self.module.fail_json(msg='Assurance group {0} does not exist'.format(self.params.get('ag_name')), **self.result)
         self.params['fabric_uuid'] = str(ag.get('uuid'))
-        d = json.loads(self.params.get('form'))
         assurance_groups_lists = []
         if self.params.get('association_to_ag'):
             assurance_groups_lists.append(dict(active=self.params.get('active'), fabric_uuid=ag.get('uuid')))
-        d['assurance_groups'] = assurance_groups_lists
-        self.params['form'] = json.dumps(d)
-        if '5.1' in self.version or '5.0' in self.version:
+        form['assurance_groups'] = assurance_groups_lists
+        if obj == [] and ('5.1' in self.version or '5.0' in self.version):
             url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
                   'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
                   'compliance-requirement/requirement-sets/' % self.params
         else:
-            url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
-                  'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
-                  'compliance-requirement/requirement_set/%(obj_uuid)s' % self.params
-
+            url = 'https://{0}:{1}/nae/api/v1/event-services/' \
+                  'assured-networks/{2}/model/aci-policy/' \
+                  'compliance-requirement/requirement-sets/' \
+                  '{3}'.format(self.params.get('host'),
+                               self.params.get('port'),
+                               self.params.get('fabric_uuid'),
+                               str(obj[0].get('uuid')))
+        if obj != []:
+            method = 'PUT'
+            form['uuid'] = obj[0].get('uuid')
+        else:
+            method = 'POST'
+        self.params['form'] = json.dumps(form)
         resp, auth = fetch_url(self.module, url,
                                data=self.params.get('form'),
                                headers=self.http_headers,
-                               method='POST')
+                               method=method)
         if auth.get('status') != 200:
             if('filename' in self.params):
                 self.params['file'] = self.params.get('filename')
