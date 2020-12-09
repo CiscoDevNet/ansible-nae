@@ -126,19 +126,15 @@ def main():
     nae = NAEModule(module)
     if state == 'present' and form and selector == 'object':
         nae.new_object_selector()
-        #nae.result['changed'] = True
         module.exit_json(**nae.result)
     elif state == 'present' and form and selector == 'traffic':
         nae.new_traffic_selector()
-        #nae.result['changed'] = True
         module.exit_json(**nae.result)
     elif state == 'present' and form and selector == 'requirement':
         nae.new_compliance_requirement()
-        #nae.result['changed'] = True
         module.exit_json(**nae.result)
     elif state == 'present' and form and selector == 'requirement_set':
         nae.new_compliance_requirement_set()
-        #nae.result['changed'] = True
         module.exit_json(**nae.result)
     elif state == 'query' and selector == 'object' and name:
         nae.get_compliance_object(name)
