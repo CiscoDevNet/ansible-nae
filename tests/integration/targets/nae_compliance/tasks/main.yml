@@ -113,13 +113,51 @@
         }
   register: create_obj_selector
 
-- name: Verify create_obj_selector
+- name: Create object selector again
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: present
+    selector: object
+    form: |
+        {
+        "name": "ansible_object_selector",
+        "description": null,
+        "includes": [
+            {
+            "matches": [
+                {
+                "application_epgmatch": {
+                    "object_attribute": "DN",
+                    "tenant": {
+                    "pattern": "NAE_Compliance",
+                    "type": "EXACT"
+                    },
+                    "application_profile": {
+                    "pattern": "ComplianceIsGood",
+                    "type": "EXACT"
+                    },
+                    "application_epg": {
+                    "pattern": "DataBase",
+                    "type": "EXACT"
+                    }
+                }
+                }
+            ]
+            }
+        ],
+        "excludes": [],
+        "selector_type": "OST_EPG"
+        }
+  register: create_obj_selector_again
+
+- name: Verify create_obj_selector and create_obj_selector_again
   assert:
     that:
       - create_obj_selector is changed
+      - create_obj_selector_again is not changed
       #- create_obj_selector.Result == "Object Selector ansible_object_selector created"
 
-- name: Create the object selector again
+- name: Update object selector
   cisco.nae.nae_compliance:
     <<: *nae_info
     state: present
@@ -154,13 +192,13 @@
         "excludes": [],
         "selector_type": "OST_EPG"
         }
-  register: create_obj_selector_again
+  register: update_obj_selector
 
-- name: Verify create_obj_selector_again
+- name: Verify update_obj_selector
   assert:
     that:
-      - create_obj_selector_again is changed
-      #- create_obj_selector_again.Result == "Object Selector ansible_object_selector created"
+      - update_obj_selector is changed
+      #- update_obj_selector.Result == "Object Selector ansible_object_selector created"
 
 - name: Create object selector for DataBase Tier
   cisco.nae.nae_compliance:
@@ -291,7 +329,7 @@
         }
   register: create_req
 
-- name: Create compliance requirement again
+- name: Update compliance requirement
   cisco.nae.nae_compliance:
     <<: *nae_info
     state: present
@@ -305,15 +343,15 @@
         "epg_selector_b": "DataBase",
         "communication_type": "MUST_NOT"
         }
-  register: create_req_again
+  register: update_req
 
-- name: Verify create_req_again
+- name: Verify update_req
   assert:
     that:
-      - create_req_again is changed
-      #- create_req_again.Result == "Compliance requirement ansible_comp_requirement created"
+      - update_req is changed
+      #- update_req.Result == "Compliance requirement ansible_comp_requirement created"
 
-- name: Create Config Compliance Requirement for Web to DB communication 
+- name: Create Config Compliance Requirement for Web to DB communication
   cisco.nae.nae_compliance:
     <<: *nae_info
     state: present
@@ -340,13 +378,41 @@
       }
   register: create_bd_requirement
 
-- name: Verify create_req and create_bd_requirement
+- name: Create Config Compliance Requirement for Web to DB communication again
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: present
+    selector: requirement
+    form: |
+      {
+        "name": "bd_config_requirement",
+        "requirement_type": "CONFIGURATION_COMPLIANCE",
+        "epg_selector_a": "bds_in_non_prod",
+        "config_compliance_parameter": {
+          "and_parameters": [
+            {
+              "parameter": "CCP_L2_UNKNOWN_UNICAST",
+              "value": "Hardware Proxy",
+              "operator": "EQUAL_TO"
+            },
+            {
+              "parameter": "CCP_LIMIT_IP_LEARNING_TO_SUBNET",
+              "value": "Yes",
+              "operator": "EQUAL_TO"
+            }
+          ]
+        }
+      }
+  register: create_bd_requirement_again
+
+- name: Verify create_req, create_bd_requirement and create_bd_requirement_again
   assert:
     that:
       - create_req is changed
       #- create_req.Result == "Compliance requirement ansible_comp_requirement created"
       - create_bd_requirement is changed
       #- create_bd_requirement.Result == "Compliance requirement bd_config_requirement created"
+      - create_bd_requirement_again is not changed
 
 - name: Create a compliance requirement set (not associated to ag)
   cisco.nae.nae_compliance:
@@ -365,6 +431,29 @@
         ]
       }
   register: create_req_set
+
+- name: Create a compliance requirement set again(not associated to ag)
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: present
+    selector: requirement_set
+    ag_name: Change Management
+    association_to_ag: False
+    form: |
+      {
+        "name": "ansible_comp_requirement_set",
+        "description": "",
+        "requirements": [
+            "bd_config_requirement",
+            "ansible_comp_requirement"
+        ]
+      }
+  register: create_req_set_again
+
+- name: Verify create_req_set_again
+  assert:
+    that:
+    - create_req_set_again is not changed
 
 - name: Create a compliance requirement set (associated to ag and not active)
   cisco.nae.nae_compliance:
@@ -437,7 +526,7 @@
       #- create_req_set.Result == "Compliance requirement set ansible_comp_requirement_set created"
       #- create_req_set_2.Result == "Compliance requirement set ansible_comp_requirement_set_2 created"
 
-- name: Create compliance requirement set again
+- name: Update compliance requirement set
   cisco.nae.nae_compliance:
     <<: *nae_info
     state: present
@@ -452,13 +541,13 @@
             "bd_config_requirement"
         ]
         }
-  register: create_req_set_again
+  register: update_req_set
 
-- name: Verify create_req_set_again
+- name: Verify update_req_set
   assert:
     that:
-      - create_req_set_again is changed
-      #- create_req_set_again.Result == "Compliance requirement set ansible_comp_requirement_set_2 created"
+      - update_req_set is changed
+      #- update_req_set.Result == "Compliance requirement set ansible_comp_requirement_set_2 created"
 
 - name: Create a traffic selector
   cisco.nae.nae_compliance:
@@ -499,7 +588,46 @@
       }
   register: create_traffic_selector
 
-- name: Create the traffic selector again
+- name: Create traffic selector again
+  cisco.nae.nae_compliance:
+    <<: *nae_info
+    state: present
+    selector: traffic
+    form: |
+      {
+        "name": "traffic_selector",
+        "description": "This is a description",
+        "includes": {
+          "selectors": [
+              {
+                  "selectors": [
+                    {
+                      "ether_type": "ARP"
+                    },
+                    {
+                      "ether_type": "FCOE"
+                    },
+                    {
+                      "ether_type": "IP",
+                      "ip_protocol": "EGP"
+                    },
+                    {
+                      "ether_type": "MAC_SECURITY"
+                    },
+                    {
+                      "ether_type": "MPLS_UNICAST"
+                    },
+                    {
+                      "ether_type": "TRILL"
+                    }
+                  ]
+              }
+          ]
+        }
+      }
+  register: create_traffic_selector_again
+
+- name: Update the traffic selector
   cisco.nae.nae_compliance:
     <<: *nae_info
     state: present
@@ -536,13 +664,14 @@
           ]
         }
       }
-  register: create_traffic_selector_again
+  register: update_traffic_selector
 
-- name: Verify create_traffic_selector_again
+- name: Verify update_traffic_selector and create_traffic_selector_again
   assert:
     that:
-      - create_traffic_selector_again is changed
-      #- create_traffic_selector_again.Result == "Traffic Selector traffic_selector created"
+      - update_traffic_selector is changed
+      - create_traffic_selector_again is not changed
+      #- update_traffic_selector.Result == "Traffic Selector traffic_selector created"
 
 - name: Create another traffic selector
   cisco.nae.nae_compliance:
