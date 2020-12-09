@@ -1024,18 +1024,19 @@ class NAEModule(object):
         try:
             form = json.loads(self.params.get('form'))
         except Exception:
-            self.module.fail_json(msg='The form can not be loaded properly')
+            self.module.fail_json(msg='The form cannot be loaded properly')
         if form is None:
             self.module.fail_json(msg='The form is empty')
         elif form.get('name') is None:
             self.module.fail_json(msg='The name should not be empty')
-        obj, type_map = self.query_compliance_object(form.get('name'))
-        return obj, form
+        obj, type_map, detail = self.query_compliance_object(form.get('name'))
+        return obj, form, detail
 
     def new_object_selector(self):
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
-        obj, form = self.check_existing()
+        obj, form, detail = self.check_existing()
         if obj != []:
+            self.result['Previous'] = detail['value']['data']
             url = 'https://{0}:{1}/nae/api/v1/event-services/'\
                   'assured-networks/{2}/model/aci-policy/'\
                   'compliance-requirement/object-selectors/{3}'.format(self.params.get('host'),
@@ -1046,9 +1047,11 @@ class NAEModule(object):
             form['uuid'] = obj[0].get('uuid')
             self.params['form'] = json.dumps(form)
         else:
-            url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/'\
-                  'assured-networks/%(fabric_uuid)s/model/aci-policy/'\
-                  'compliance-requirement/object-selectors' % self.params
+            url = 'https://{0}:{1}/nae/api/v1/event-services/'\
+                  'assured-networks/{2}/model/aci-policy/'\
+                  'compliance-requirement/object-selectors'.format(self.params.get('host'),
+                                                                   self.params.get('port'),
+                                                                   self.params.get('fabric_uuid'))
             method = 'POST'
         resp, auth = fetch_url(self.module, url,
                                data=json.dumps(form),
@@ -1076,12 +1079,13 @@ class NAEModule(object):
                 str(json.loads(r)['value']
                     ['data']['name']) + " created"
             self.result['Result'] = final_msg
-            self.result['Current'] = str(json.loads(r)['value']['data'])
+            self.result['Current'] = json.loads(r)['value']['data']
 
     def new_traffic_selector(self):
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
-        obj, form = self.check_existing()
+        obj, form, detail = self.check_existing()
         if obj != []:
+            self.result['Previous'] = detail['value']['data']
             url = 'https://{0}:{1}/nae/api/v1/event-services/'\
                   'assured-networks/{2}/model/aci-policy/'\
                   'compliance-requirement/traffic-selectors/{3}'.format(self.params.get('host'),
@@ -1092,9 +1096,11 @@ class NAEModule(object):
             form['uuid'] = obj[0].get('uuid')
             self.params['form'] = json.dumps(form)
         else:
-            url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
-                  'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
-                  'compliance-requirement/traffic-selectors' % self.params
+            url = 'https://{0}:{1}/nae/api/v1/event-services/' \
+                  'assured-networks/{2}/model/aci-policy/' \
+                  'compliance-requirement/traffic-selectors'.format(self.params.get('host'),
+                                                                    self.params.get('port'),
+                                                                    self.params.get('fabric_uuid'))
             method = 'POST'
         resp, auth = fetch_url(self.module, url,
                                data=json.dumps(form),
@@ -1122,12 +1128,14 @@ class NAEModule(object):
                 str(json.loads(r)['value']
                     ['data']['name']) + " created"
             self.result['Result'] = final_msg
-            self.result['Current'] = str(json.loads(r)['value']['data'])
+            self.result['Current'] = json.loads(r)['value']['data']
+
 
     def new_compliance_requirement(self):
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
-        obj, form = self.check_existing()
+        obj, form, detail = self.check_existing()
         if obj != []:
+            self.result['Previous'] = detail['value']['data']
             url = 'https://{0}:{1}/nae/api/v1/event-services/'\
                   'assured-networks/{2}/model/aci-policy/'\
                   'compliance-requirement/requirements/{3}'.format(self.params.get('host'),
@@ -1138,8 +1146,10 @@ class NAEModule(object):
             form['uuid'] = obj[0].get('uuid')
             self.params['form'] = json.dumps(form)
         else:
-            url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks' \
-                  '/%(fabric_uuid)s/model/aci-policy/compliance-requirement/requirements' % self.params
+            url = 'https://{0}:{1}/nae/api/v1/event-services/assured-networks' \
+                  '/{2}/model/aci-policy/compliance-requirement/requirements'.format(self.params.get('host'),
+                                                                                     self.params.get('port'),
+                                                                                     self.params.get('fabric_uuid'))
             method = 'POST'
         resp, auth = fetch_url(self.module, url,
                                data=json.dumps(form),
@@ -1167,10 +1177,10 @@ class NAEModule(object):
                 str(json.loads(r)['value']
                     ['data']['name']) + " created"
             self.result['Result'] = final_msg
-            self.result['Current'] = str(json.loads(r)['value']['data'])
+            self.result['Current'] = json.loads(r)['value']['data']
 
     def new_compliance_requirement_set(self):
-        obj, form = self.check_existing()
+        obj, form, detail = self.check_existing()
         ag = self.get_assurance_group(self.params.get('ag_name'))
         if ag is None:
             self.result['Result'] = "No such Assurance Group exists"
@@ -1181,9 +1191,11 @@ class NAEModule(object):
             assurance_groups_lists.append(dict(active=self.params.get('active'), fabric_uuid=ag.get('uuid')))
         form['assurance_groups'] = assurance_groups_lists
         if obj == [] and ('5.1' in self.version or '5.0' in self.version):
-            url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/' \
-                  'assured-networks/%(fabric_uuid)s/model/aci-policy/' \
-                  'compliance-requirement/requirement-sets/' % self.params
+            url = 'https://{0}:{1}/nae/api/v1/event-services/' \
+                  'assured-networks/{2}/model/aci-policy/' \
+                  'compliance-requirement/requirement-sets'.format(self.params.get('host'),
+                                                                    self.params.get('port'),
+                                                                    self.params.get('fabric_uuid'))
         else:
             url = 'https://{0}:{1}/nae/api/v1/event-services/' \
                   'assured-networks/{2}/model/aci-policy/' \
@@ -1193,6 +1205,7 @@ class NAEModule(object):
                                self.params.get('fabric_uuid'),
                                str(obj[0].get('uuid')))
         if obj != []:
+            self.result['Previous'] = detail['value']['data']
             method = 'PUT'
             form['uuid'] = obj[0].get('uuid')
         else:
@@ -1223,7 +1236,7 @@ class NAEModule(object):
                 str(json.loads(r)['value']
                     ['data']['name']) + " created"
             self.result['Result'] = final_msg
-            self.result['Current'] = str(json.loads(r)['value']['data'])
+            self.result['Current'] = json.loads(r)['value']['data']
 
     def get_all_requirement_sets(self):
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
@@ -1341,6 +1354,52 @@ class NAEModule(object):
             self.result['Result'] = json.loads(r)['value']['data']
             return json.loads(r)['value']['data']
 
+    def get_obj_detail(self, obj, type):
+        url_map = {
+            'object': 'object-selectors',
+            'traffic': 'traffic-selectors',
+            'requirement': 'requirements',
+            'requirement_set': 'requirement-sets'
+        }
+        if obj != []:
+            try:
+                uuid = obj[0].get('uuid')
+            except Exception:
+                self.module.fail_json(msg="There is no uuid in {0}".format(url_map[type]))
+            url = 'https://{0}:{1}/nae/api/v1/event-services/' \
+                'assured-networks/{2}/model/aci-policy/' \
+                'compliance-requirement/{3}/{4}'.format(self.params.get('host'),
+                                                    self.params.get('port'),
+                                                    self.params.get('fabric_uuid'),
+                                                    url_map[type],
+                                                    uuid)
+            resp, auth = fetch_url(self.module, url,
+                               headers=self.http_headers,
+                               method='GET')
+            if auth.get('status') != 200:
+                if('filename' in self.params):
+                    self.params['file'] = self.params.get('filename')
+                    del self.params['filename']
+                self.status = auth.get('status')
+                try:
+                    self.module.fail_json(msg=auth.get('body'), **self.result)
+                except KeyError:
+                    # Connection error
+                    self.fail_json(
+                        msg='Connection failed for %(url)s. %(msg)s' %
+                        auth, **self.result)
+            else:
+                if resp.headers.get('Content-Encoding') == "gzip":
+                    r = gzip.decompress(resp.read())
+                    detail = json.loads(r.decode())
+                    return detail
+                r = resp.read()
+                detail = json.loads(r)
+                return detail
+        else:
+            detail = {}
+            return detail
+
     def query_compliance_object(self, name):
         type_map = {
             'object': 'Object selector',
@@ -1351,19 +1410,23 @@ class NAEModule(object):
         if self.params.get('selector') == 'object':
             objs = self.get_all_object_selectors()
             obj = [x for x in objs if x['name'] == name]
+            detail = self.get_obj_detail(obj, 'object')
         elif self.params.get('selector') == 'traffic':
             objs = self.get_all_traffic_selectors()
             obj = [x for x in objs if x['name'] == name]
+            detail = self.get_obj_detail(obj, 'traffic')
         elif self.params.get('selector') == 'requirement':
             objs = self.get_all_requirements()
             obj = [x for x in objs if x['name'] == name]
+            detail = self.get_obj_detail(obj, 'requirement')
         elif self.params.get('selector') == 'requirement_set':
             objs = self.get_all_requirement_sets()
             obj = [x for x in objs if x['name'] == name]
-        return obj, type_map
+            detail = self.get_obj_detail(obj, 'requirement_set')
+        return obj, type_map, detail
 
     def get_compliance_object(self, name):
-        obj, type_map = self.query_compliance_object(name)
+        obj, type_map, detail = self.query_compliance_object(name)
         if obj != []:
             self.result['Result'] = obj[0]
             return obj[0]
