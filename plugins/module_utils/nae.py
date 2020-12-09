@@ -1082,10 +1082,6 @@ class NAEModule(object):
                 r = gzip.decompress(resp.read())
             else:
                 r = resp.read()
-            # final_msg = "Object Selector " + \
-            #     str(json.loads(r)['value']
-            #         ['data']['name']) + " created"
-            # self.result['Result'] = final_msg
             self.result['Current'] = json.loads(r)['value']['data']
             self.check_changed(self.result['Previous'], self.result['Current'])
 
@@ -1133,10 +1129,6 @@ class NAEModule(object):
                 r = gzip.decompress(resp.read())
             else:
                 r = resp.read()
-            # final_msg = "Traffic Selector " + \
-            #     str(json.loads(r)['value']
-            #         ['data']['name']) + " created"
-            # self.result['Result'] = final_msg
             self.result['Current'] = json.loads(r)['value']['data']
             self.check_changed(self.result['Previous'], self.result['Current'])
 
@@ -1183,10 +1175,6 @@ class NAEModule(object):
                 r = gzip.decompress(resp.read())
             else:
                 r = resp.read()
-            # final_msg = "Compliance requirement " + \
-            #     str(json.loads(r)['value']
-            #         ['data']['name']) + " created"
-            # self.result['Result'] = final_msg
             self.result['Current'] = json.loads(r)['value']['data']
             self.check_changed(self.result['Previous'], self.result['Current'])
 
@@ -1244,10 +1232,6 @@ class NAEModule(object):
                 r = gzip.decompress(resp.read())
             else:
                 r = resp.read()
-            # final_msg = "Compliance requirement set " + \
-            #     str(json.loads(r)['value']
-            #         ['data']['name']) + " created"
-            # self.result['Result'] = final_msg
             self.result['Current'] = json.loads(r)['value']['data']
             self.check_changed(self.result['Previous'], self.result['Current'])
 

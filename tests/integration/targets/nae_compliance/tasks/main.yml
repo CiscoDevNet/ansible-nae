@@ -155,7 +155,6 @@
     that:
       - create_obj_selector is changed
       - create_obj_selector_again is not changed
-      # - create_obj_selector.Result == "Object Selector ansible_object_selector created"
 
 - name: Update object selector
   cisco.nae.nae_compliance:
@@ -198,7 +197,6 @@
   assert:
     that:
       - update_obj_selector is changed
-      # - update_obj_selector.Result == "Object Selector ansible_object_selector created"
 
 - name: Create object selector for DataBase Tier
   cisco.nae.nae_compliance:
@@ -307,9 +305,6 @@
     - create_db_selector is changed
     - create_web_selector is changed
     - create_bd_selector is changed
-    # - create_db_selector.Result == "Object Selector DataBase created"
-    # - create_web_selector.Result == "Object Selector Web created"
-    # - create_bd_selector.Result == "Object Selector bds_in_non_prod created"
 
 - name: Create a compliance requirement
   cisco.nae.nae_compliance:
@@ -349,7 +344,6 @@
   assert:
     that:
       - update_req is changed
-      # - update_req.Result == "Compliance requirement ansible_comp_requirement created"
 
 - name: Create Config Compliance Requirement for Web to DB communication
   cisco.nae.nae_compliance:
@@ -409,9 +403,7 @@
   assert:
     that:
       - create_req is changed
-      # - create_req.Result == "Compliance requirement ansible_comp_requirement created"
       - create_bd_requirement is changed
-      # - create_bd_requirement.Result == "Compliance requirement bd_config_requirement created"
       - create_bd_requirement_again is not changed
 
 - name: Create a compliance requirement set (not associated to ag)
@@ -523,8 +515,6 @@
     that:
       - create_req_set is changed
       - create_req_set_2 is changed
-      # - create_req_set.Result == "Compliance requirement set ansible_comp_requirement_set created"
-      # - create_req_set_2.Result == "Compliance requirement set ansible_comp_requirement_set_2 created"
 
 - name: Update compliance requirement set
   cisco.nae.nae_compliance:
@@ -547,7 +537,6 @@
   assert:
     that:
       - update_req_set is changed
-      # - update_req_set.Result == "Compliance requirement set ansible_comp_requirement_set_2 created"
 
 - name: Create a traffic selector
   cisco.nae.nae_compliance:
@@ -671,7 +660,6 @@
     that:
       - update_traffic_selector is changed
       - create_traffic_selector_again is not changed
-      # - update_traffic_selector.Result == "Traffic Selector traffic_selector created"
 
 - name: Create another traffic selector
   cisco.nae.nae_compliance:
@@ -701,8 +689,6 @@
     that:
       - create_another_traffic_selector is changed
       - create_traffic_selector is changed
-      # - create_traffic_selector.Result == "Traffic Selector traffic_selector created"
-      # - create_another_traffic_selector.Result == "Traffic Selector FCOE_traffic_selector created"
 
 - name: Query for all object selectors
   cisco.nae.nae_compliance:
