@@ -1038,7 +1038,6 @@ class NAEModule(object):
         else:
             self.result['changed'] = True
 
-
     def new_object_selector(self):
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         obj, form, detail = self.check_existing()
@@ -1089,7 +1088,6 @@ class NAEModule(object):
             # self.result['Result'] = final_msg
             self.result['Current'] = json.loads(r)['value']['data']
             self.check_changed(self.result['Previous'], self.result['Current'])
-
 
     def new_traffic_selector(self):
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
@@ -1207,8 +1205,8 @@ class NAEModule(object):
             url = 'https://{0}:{1}/nae/api/v1/event-services/' \
                   'assured-networks/{2}/model/aci-policy/' \
                   'compliance-requirement/requirement-sets'.format(self.params.get('host'),
-                                                                    self.params.get('port'),
-                                                                    self.params.get('fabric_uuid'))
+                                                                   self.params.get('port'),
+                                                                   self.params.get('fabric_uuid'))
         else:
             url = 'https://{0}:{1}/nae/api/v1/event-services/' \
                   'assured-networks/{2}/model/aci-policy/' \
@@ -1384,13 +1382,13 @@ class NAEModule(object):
             url = 'https://{0}:{1}/nae/api/v1/event-services/' \
                 'assured-networks/{2}/model/aci-policy/' \
                 'compliance-requirement/{3}/{4}'.format(self.params.get('host'),
-                                                    self.params.get('port'),
-                                                    self.params.get('fabric_uuid'),
-                                                    url_map[type],
-                                                    uuid)
+                                                        self.params.get('port'),
+                                                        self.params.get('fabric_uuid'),
+                                                        url_map[type],
+                                                        uuid)
             resp, auth = fetch_url(self.module, url,
-                               headers=self.http_headers,
-                               method='GET')
+                                   headers=self.http_headers,
+                                   method='GET')
             if auth.get('status') != 200:
                 if('filename' in self.params):
                     self.params['file'] = self.params.get('filename')
