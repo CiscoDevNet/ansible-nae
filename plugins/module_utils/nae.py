@@ -1032,6 +1032,13 @@ class NAEModule(object):
         obj, type_map, detail = self.query_compliance_object(form.get('name'))
         return obj, form, detail
 
+    def check_changed(self, previous, current):
+        if previous == current:
+            self.result['changed'] = False
+        else:
+            self.result['changed'] = True
+
+
     def new_object_selector(self):
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
         obj, form, detail = self.check_existing()
@@ -1047,6 +1054,7 @@ class NAEModule(object):
             form['uuid'] = obj[0].get('uuid')
             self.params['form'] = json.dumps(form)
         else:
+            self.result['Previous'] = {}
             url = 'https://{0}:{1}/nae/api/v1/event-services/'\
                   'assured-networks/{2}/model/aci-policy/'\
                   'compliance-requirement/object-selectors'.format(self.params.get('host'),
@@ -1075,11 +1083,13 @@ class NAEModule(object):
                 r = gzip.decompress(resp.read())
             else:
                 r = resp.read()
-            final_msg = "Object Selector " + \
-                str(json.loads(r)['value']
-                    ['data']['name']) + " created"
-            self.result['Result'] = final_msg
+            # final_msg = "Object Selector " + \
+            #     str(json.loads(r)['value']
+            #         ['data']['name']) + " created"
+            # self.result['Result'] = final_msg
             self.result['Current'] = json.loads(r)['value']['data']
+            self.check_changed(self.result['Previous'], self.result['Current'])
+
 
     def new_traffic_selector(self):
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
@@ -1096,6 +1106,7 @@ class NAEModule(object):
             form['uuid'] = obj[0].get('uuid')
             self.params['form'] = json.dumps(form)
         else:
+            self.result['Previous'] = {}
             url = 'https://{0}:{1}/nae/api/v1/event-services/' \
                   'assured-networks/{2}/model/aci-policy/' \
                   'compliance-requirement/traffic-selectors'.format(self.params.get('host'),
@@ -1124,12 +1135,12 @@ class NAEModule(object):
                 r = gzip.decompress(resp.read())
             else:
                 r = resp.read()
-            final_msg = "Traffic Selector " + \
-                str(json.loads(r)['value']
-                    ['data']['name']) + " created"
-            self.result['Result'] = final_msg
+            # final_msg = "Traffic Selector " + \
+            #     str(json.loads(r)['value']
+            #         ['data']['name']) + " created"
+            # self.result['Result'] = final_msg
             self.result['Current'] = json.loads(r)['value']['data']
-
+            self.check_changed(self.result['Previous'], self.result['Current'])
 
     def new_compliance_requirement(self):
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
@@ -1146,6 +1157,7 @@ class NAEModule(object):
             form['uuid'] = obj[0].get('uuid')
             self.params['form'] = json.dumps(form)
         else:
+            self.result['Previous'] = {}
             url = 'https://{0}:{1}/nae/api/v1/event-services/assured-networks' \
                   '/{2}/model/aci-policy/compliance-requirement/requirements'.format(self.params.get('host'),
                                                                                      self.params.get('port'),
@@ -1173,11 +1185,12 @@ class NAEModule(object):
                 r = gzip.decompress(resp.read())
             else:
                 r = resp.read()
-            final_msg = "Compliance requirement " + \
-                str(json.loads(r)['value']
-                    ['data']['name']) + " created"
-            self.result['Result'] = final_msg
+            # final_msg = "Compliance requirement " + \
+            #     str(json.loads(r)['value']
+            #         ['data']['name']) + " created"
+            # self.result['Result'] = final_msg
             self.result['Current'] = json.loads(r)['value']['data']
+            self.check_changed(self.result['Previous'], self.result['Current'])
 
     def new_compliance_requirement_set(self):
         obj, form, detail = self.check_existing()
@@ -1209,6 +1222,7 @@ class NAEModule(object):
             method = 'PUT'
             form['uuid'] = obj[0].get('uuid')
         else:
+            self.result['Previous'] = {}
             method = 'POST'
         self.params['form'] = json.dumps(form)
         resp, auth = fetch_url(self.module, url,
@@ -1232,11 +1246,12 @@ class NAEModule(object):
                 r = gzip.decompress(resp.read())
             else:
                 r = resp.read()
-            final_msg = "Compliance requirement set " + \
-                str(json.loads(r)['value']
-                    ['data']['name']) + " created"
-            self.result['Result'] = final_msg
+            # final_msg = "Compliance requirement set " + \
+            #     str(json.loads(r)['value']
+            #         ['data']['name']) + " created"
+            # self.result['Result'] = final_msg
             self.result['Current'] = json.loads(r)['value']['data']
+            self.check_changed(self.result['Previous'], self.result['Current'])
 
     def get_all_requirement_sets(self):
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")
