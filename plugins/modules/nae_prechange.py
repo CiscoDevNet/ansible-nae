@@ -198,7 +198,6 @@ def main():
         module.exit_json(**nae.result)
     elif state == 'present' and changes:
         nae.create_pre_change_from_manual_changes()
-        nae.result['changed'] = True
         module.exit_json(**nae.result)
     elif state == 'query' and name:
         nae.result['Result'] = nae.get_pre_change_result()

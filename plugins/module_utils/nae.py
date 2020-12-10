@@ -348,7 +348,9 @@ class NAEModule(object):
 
         if resp.headers.get('Content-Encoding') == "gzip":
             r = gzip.decompress(resp.read())
+            # self.result['stdout'] = json.loads(r.decode())['value']['data']
             return json.loads(r.decode())['value']['data']
+        # self.result['stdout'] = json.loads(resp.read())['value']['data']
         return json.loads(resp.read())['value']['data']
 
     def show_pre_change_analyses(self):
@@ -580,36 +582,49 @@ class NAEModule(object):
             self.result['Result'] = "Pre-change analysis %(name)s successfully created." % self.params
 
         elif '5.0' in self.version or '5.1' in self.version:
-            # job_id = self.params.get('job_id') # necessary to PUT method
-            url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/manual-changes?action=%(action)s' % self.params
-            form = '''{
-                                    "name": "''' + self.params.get('name') + '''",
-                                    "allow_unsupported_object_modification": true,
-                                    "uploaded_file_name": null,
-                                    "stop_analysis": false,
-                                    "fabric_uuid": "''' + self.params.get('fabric_id') + '''",
-                                    "base_epoch_id": "''' + self.params.get('base_epoch_id') + '''",
-                                    "imdata": ''' + self.params.get('changes') + '''
-                                    }'''
+            form = {
+                        "name": self.params.get('name'),
+                        "allow_unsupported_object_modification": True,
+                        "uploaded_file_name": None,
+                        "stop_analysis": False,
+                        "fabric_uuid": self.params.get('fabric_id'),
+                        "base_epoch_id": self.params.get('base_epoch_id'),
+                        "imdata": json.loads(self.params.get('changes'))
+                    }
 
-            resp, auth = fetch_url(self.module, url,
-                                   headers=self.http_headers,
-                                   data=form,
-                                   method='POST')
+            obj = self.get_pre_change_analysis()
+            if obj is not None:
+                if self.check_changed(obj, form) and obj.get('analysis_status') != 'SAVED':
+                    self.module.fail_json(msg='Pre-change analysis {0} is not in SAVED status. It cannot be edited.'.format(self.params.get('name')), **self.result)
+                self.params['job_id'] = obj.get('job_id')
+                # self.result['result'] = 'I AM IN PUT' #me
+                url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/manual-changes/%(job_id)s?action=RUN' % self.params
+                method = 'PUT'
+            else:
+                self.result['Previous'] = {}
+                url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/manual-changes?action=%(action)s' % self.params
+                method = 'POST'
 
-            if auth.get('status') != 200:
+            if self.check_changed(obj, form) or (obj.get('analysis_status') == 'SAVED' and self.params.get('action') == 'RUN'):
+                resp, auth = fetch_url(self.module, url,
+                                    headers=self.http_headers,
+                                    data=json.dumps(form),
+                                    method=method)
+
+                if auth.get('status') != 200:
+                    if('filename' in self.params):
+                        self.params['file'] = self.params.get('filename')
+                        del self.params['filename']
+                    self.result['status'] = auth['status']
+                    self.module.exit_json(msg=json.loads(
+                        auth.get('body'))['messages'][0]['message'], **self.result)
+
                 if('filename' in self.params):
                     self.params['file'] = self.params.get('filename')
                     del self.params['filename']
-                self.result['status'] = auth['status']
-                self.module.exit_json(msg=json.loads(
-                    auth.get('body'))['messages'][0]['message'], **self.result)
 
-            if('filename' in self.params):
-                self.params['file'] = self.params.get('filename')
-                del self.params['filename']
-
-            self.result['Result'] = "Pre-change analysis %(name)s successfully created." % self.params
+                self.result['Result'] = "Pre-change analysis %(name)s successfully created." % self.params
+                self.result['changed'] = True
 
     def create_pre_change_from_file(self):
         no_parse = False
@@ -1040,6 +1055,7 @@ class NAEModule(object):
             self.result['changed'] = False
         else:
             self.result['changed'] = True
+        return self.result['changed']
 
     def new_object_selector(self):
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")

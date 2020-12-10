@@ -19,24 +19,20 @@
 
 - include_tasks: ../../../../../../integration/targets/nae_compliance/tasks/create_ag.yml
   tags: create_ag
+  when: check_ag.msg is defined and check_ag.msg == "Assurance group Change Management does not exist"
 
 - name: Delete a pre_change analysis
   nae_prechange:
     <<: *nae_info
     ag_name: Change Management
-    name: New_Analysis
+    name: '{{ item }}'
     state: absent
   ignore_errors: yes
+  loop:
+  - TestAnalysis
+  - TestAnalysis_2
 
-- name: Delete a pre_change analysis
-  nae_prechange:
-    <<: *nae_info
-    ag_name: Change Management
-    name: TestAnalysis_2
-    state: absent
-  ignore_errors: yes
-
-- name: Check pre-change analysis from manual changes ( Contract ) exists
+- name: Add pre-change analysis from manual changes ( Contract )
   nae_prechange:
     <<: *nae_info
     ag_name: Change Management
@@ -61,7 +57,24 @@
         ]
     name: TestAnalysis
     state: present
-  register: check_pre_change
+  register: add_pre_change
+
+- name: Checking pre-change analysis from manual changes ( Contract ) exists
+  assert:
+    that:
+    - add_pre_change.Result == "Pre-change analysis TestAnalysis successfully created."
+
+- name: Query added specific pre-change analysis
+  nae_prechange:
+    <<: *nae_info
+    ag_name: Change Management
+    name: TestAnalysis
+    state: query
+  register: query_specific_result
+  ignore_errors: true
+  until: query_specific_result.msg != "Pre-Change Job has not yet completed."
+  retries: 10
+  delay: 5
 
 - name: Save pre-change analysis from manual changes ( EPG ) before running it
   nae_prechange:
@@ -100,19 +113,64 @@
             }
         ]
     name: TestAnalysis_2
+    description: do change
     state: present
-    # save: True
-  register: check_pre_change_2
+    save: True
+  register: save_pre_change
 
-- name: Checking pre-change analysis from manual changes ( Contract and EPG ) exists
+- name: Checking pre-change analysis from manual changes ( EPG ) is saved
   assert:
     that:
-    - check_pre_change.msg == "Pre-Change Analysis Job with the name TestAnalysis already exists."
-    - check_pre_change_2.Result == "Pre-change analysis TestAnalysis_2 successfully created."
+    - save_pre_change.Result == "Pre-change analysis TestAnalysis_2 successfully created."
 
-# Modify requires PUT command, which requires job_id for the url
+- name: Modify existing pre-change analysis from manual changes (edit and run)
+  nae_prechange:
+    <<: *nae_info
+    ag_name: Change Management
+    changes: |
+        [
+            {
+                "fvAEPg": {
+                    "attributes": {
+                        "descr": "modify and run the existing (saved) EPG prechange analysis ",
+                        "exceptionTag": "",
+                        "floodOnEncap": "disabled",
+                        "fwdCtrl": "none",
+                        "hasMcastSource": "no",
+                        "isAttrBasedEPg": "no",
+                        "matchT": "AtleastOne",
+                        "nameAlias": "",
+                        "pcEnfPref": "unenforced",
+                        "prefGrMemb": "exclude",
+                        "prio": "unspecified",
+                        "shutdown": "no",
+                        "dn": "uni/tn-common/ap-default/epg-epg",
+                        "name": "epg",
+                        "pcv_status": "created"
+                    },
+                    "children": [{
+                        "fvRsBd": {
+                            "attributes": {
+                                "tnFvBDName": "",
+                                "pcv_status": ""
+                            }
+                        }
+                    }]
+                }
+            }
+        ]
+    name: TestAnalysis_2
+    description: modify prechange analysis
+    state: present
+    save: False 
+  register: modify_pre_change
 
-# - name: Modify existing pre-change analysis from manual changes
+- name: Checking modification of existing pre-change analysis from manual changes (edit and run)
+  assert:
+    that:
+    - modify_pre_change.Result == "Pre-change analysis TestAnalysis_2 successfully created."
+
+# - name: Modify existing pre-change analysis from manual changes (edit and save) again
 #   nae_prechange:
 #     <<: *nae_info
 #     ag_name: Change Management
@@ -149,92 +207,61 @@
 #             }
 #         ]
 #     name: TestAnalysis_2
+#     description: modify and run the existing (saved) EPG prechange analysis
 #     state: present
-#     save: False
-#   register: modify_pre_change
+#     save: True
+#   register: modify_and_save_pre_change
 
-# - name: Verify modification of pre-change analysis from manual changes
+# - name: Checking modification of existing pre-change analysis from manual changes (edit and run) again
 #   assert:
 #     that:
-#     - modify_pre_change.Result == "Pre-change analysis TestAnalysis_2 successfully created."
+#     - modify_and_save_pre_change.Result == "Pre-change analysis TestAnalysis_2 successfully created."
 
-- name: Query specific pre-change analysis
-  nae_prechange:
-    <<: *nae_info
-    ag_name: Change Management
-    name: TestAnalysis_2
-    state: query
-  register: query_specific_result
-  ignore_errors: true
-  until: query_specific_result.msg != "Pre-Change Job has not yet completed."
-  retries: 10
-  delay: 60
+# - name: Query specific pre-change analysis
+#   nae_prechange:
+#     <<: *nae_info
+#     ag_name: Change Management
+#     name: TestAnalysis_2
+#     state: query
+#   register: query_specific_result
+#   ignore_errors: true
+#   until: query_specific_result.msg != "Pre-Change Job has not yet completed."
+#   retries: 10
+#   delay: 60
 
-- name: Add a new pre-change analysis from manual changes
-  nae_prechange:
-    <<: *nae_info
-    ag_name: Change Management
-    changes: |
-        [
-            {
-                "vzBrCP": {
-                    "attributes": {
-                        "descr": "",
-                        "intent": "install",
-                        "nameAlias": "",
-                        "prio": "unspecified",
-                        "scope": "context",
-                        "targetDscp": "unspecified",
-                        "dn": "uni/tn-AnsibleTest/brc-new_brc",
-                        "name": "new_brc",
-                        "pcv_status": "created"
-                    }
-                }
-            }
-        ]
-    name: New_Analysis
-    state: present
-  register: add_pre_change
-  ignore_errors: true
+# - name: Add a pre-change analysis from manual changes again
+#   nae_prechange:
+#     <<: *nae_info
+#     ag_name: Change Management
+#     changes: |
+#         [
+#             {
+#                 "vzBrCP": {
+#                     "attributes": {
+#                         "descr": "",
+#                         "intent": "install",
+#                         "nameAlias": "",
+#                         "prio": "unspecified",
+#                         "scope": "context",
+#                         "targetDscp": "unspecified",
+#                         "dn": "uni/tn-AnsibleTest/brc-test_brc",
+#                         "name": "test_brc",
+#                         "pcv_status": "created"
+#                     },
+#                     "children": []
+#                 }
+#             }
+#         ]
+#     name: TestAnalysis
+#     state: present
+#   delegate_to: localhost
+#   ignore_errors: yes
+#   register: add_pre_change_again
 
-- name: Verify Addding pre-change analysis from manual changes
-  assert:
-    that:
-    - add_pre_change.Result == "Pre-change analysis New_Analysis successfully created."
-
-- name: Add a pre-change analysis from manual changes again
-  nae_prechange:
-    <<: *nae_info
-    ag_name: Change Management
-    changes: |
-        [
-            {
-                "vzBrCP": {
-                    "attributes": {
-                        "descr": "",
-                        "intent": "install",
-                        "nameAlias": "",
-                        "prio": "unspecified",
-                        "scope": "context",
-                        "targetDscp": "unspecified",
-                        "dn": "uni/tn-AnsibleTest/brc-test_brc",
-                        "name": "test_brc",
-                        "pcv_status": "created"
-                    },
-                    "children": []
-                }
-            }
-        ]
-    name: TestAnalysis
-    state: present
-  delegate_to: localhost
-  ignore_errors: yes
-  register: add_pre_change_again
-
-- name: Verify Addding pre-change analysis from manual changes
-  assert:
-    that:
-    - add_pre_change_again.msg == "Pre-Change Analysis Job with the name TestAnalysis already exists."
+# - name: Verify Addding pre-change analysis from manual changes
+#   assert:
+#     that:
+#     - add_pre_change_again.msg == "Pre-Change Analysis Job with the name TestAnalysis already exists."
 
 - name: Query all pre-change analysis
   nae_prechange:
@@ -256,6 +283,9 @@
     state: query
   register: query_specific_result
   ignore_errors: true
+  until: query_specific_result.msg != "Pre-Change Job has not yet completed."
+  retries: 10
+  delay: 10
 
 - name: Verify querying specific pre-change analysis
   assert:
@@ -280,13 +310,13 @@
   nae_prechange:
     <<: *nae_info
     ag_name: Change Management
-    name: New_Analysis
+    name: TestAnalysis_2
     state: absent
   ignore_errors: yes
   register: remove_pre_change
   until: remove_pre_change.msg != "The analysis is in progress. The Pre-Change Job cannot be deleted."
   retries: 10
-  delay: 60
+  delay: 5
 
 - name: Verify deletion of pre-change analysis
   assert:
