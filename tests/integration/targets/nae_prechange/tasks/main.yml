@@ -123,6 +123,53 @@
     that:
     - save_pre_change.Result == "Pre-change analysis TestAnalysis_2 successfully created."
 
+- name: Modify existing pre-change analysis from manual changes (edit and save) again
+  nae_prechange:
+    <<: *nae_info
+    ag_name: Change Management
+    changes: |
+        [
+            {
+                "fvAEPg": {
+                    "attributes": {
+                        "descr": "modify and save prechange analysis ",
+                        "exceptionTag": "",
+                        "floodOnEncap": "disabled",
+                        "fwdCtrl": "none",
+                        "hasMcastSource": "no",
+                        "isAttrBasedEPg": "no",
+                        "matchT": "AtleastOne",
+                        "nameAlias": "",
+                        "pcEnfPref": "unenforced",
+                        "prefGrMemb": "exclude",
+                        "prio": "unspecified",
+                        "shutdown": "no",
+                        "dn": "uni/tn-common/ap-default/epg-epg",
+                        "name": "epg",
+                        "pcv_status": "created"
+                    },
+                    "children": [{
+                        "fvRsBd": {
+                            "attributes": {
+                                "tnFvBDName": "",
+                                "pcv_status": ""
+                            }
+                        }
+                    }]
+                }
+            }
+        ]
+    name: TestAnalysis_2
+    description: modify and run the existing (saved) EPG prechange analysis
+    state: present
+    save: True
+  register: modify_and_save_pre_change
+
+- name: Checking modification of existing pre-change analysis from manual changes (edit and run) again
+  assert:
+    that:
+    - modify_and_save_pre_change.Result == "Pre-change analysis TestAnalysis_2 successfully created."
+
 - name: Modify existing pre-change analysis from manual changes (edit and run)
   nae_prechange:
     <<: *nae_info
@@ -170,64 +217,17 @@
     that:
     - modify_pre_change.Result == "Pre-change analysis TestAnalysis_2 successfully created."
 
-# - name: Modify existing pre-change analysis from manual changes (edit and save) again
-#   nae_prechange:
-#     <<: *nae_info
-#     ag_name: Change Management
-#     changes: |
-#         [
-#             {
-#                 "fvAEPg": {
-#                     "attributes": {
-#                         "descr": "modify and run the existing (saved) EPG prechange analysis ",
-#                         "exceptionTag": "",
-#                         "floodOnEncap": "disabled",
-#                         "fwdCtrl": "none",
-#                         "hasMcastSource": "no",
-#                         "isAttrBasedEPg": "no",
-#                         "matchT": "AtleastOne",
-#                         "nameAlias": "",
-#                         "pcEnfPref": "unenforced",
-#                         "prefGrMemb": "exclude",
-#                         "prio": "unspecified",
-#                         "shutdown": "no",
-#                         "dn": "uni/tn-common/ap-default/epg-epg",
-#                         "name": "epg",
-#                         "pcv_status": "created"
-#                     },
-#                     "children": [{
-#                         "fvRsBd": {
-#                             "attributes": {
-#                                 "tnFvBDName": "",
-#                                 "pcv_status": ""
-#                             }
-#                         }
-#                     }]
-#                 }
-#             }
-#         ]
-#     name: TestAnalysis_2
-#     description: modify and run the existing (saved) EPG prechange analysis
-#     state: present
-#     save: True
-#   register: modify_and_save_pre_change
-
-# - name: Checking modification of existing pre-change analysis from manual changes (edit and run) again
-#   assert:
-#     that:
-#     - modify_and_save_pre_change.Result == "Pre-change analysis TestAnalysis_2 successfully created."
-
-# - name: Query specific pre-change analysis
-#   nae_prechange:
-#     <<: *nae_info
-#     ag_name: Change Management
-#     name: TestAnalysis_2
-#     state: query
-#   register: query_specific_result
-#   ignore_errors: true
-#   until: query_specific_result.msg != "Pre-Change Job has not yet completed."
-#   retries: 10
-#   delay: 60
+- name: Query specific pre-change analysis
+  nae_prechange:
+    <<: *nae_info
+    ag_name: Change Management
+    name: TestAnalysis_2
+    state: query
+  register: query_specific_result
+  ignore_errors: true
+  until: query_specific_result.msg != "Pre-Change Job has not yet completed."
+  retries: 10
+  delay: 10
 
 # - name: Add a pre-change analysis from manual changes again
 #   nae_prechange:
