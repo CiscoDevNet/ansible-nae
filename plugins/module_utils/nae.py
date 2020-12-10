@@ -583,23 +583,28 @@ class NAEModule(object):
 
         elif '5.0' in self.version or '5.1' in self.version:
             form = {
-                        "name": self.params.get('name'),
-                        "allow_unsupported_object_modification": True,
-                        "uploaded_file_name": None,
-                        "stop_analysis": False,
-                        "fabric_uuid": self.params.get('fabric_id'),
-                        "base_epoch_id": self.params.get('base_epoch_id'),
-                        "imdata": json.loads(self.params.get('changes'))
-                    }
+                "name": self.params.get('name'),
+                "allow_unsupported_object_modification": True,
+                "uploaded_file_name": None,
+                "stop_analysis": False,
+                "fabric_uuid": self.params.get('fabric_id'),
+                "base_epoch_id": self.params.get('base_epoch_id'),
+                "imdata": json.loads(self.params.get('changes'))
+            }
 
             obj = self.get_pre_change_analysis()
             if obj is not None:
                 if self.check_changed(obj, form) and obj.get('analysis_status') != 'SAVED':
-                    self.module.fail_json(msg='Pre-change analysis {0} is not in SAVED status. It cannot be edited.'.format(self.params.get('name')), **self.result)
+                    self.module.fail_json(
+                        msg='Pre-change analysis {0} exists and not in SAVED status. It cannot be edited.'.format(self.params.get('name')),
+                        **self.result)
                 self.params['job_id'] = obj.get('job_id')
-                # self.result['result'] = 'I AM IN PUT' #me
-                url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/manual-changes/%(job_id)s?action=RUN' % self.params
-                method = 'PUT'
+                if self.check_changed(obj, form) and (obj.get('analysis_status') == 'SAVED' and self.params.get('action') == 'SAVE'):
+                    url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/manual-changes/%(job_id)s?action=SAVE' % self.params
+                    method = 'PUT'
+                else:
+                    url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/manual-changes/%(job_id)s?action=RUN' % self.params
+                    method = 'PUT'
             else:
                 self.result['Previous'] = {}
                 url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/manual-changes?action=%(action)s' % self.params
@@ -607,9 +612,9 @@ class NAEModule(object):
 
             if self.check_changed(obj, form) or (obj.get('analysis_status') == 'SAVED' and self.params.get('action') == 'RUN'):
                 resp, auth = fetch_url(self.module, url,
-                                    headers=self.http_headers,
-                                    data=json.dumps(form),
-                                    method=method)
+                                       headers=self.http_headers,
+                                       data=json.dumps(form),
+                                       method=method)
 
                 if auth.get('status') != 200:
                     if('filename' in self.params):
