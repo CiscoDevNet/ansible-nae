@@ -585,7 +585,6 @@ class NAEModule(object):
             form = {
                 "name": self.params.get('name'),
                 "allow_unsupported_object_modification": True,
-                "uploaded_file_name": None,
                 "stop_analysis": False,
                 "fabric_uuid": self.params.get('fabric_id'),
                 "base_epoch_id": self.params.get('base_epoch_id'),
@@ -594,23 +593,29 @@ class NAEModule(object):
 
             obj = self.get_pre_change_analysis()
             if obj is not None:
-                if self.check_changed(obj, form) and obj.get('analysis_status') != 'SAVED':
-                    self.module.fail_json(
-                        msg='Pre-change analysis {0} exists and not in SAVED status. It cannot be edited.'.format(self.params.get('name')),
-                        **self.result)
-                self.params['job_id'] = obj.get('job_id')
-                if self.check_changed(obj, form) and (obj.get('analysis_status') == 'SAVED' and self.params.get('action') == 'SAVE'):
-                    url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/manual-changes/%(job_id)s?action=SAVE' % self.params
-                    method = 'PUT'
+                if not self.issubset(form, obj):
+                    if obj.get('analysis_status') != 'SAVED':
+                        self.module.fail_json(
+                            msg='Pre-change analysis {0} is not in SAVED status. It cannot be edited.'.format(self.params.get('name')),
+                            **self.result)
+                    else:
+                        self.params['job_id'] = obj.get('job_id')
+                        if self.params.get('action') == 'SAVE':
+                            url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/manual-changes/%(job_id)s?action=SAVE' % self.params
+                            method = 'PUT'
+                        else:
+                            url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/manual-changes/%(job_id)s?action=RUN' % self.params
+                            method = 'PUT'
                 else:
-                    url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/manual-changes/%(job_id)s?action=RUN' % self.params
-                    method = 'PUT'
+                    self.module.fail_json(
+                        msg='Pre-Change Analysis Job with the name {0} already exists.'.format(self.params.get('name')),
+                        **self.result)
             else:
                 self.result['Previous'] = {}
                 url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/manual-changes?action=%(action)s' % self.params
                 method = 'POST'
 
-            if self.check_changed(obj, form) or (obj.get('analysis_status') == 'SAVED' and self.params.get('action') == 'RUN'):
+            if not self.issubset(form, obj) or (obj.get('analysis_status') == 'SAVED' and self.params.get('action') == 'RUN'):
                 resp, auth = fetch_url(self.module, url,
                                        headers=self.http_headers,
                                        data=json.dumps(form),
@@ -630,6 +635,51 @@ class NAEModule(object):
 
                 self.result['Result'] = "Pre-change analysis %(name)s successfully created." % self.params
                 self.result['changed'] = True
+
+    def issubset(self, subset, superset):
+        ''' Recurse through nested dictionary and compare entries '''
+
+        # Both objects are the same object
+        if subset is superset:
+            return True
+
+        # Both objects are identical
+        if subset == superset:
+            return True
+
+        # Both objects have a different type
+        if type(subset) != type(superset):
+            return False
+
+        for key, value in subset.items():
+            # Ignore empty values
+            if value is None:
+                return True
+
+            # Item from subset is missing from superset
+            if key not in superset:
+                return False
+
+            # Item has different types in subset and superset
+            if type(superset.get(key)) != type(value):
+                return False
+
+            # Compare if key & values are similar to subset
+            if not all(superset.get(key, None) == val for key, val in subset.items()):
+                return False
+
+            # Compare if item values are subset
+            if isinstance(value, dict):
+                if not self.issubset(superset.get(key), value):
+                    return False
+            elif isinstance(value, set):
+                if not value <= superset.get(key):
+                    return False
+            else:
+                if not value == superset.get(key):
+                    return False
+
+        return True
 
     def create_pre_change_from_file(self):
         no_parse = False
