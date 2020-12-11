@@ -88,7 +88,7 @@ def main():
     if ag_name:
         nae.result['tcam'] = nae.get_tcam_stats()
         module.exit_json(**nae.result)
-    module.fail_json(msg='Incorrect params passed', **nae.result)
+    module.fail_json(msg='Incorrect parameters passed', **nae.result)
 
 
 if __name__ == '__main__':
