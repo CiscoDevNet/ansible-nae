@@ -108,7 +108,7 @@ class NAEModule(object):
                 self.module.fail_json(msg=self.response, **self.result)
             except KeyError:
                 # Connection error
-                self.fail_json(
+                self.module.fail_json(
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
 
@@ -123,6 +123,10 @@ class NAEModule(object):
                                headers=self.http_headers,
                                data=user_credentials,
                                method='POST')
+
+        if auth.get('status') == 403:
+            self.module.fail_json(msg=json.loads(auth.get('body'))['messages'][0]['message'],
+                **self.result)
 
         if auth.get('status') != 200:
             if('filename' in self.params):
@@ -153,7 +157,7 @@ class NAEModule(object):
                 self.module.fail_json(msg=self.response, **self.result)
             except KeyError:
                 # Connection error
-                self.fail_json(
+                self.module.fail_json(
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         self.version = json.loads(
@@ -223,7 +227,7 @@ class NAEModule(object):
                     self.module.fail_json(msg=self.response, **self.result)
                 except KeyError:
                     # Connection error
-                    self.fail_json(
+                    self.module.fail_json(
                         msg='Connection failed for %(url)s. %(msg)s' %
                         auth, **self.result)
             if json.loads(resp.read())['success'] is True:
@@ -274,7 +278,7 @@ class NAEModule(object):
                     msg=str(self.response['messages'][0]['message']), **self.result)
             except KeyError:
                 # Connection error
-                self.fail_json(
+                self.module.fail_json(
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         self.result['Result'] = 'Successfully created Assurance Group "%(name)s"' % self.params
@@ -321,7 +325,7 @@ class NAEModule(object):
                     msg=str(self.response['messages'][0]['message']), **self.result)
             except KeyError:
                 # Connection error
-                self.fail_json(
+                self.module.fail_json(
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         self.result['Result'] = 'Successfully created Assurance Group "%(name)s"' % self.params
@@ -1121,7 +1125,7 @@ class NAEModule(object):
                                       'messages'][0]['message'], **self.result)
             except KeyError:
                 # Connection error
-                self.fail_json(
+                self.module.fail_json(
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         else:
@@ -1167,7 +1171,7 @@ class NAEModule(object):
                                       'messages'][0]['message'], **self.result)
             except KeyError:
                 # Connection error
-                self.fail_json(
+                self.module.fail_json(
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         else:
@@ -1224,7 +1228,7 @@ class NAEModule(object):
                 self.module.fail_json(msg=auth.get('body'), **self.result)
             except KeyError:
                 # Connection error
-                self.fail_json(
+                self.module.fail_json(
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         else:
@@ -1252,7 +1256,7 @@ class NAEModule(object):
                 self.module.fail_json(msg=auth.get('body'), **self.result)
             except KeyError:
                 # Connection error
-                self.fail_json(
+                self.module.fail_json(
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         else:
@@ -1281,7 +1285,7 @@ class NAEModule(object):
                 self.module.fail_json(msg=auth.get('body'), **self.result)
             except KeyError:
                 # Connection error
-                self.fail_json(
+                self.module.fail_json(
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         else:
@@ -1310,7 +1314,7 @@ class NAEModule(object):
                 self.module.fail_json(msg=auth.get('body'), **self.result)
             except KeyError:
                 # Connection error
-                self.fail_json(
+                self.module.fail_json(
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         else:
@@ -1339,7 +1343,7 @@ class NAEModule(object):
                 self.module.fail_json(msg=auth.get('body'), **self.result)
             except KeyError:
                 # Connection error
-                self.fail_json(
+                self.module.fail_json(
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         else:
@@ -1382,7 +1386,7 @@ class NAEModule(object):
                     self.module.fail_json(msg=auth.get('body'), **self.result)
                 except KeyError:
                     # Connection error
-                    self.fail_json(
+                    self.module.fail_json(
                         msg='Connection failed for %(url)s. %(msg)s' %
                         auth, **self.result)
             else:
@@ -1451,7 +1455,7 @@ class NAEModule(object):
                 self.module.fail_json(msg=auth.get('body'), **self.result)
             except KeyError:
                 # Connection error
-                self.fail_json(
+                self.module.fail_json(
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         else:
@@ -1476,7 +1480,7 @@ class NAEModule(object):
                 self.module.fail_json(msg=auth.get('body'), **self.result)
             except KeyError:
                 # Connection error
-                self.fail_json(
+                self.module.fail_json(
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         else:
@@ -1502,7 +1506,7 @@ class NAEModule(object):
                 self.module.fail_json(msg=auth.get('body'), **self.result)
             except KeyError:
                 # Connection error
-                self.fail_json(
+                self.module.fail_json(
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         else:
@@ -1528,7 +1532,7 @@ class NAEModule(object):
                 self.module.fail_json(msg=auth.get('body'), **self.result)
             except KeyError:
                 # Connection error
-                self.fail_json(
+                self.module.fail_json(
                     msg='Connection failed for %(url)s. %(msg)s' %
                     auth, **self.result)
         else:
@@ -1804,6 +1808,7 @@ class NAEModule(object):
                 writer.writerow(i)
         success = 'to file %(file)s.csv' % self.params
         self.result['Result'] = self.result['Result'] + success
+        self.result['changed'] = True
 
     def StartOnDemandAnalysis(self, iterations):
         runningLive = self.isLiveAnalysis()

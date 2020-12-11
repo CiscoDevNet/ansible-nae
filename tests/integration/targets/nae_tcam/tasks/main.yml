@@ -1,0 +1,82 @@
+# Test code for the NAE modules
+# Copyright: (c) 2020, Cindy Zhao (cizhao) <cizhao@cisco.com>
+
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+- name: Test that we have an NAE host, NAE username and NAE password
+  fail:
+    msg: 'Please define the following variables: nae_host, nae_username and nae_password.'
+  when: nae_host is not defined or nae_username is not defined or nae_password is not defined
+
+- name: Set vars
+  set_fact: 
+    nae_info: &nae_info
+      host: '{{ nae_host }}'
+      username: '{{ nae_username }}'
+      password: '{{ nae_password }}'
+      validate_certs: '{{ nae_validate_certs | default(false) }}'
+
+- name: Set vars
+  set_fact: 
+    nae_info: &nae_info1
+      host: '{{ nae_host }}'
+      username: 'incorrect_username'
+      password: '{{ nae_password }}'
+      validate_certs: '{{ nae_validate_certs | default(false) }}'
+
+- name: Set vars
+  set_fact: 
+    nae_info: &nae_info2
+      host: '{{ nae_host }}'
+      username: '{{ nae_username }}'
+      password: 'incorrect_password'
+      validate_certs: '{{ nae_validate_certs | default(false) }}'
+
+- name: Get tcam results (having wrong username)
+  nae_tcam:
+    <<: *nae_info1
+    ag_name: Change Management
+  ignore_errors: yes
+  register: wrong_username
+
+- name: Get tcam results (having wrong password)
+  nae_tcam:
+    <<: *nae_info2
+    ag_name: Change Management
+  ignore_errors: yes
+  register: wrong_password
+
+- name: Verify ivalid credentials
+  assert:
+    that:
+      - wrong_username is not changed
+      - wrong_password is not changed
+      - wrong_username.msg == wrong_password.msg == 'Invalid username and/or password'
+
+- name: Check whether AG Change Management exists
+  include_tasks: ../../../../../../integration/targets/nae_compliance/tasks/create_ag.yml
+  tags: create_ag
+  when: check_ag.msg is defined and check_ag.msg == "Assurance group Change Management does not exist"
+
+- name: Get tcam results
+  nae_tcam:
+    <<: *nae_info
+    ag_name: Change Management
+
+- name: Get tcam results and write to local csv file
+  nae_tcam:
+    <<: *nae_info
+    ag_name: Change Management
+    file: tcam_data
+
+- name: Use incorrect params
+  nae_tcam:
+    <<: *nae_info
+  ignore_errors: yes
+  register: incorrect_params
+
+- name: Verify incorrect_params
+  assert:
+    that:
+      - incorrect_params is not changed
+      - incorrect_params.msg == "Incorrect parameters passed"
