@@ -1271,7 +1271,7 @@ class NAEModule(object):
                                self.params.get('fabric_uuid'),
                                str(obj[0].get('uuid')))
         if obj != []:
-            self.result[''] = detail['value']['data']
+            self.result['Previous'] = detail['value']['data']
             method = 'PUT'
             form['uuid'] = obj[0].get('uuid')
         else:
@@ -1300,7 +1300,7 @@ class NAEModule(object):
             else:
                 r = resp.read()
             self.result['Current'] = json.loads(r)['value']['data']
-            self.check_changed(self.result['Previous'], self.result['Current'])
+            self.check_changed(self.result.get('Previous'), self.result.get('Current'))
 
     def get_all_requirement_sets(self):
         self.params['fabric_uuid'] = self.getFirstAG().get("uuid")

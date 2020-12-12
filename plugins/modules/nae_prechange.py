@@ -38,7 +38,9 @@ options:
     aliases: [ descr ]
   verify:
     description:
-    - Flag specifying if pre-change analysis is made from aci config dump.
+    - When used with C(present) this flag specify if pre-change analysis is made from cisco.aci collection
+    - output_path config dump.
+    - When used with C(query) this flag will wait to execute the query until the prechange status is COMPLETED.
     type: bool
   state:
     description:
@@ -55,7 +57,7 @@ options:
     - Optional parameter if creating new pre-change analysis from change-list (manual)
   ignore_sm:
     description:
-    - Optional list of Smart Event Mnomonics that should be ignored
+    - Optional list of Smart Event Mnemonics that should be ignored
     type: list
 
 author:
@@ -63,7 +65,7 @@ author:
 '''
 
 EXAMPLES = r'''
-- name: Add a pre-change analysis from manual changes
+- name: Add a pre-change analysis from manual changes (version <= 4.1)
   nae_prechange:
     host: nae
     port: 8080
@@ -71,6 +73,35 @@ EXAMPLES = r'''
     password: C@ndidadmin1234
     ag_name: FAB2
     changes: {"tenant_change": {"action": "ADD","dn": "uni/tn-newTenant","description": "Adding a new Tenant"}}
+    name: NewAnalysis
+    state: present
+  delegate_to: localhost
+- name: Add a pre-change analysis from manual changes (version >= 5.0)
+  nae_prechange: &add_prechange
+    host: nae
+    port: 8080
+    username: Admin
+    password: C@ndidadmin1234
+    ag_name: FAB2
+    changes: |
+        [
+            {
+                "vzBrCP": {
+                    "attributes": {
+                        "descr": "",
+                        "intent": "install",
+                        "nameAlias": "",
+                        "prio": "unspecified",
+                        "scope": "context",
+                        "targetDscp": "unspecified",
+                        "dn": "uni/tn-AnsibleTest/brc-test_brc",
+                        "name": "test_brc",
+                        "pcv_status": "created"
+                    },
+                    "children": []
+                }
+            }
+        ]
     name: NewAnalysis
     state: present
   delegate_to: localhost
@@ -84,19 +115,32 @@ EXAMPLES = r'''
     name: NewAnalysis
     state: absent
   delegate_to: localhost
-- name: Add a new pre-change analysis from file
+- name: Add a new pre-change analysis from file (JSON from APIC file)
   nae_prechange:
     host: nae
     port: 8080
     username: Admin
     password: C@ndidadmin1234
     ag_name: FAB2
-    file: ../Camillo.json
+    file: object_from_apic.json
     name: NewAnalysis
     description: New Analysis
     state: present
   delegate_to: localhost
-- name: Query a pre-change analysis
+- name: Add a new pre-change analysis from file (JSON from ACI collection output_path)
+  nae_prechange:
+    host: nae
+    port: 8080
+    username: Admin
+    password: C@ndidadmin1234
+    ag_name: FAB2
+    file: object_from_cisco_aci_collection_output.json
+    name: NewAnalysis
+    description: New Analysis
+    verify: True
+    state: present
+  delegate_to: localhost
+- name: Query a pre-change analysis (wait until status = COMPLETED)
   nae_prechange:
     host: nae
     port: 8080
@@ -104,7 +148,8 @@ EXAMPLES = r'''
     password: C@ndidadmin1234
     ag_name: FAB2
     name: Analysis1
-    state: verify
+    state: query
+    verify: True
   delegate_to: localhost
 - name: Query a pre-change analysis
   nae_prechange:
