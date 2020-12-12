@@ -16,37 +16,23 @@
       password: '{{ nae_password }}'
       validate_certs: '{{ nae_validate_certs | default(false) }}'
 
-- name: Set vars
-  set_fact: 
-    nae_info: &nae_info1
-      host: '{{ nae_host }}'
-      username: 'incorrect_username'
-      password: '{{ nae_password }}'
-      validate_certs: '{{ nae_validate_certs | default(false) }}'
-
-- name: Set vars
-  set_fact: 
-    nae_info: &nae_info2
-      host: '{{ nae_host }}'
-      username: '{{ nae_username }}'
-      password: 'incorrect_password'
-      validate_certs: '{{ nae_validate_certs | default(false) }}'
-
-- name: Get tcam results (having wrong username)
+- name: Get tcam results (wrong username)
   nae_tcam:
-    <<: *nae_info1
+    <<: *nae_info
+    username: 'incorrect_username'
     ag_name: Change Management
   ignore_errors: yes
   register: wrong_username
 
-- name: Get tcam results (having wrong password)
+- name: Get tcam results (wrong password)
   nae_tcam:
-    <<: *nae_info2
+    <<: *nae_info
+    password: 'incorrect_password'
     ag_name: Change Management
   ignore_errors: yes
   register: wrong_password
 
-- name: Verify ivalid credentials
+- name: Verify invalid credentials
   assert:
     that:
       - wrong_username is not changed
@@ -68,6 +54,13 @@
     <<: *nae_info
     ag_name: Change Management
     file: tcam_data
+  register: result_tcam_data
+
+- name: Verify tcam_data
+  assert:
+    that:
+      - result_tcam_data is changed
+      - result_tcam_data.msg is match ('Pages extracted [0-9]* to file tcam_data.csv')
 
 - name: Use incorrect params
   nae_tcam:
