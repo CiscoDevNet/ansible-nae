@@ -126,7 +126,7 @@ class NAEModule(object):
 
         if auth.get('status') == 403:
             self.module.fail_json(msg=json.loads(auth.get('body'))['messages'][0]['message'],
-                **self.result)
+                                  **self.result)
 
         if auth.get('status') != 200:
             if('filename' in self.params):
@@ -1807,7 +1807,7 @@ class NAEModule(object):
             for i in tcam_stats:
                 writer.writerow(i)
         success = 'to file %(file)s.csv' % self.params
-        self.result['Result'] = self.result['Result'] + success
+        self.result['msg'] = self.result['Result'] + success
         self.result['changed'] = True
 
     def StartOnDemandAnalysis(self, iterations):
