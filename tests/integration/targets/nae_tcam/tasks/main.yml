@@ -16,10 +16,11 @@
       password: '{{ nae_password }}'
       validate_certs: '{{ nae_validate_certs | default(false) }}'
 
+# Testing module login
 - name: Get tcam results (wrong username)
   nae_tcam:
     <<: *nae_info
-    username: 'incorrect_username'
+    username: incorrect_username
     ag_name: Change Management
   ignore_errors: yes
   register: wrong_username
@@ -27,18 +28,39 @@
 - name: Get tcam results (wrong password)
   nae_tcam:
     <<: *nae_info
-    password: 'incorrect_password'
+    password: incorrect_password
     ag_name: Change Management
   ignore_errors: yes
   register: wrong_password
+
+- name: Get tcam results (wrong host)
+  nae_tcam:
+    <<: *nae_info
+    host: incorrect_host
+    ag_name: Change Management
+  ignore_errors: yes
+  register: wrong_host
+
+- name: Get tcam results (google host)
+  nae_tcam:
+    <<: *nae_info
+    host: 'google.com'
+    ag_name: Change Management
+  ignore_errors: yes
+  register: google_host
 
 - name: Verify invalid credentials
   assert:
     that:
       - wrong_username is not changed
       - wrong_password is not changed
+      - wrong_host is not changed
+      - google_host is not changed
       - wrong_username.msg == wrong_password.msg == 'Invalid username and/or password'
+      - wrong_host.msg == 'Request failed{{':'}} <urlopen error [Errno -2] Name or service not known>'
+      - google_host.msg == 'HTTP Error 404{{':'}} Not Found'
 
+# Testing nae_tcam module
 - name: Check whether AG Change Management exists
   include_tasks: ../../../../../../integration/targets/nae_compliance/tasks/create_ag.yml
   tags: create_ag
@@ -48,6 +70,7 @@
   nae_tcam:
     <<: *nae_info
     ag_name: Change Management
+  register: result_tcam
 
 - name: Get tcam results and write to local csv file
   nae_tcam:
@@ -59,6 +82,8 @@
 - name: Verify tcam_data
   assert:
     that:
+      - result_tcam is not changed
+      - result_tcam.tcam[0][0].bucket.action == 'PERMIT'
       - result_tcam_data is changed
       - result_tcam_data.msg is match ('Pages extracted [0-9]* to file tcam_data.csv')
 

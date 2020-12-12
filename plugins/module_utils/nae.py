@@ -124,18 +124,12 @@ class NAEModule(object):
                                data=user_credentials,
                                method='POST')
 
-        if auth.get('status') == 403:
-            self.module.fail_json(msg=json.loads(auth.get('body'))['messages'][0]['message'],
-                                  **self.result)
-
         if auth.get('status') != 200:
             if('filename' in self.params):
                 self.params['file'] = self.params.get('filename')
                 del self.params['filename']
-            self.module.exit_json(
-                msg=json.loads(
-                    auth.get('body'))['messages'][0]['message'],
-                **self.result)
+            self.module.fail_json(msg=json.loads(auth.get('body'))['messages'][0]['message'],
+                                  **self.result)
 
         self.http_headers['X-NAE-CSRF-TOKEN'] = resp.headers['X-NAE-CSRF-TOKEN']
 
