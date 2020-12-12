@@ -109,8 +109,8 @@ class NAEModule(object):
             except KeyError:
                 # Connection error
                 self.module.fail_json(
-                    msg='Connection failed for %(url)s. %(msg)s' %
-                    auth, **self.result)
+                    msg='Connection failed for %(url)s. %(msg)s' % auth,
+                    **self.result)
 
         url = 'https://%(host)s:%(port)s/nae/api/v1/login' % self.params
         user_credentials = json.dumps({"username": self.params.get(
@@ -128,8 +128,9 @@ class NAEModule(object):
             if('filename' in self.params):
                 self.params['file'] = self.params.get('filename')
                 del self.params['filename']
-            self.module.fail_json(msg=json.loads(auth.get('body'))['messages'][0]['message'],
-                                  **self.result)
+            self.module.fail_json(
+                msg=json.loads(auth.get('body'))['messages'][0]['message'],
+                **self.result)
 
         self.http_headers['X-NAE-CSRF-TOKEN'] = resp.headers['X-NAE-CSRF-TOKEN']
 
@@ -182,8 +183,7 @@ class NAEModule(object):
                 self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.module.exit_json(
-                msg=json.loads(
-                    auth.get('body'))['messages'][0]['message'],
+                msg=json.loads(auth.get('body'))['messages'][0]['message'],
                 **self.result)
 
         if resp.headers.get('Content-Encoding') == "gzip":
@@ -273,8 +273,8 @@ class NAEModule(object):
             except KeyError:
                 # Connection error
                 self.module.fail_json(
-                    msg='Connection failed for %(url)s. %(msg)s' %
-                    auth, **self.result)
+                    msg='Connection failed for %(url)s. %(msg)s' % auth,
+                    **self.result)
         self.result['Result'] = 'Successfully created Assurance Group "%(name)s"' % self.params
 
     def newOfflineAG(self):
@@ -320,8 +320,8 @@ class NAEModule(object):
             except KeyError:
                 # Connection error
                 self.module.fail_json(
-                    msg='Connection failed for %(url)s. %(msg)s' %
-                    auth, **self.result)
+                    msg='Connection failed for %(url)s. %(msg)s' % auth,
+                    **self.result)
         self.result['Result'] = 'Successfully created Assurance Group "%(name)s"' % self.params
 
     def get_pre_change_analyses(self):
@@ -340,8 +340,7 @@ class NAEModule(object):
                 self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.module.exit_json(
-                msg=json.loads(
-                    auth.get('body'))['messages'][0]['message'],
+                msg=json.loads(auth.get('body'))['messages'][0]['message'],
                 **self.result)
 
         if resp.headers.get('Content-Encoding') == "gzip":
@@ -402,10 +401,8 @@ class NAEModule(object):
 
     def get_pre_change_analysis(self):
         ret = self.get_pre_change_analyses()
-        # self.result['ret'] = ret
         for a in ret:
             if a['name'] == self.params.get('name'):
-                # self.result['analysis'] = a
                 return a
         return None
 
@@ -413,7 +410,9 @@ class NAEModule(object):
         ag = self.get_assurance_group(self.params.get('ag_name'))
         if ag is None:
             self.result['Result'] = "No such Assurance Group exists"
-            self.module.fail_json(msg='Assurance group {0} does not exist'.format(self.params.get('ag_name')), **self.result)
+            self.module.fail_json(
+                msg='Assurance group {0} does not exist'.format(self.params.get('ag_name')),
+                **self.result)
         self.params['fabric_id'] = str(ag.get('uuid'))
         if self.get_pre_change_analysis() is None:
             self.module.fail_json(
@@ -597,7 +596,6 @@ class NAEModule(object):
                             msg='Pre-change analysis {0} is not in SAVED status. It cannot be edited.'.format(self.params.get('name')),
                             **self.result)
                     else:
-                        # self.params['job_id'] = obj.get('job_id')
                         if self.params.get('action') == 'SAVE':
                             url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/manual-changes/%(job_id)s?action=SAVE' % self.params
                             method = 'PUT'
