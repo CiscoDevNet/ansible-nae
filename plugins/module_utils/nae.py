@@ -335,8 +335,6 @@ class NAEModule(object):
                                headers=self.http_headers,
                                data=None,
                                method='GET')
-        # self.result['resp'] = resp.headers.get('Set-Cookie')
-        # self.module.fail_json(msg="err", **self.result)
         if auth.get('status') != 200:
             if('filename' in self.params):
                 self.params['file'] = self.params.get('filename')
@@ -348,9 +346,7 @@ class NAEModule(object):
 
         if resp.headers.get('Content-Encoding') == "gzip":
             r = gzip.decompress(resp.read())
-            # self.result['stdout'] = json.loads(r.decode())['value']['data']
             return json.loads(r.decode())['value']['data']
-        # self.result['stdout'] = json.loads(resp.read())['value']['data']
         return json.loads(resp.read())['value']['data']
 
     def show_pre_change_analyses(self):
@@ -584,6 +580,7 @@ class NAEModule(object):
         elif '5.0' in self.version or '5.1' in self.version:
             form = {
                 "name": self.params.get('name'),
+                "description": self.params.get('description'),
                 "allow_unsupported_object_modification": True,
                 "stop_analysis": False,
                 "fabric_uuid": self.params.get('fabric_id'),
@@ -593,13 +590,14 @@ class NAEModule(object):
 
             obj = self.get_pre_change_analysis()
             if obj is not None:
+                self.params['job_id'] = obj.get('job_id')
                 if not self.issubset(form, obj):
                     if obj.get('analysis_status') != 'SAVED':
                         self.module.fail_json(
                             msg='Pre-change analysis {0} is not in SAVED status. It cannot be edited.'.format(self.params.get('name')),
                             **self.result)
                     else:
-                        self.params['job_id'] = obj.get('job_id')
+                        # self.params['job_id'] = obj.get('job_id')
                         if self.params.get('action') == 'SAVE':
                             url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/manual-changes/%(job_id)s?action=SAVE' % self.params
                             method = 'PUT'
@@ -607,9 +605,8 @@ class NAEModule(object):
                             url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/manual-changes/%(job_id)s?action=RUN' % self.params
                             method = 'PUT'
                 else:
-                    self.module.fail_json(
-                        msg='Pre-Change Analysis Job with the name {0} already exists.'.format(self.params.get('name')),
-                        **self.result)
+                    url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/manual-changes/%(job_id)s?action=RUN' % self.params
+                    method = 'PUT'
             else:
                 self.result['Previous'] = {}
                 url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/manual-changes?action=%(action)s' % self.params
@@ -682,42 +679,40 @@ class NAEModule(object):
         return True
 
     def create_pre_change_from_file(self):
-        no_parse = False
         if not os.path.exists(self.params.get('file')):
-            raise AssertionError("File not found, " +
-                                 str(self.params.get('file')))
+            self.module.fail_json(
+                msg="File not found : {0}".format(self.params.get('file')),
+                **self.result)
         filename = self.params.get('file')
         self.params['filename'] = filename
-        # self.result['Checking'] = str(self.params.get('filename'))
-        # self.module.exit_json(msg="Testing", **self.result)
         f = open(self.params.get('file'), "rb")
-        if self.is_json(f.read()) is True:
-            no_parse = True
-        if self.params.get('verify') and no_parse is False:
-            # # Input file is not parsed.
-            self.params['cmap'] = {}
-            data = self.load(open(self.params.get('file')))
-            tree = self.construct_tree(data)
-            if tree is False:
+        if self.is_json(f.read()) is False:
+            if self.params.get('verify'):
+                # # Input file is not parsed.
+                self.params['cmap'] = {}
+                data = self.load(open(self.params.get('file')))
+                tree = self.construct_tree(data)
+                if tree is False:
+                    self.module.fail_json(
+                        msg="Error parsing input file, unsupported object found in hierarchy.",
+                        **self.result)
+                tree_roots = self.find_tree_roots(tree)
+                ansible_ds = {}
+                for root in tree_roots:
+                    exp = self.export_tree(root)
+                    for key, val in exp.items():
+                        ansible_ds[key] = val
+                self.copy_children(ansible_ds)
+                toplevel = {"totalCount": "1", "imdata": []}
+                toplevel['imdata'].append(ansible_ds)
+                with open(self.params.get('file'), 'w') as f:
+                    json.dump(toplevel, f)
+                del self.params['cmap']
+                f.close()
+            else:
                 self.module.fail_json(
-                    msg="Error parsing input file, unsupported object found in heirarchy.",
+                    msg="Error parsing input file. JSON format necessary",
                     **self.result)
-            tree_roots = self.find_tree_roots(tree)
-            ansible_ds = {}
-            for root in tree_roots:
-                exp = self.export_tree(root)
-                for key, val in exp.items():
-                    ansible_ds[key] = val
-            self.copy_children(ansible_ds)
-            toplevel = {"totalCount": "1", "imdata": []}
-            toplevel['imdata'].append(ansible_ds)
-            with open(self.params.get('file'), 'w') as f:
-                json.dump(toplevel, f)
-            del self.params['cmap']
-            f.close()
-
-        # self.result['Checking'] = f
-        # self.module.exit_json(msg="Testing", **self.result)
         config = []
         self.params['file'] = f
         self.params['changes'] = config
@@ -1278,7 +1273,7 @@ class NAEModule(object):
                                self.params.get('fabric_uuid'),
                                str(obj[0].get('uuid')))
         if obj != []:
-            self.result['Previous'] = detail['value']['data']
+            self.result[''] = detail['value']['data']
             method = 'PUT'
             form['uuid'] = obj[0].get('uuid')
         else:

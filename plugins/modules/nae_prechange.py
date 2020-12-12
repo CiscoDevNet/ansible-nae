@@ -31,7 +31,6 @@ options:
     - The name of the pre-change analysis
     type: str
     required: yes
-    aliases: [ name ]
   description:
     description:
     - Description for the pre-change analysis.
@@ -162,7 +161,7 @@ def main():
     argument_spec = nae_argument_spec()
     argument_spec.update(  # Not required for querying all objects
         ag_name=dict(type='str', aliases=['fab_name']),
-        name=dict(type='str', aliases=['name']),
+        name=dict(type='str'),
         description=dict(type='str'),
         changes=dict(type='str'),
         ignore_sm=dict(type='list', default=[]),

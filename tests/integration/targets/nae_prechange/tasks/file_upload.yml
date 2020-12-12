@@ -1,0 +1,213 @@
+# Test code for the NAE modules
+# Copyright: (c) 2020, Anvitha Jain (@anvitha-jain) <anvjain@cisco.com>
+
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+- name: Set vars
+  set_fact:
+    nae_info: &nae_info
+      host: '{{ nae_host }}'
+      port: '{{ nae_port }}'
+      username: '{{ nae_username }}'
+      password: '{{ nae_password }}'
+      validate_certs: '{{ nae_validate_certs | default(false) }}'
+
+- name: Add a new pre-change analysis (Contract) from file upload
+  nae_prechange:
+    <<: *nae_info
+    ag_name: Change Management
+    file: targets/nae_prechange/tasks/contract.json
+    name: ansible_file_upload
+    description: pre-change analysis using file upload
+    state: present
+  register: add_pre_change_contract
+
+- name: Checking pre-change analysis (Contract) from file upload is added
+  assert:
+    that:
+    - add_pre_change_contract is changed
+    - add_pre_change_contract.Result == "Pre-change analysis ansible_file_upload successfully created."
+
+- name: Add a new pre-change analysis from file upload (non-existing file)
+  nae_prechange:
+    <<: *nae_info
+    ag_name: Change Management
+    file: targets/nae_prechange/tasks/ansible_test.json
+    name: ansible_file_upload_test
+    description: pre-change analysis using file upload
+    state: present
+  ignore_errors: true
+  register: add_pre_change_file
+
+- name: Checking pre-change analysis from file upload (non-existing file)
+  assert:
+    that:
+    - add_pre_change_file is not changed
+    - add_pre_change_file.msg == ("File not found {{':'}} targets/nae_prechange/tasks/ansible_test.json")
+
+- name: Query specific pre-change analysis (checks if Pre-Change Job is complete)
+  nae_prechange:
+    <<: *nae_info
+    ag_name: Change Management
+    name: ansible_file_upload
+    state: query
+  register: query_file_specific_result
+  ignore_errors: true
+  until: query_file_specific_result.msg != "Pre-Change Job has not yet completed."
+  retries: 25
+  delay: 5
+
+- name: Add pre-change analysis (Contract) from file upload again (same name same filename)
+  nae_prechange:
+    <<: *nae_info
+    ag_name: Change Management
+    file: targets/nae_prechange/tasks/contract.json
+    name: ansible_file_upload
+    description: pre-change analysis using file upload
+    state: present
+  register: add_pre_change_again_same
+
+- name: Add pre-change analysis (Contract) from file upload again (same name different filename)
+  nae_prechange:
+    <<: *nae_info
+    ag_name: Change Management
+    file: targets/nae_prechange/tasks/contract_identical.json
+    name: ansible_file_upload
+    description: pre-change analysis using file upload
+    verify: True  # converts to json format
+    state: present
+  ignore_errors: true
+  register: add_pre_change_again_file
+
+- name: Add pre-change analysis (Contract) from file upload again
+  assert:
+    that:
+    - add_pre_change_again_same is not changed
+    - add_pre_change_again_same.msg == "Pre-Change Analysis Job with the name ansible_file_upload already exists."
+    - add_pre_change_again_file is not changed
+    - add_pre_change_again_file.msg == "Pre-Change Analysis Job with the name ansible_file_upload already exists."
+
+- name: Add pre-change analysis (Contract) from file upload again (same filename different name)
+  nae_prechange:
+    <<: *nae_info
+    ag_name: Change Management
+    file: targets/nae_prechange/tasks/contract.json
+    name: ansible_file_upload_2
+    description: pre-change analysis using file upload
+    state: present
+  ignore_errors: true
+  register: add_pre_change_again
+
+- name: Add file upload again  (same filename different name)
+  assert:
+    that:
+    - add_pre_change_again is changed
+    - add_pre_change_again.Result == "Pre-change analysis ansible_file_upload_2 successfully created."
+
+- name: Query specific pre-change analysis (checks if Pre-Change Job is complete)
+  nae_prechange:
+    <<: *nae_info
+    ag_name: Change Management
+    name: ansible_file_upload_2
+    state: query
+  register: query_file_specific_result
+  ignore_errors: true
+  until: query_file_specific_result.msg != "Pre-Change Job has not yet completed."
+  retries: 25
+  delay: 5
+
+- name: Add pre-change analysis from file upload (non JSON format & verify is False)
+  nae_prechange:
+    <<: *nae_info
+    ag_name: Change Management
+    file: targets/nae_prechange/tasks/ansible_dump.json
+    name: ansible_file_upload_test
+    description: pre-change analysis using file upload
+    verify: False
+    state: present
+  ignore_errors: true
+  register: add_pre_change_format
+
+- name: Checking pre-change analysis from file upload (non JSON format & verify is False)
+  assert:
+    that:
+    - add_pre_change_format is not changed
+    - add_pre_change_format.msg == "Error parsing input file. JSON format necessary"
+
+- name: Add pre-change analysis from file upload (non JSON format & verify is True)
+  nae_prechange:
+    <<: *nae_info
+    ag_name: Change Management
+    file: targets/nae_prechange/tasks/ansible_dump.json
+    name: ansible_file_upload_3
+    description: pre-change analysis using file upload
+    verify: True  # converts to json format
+    state: present
+  register: add_pre_change_verify
+
+- name: Checking pre-change analysis from file upload (non JSON format & verify is True)
+  assert:
+    that:
+    - add_pre_change_verify is changed
+    - add_pre_change_verify.Result == "Pre-change analysis ansible_file_upload_3 successfully created."
+
+- name: Query all pre-change analysis
+  nae_prechange: &query_pre_change_file
+    <<: *nae_info
+    ag_name: Change Management
+    state: query
+  register: query_file_all_result
+
+- name: Verify querying all pre-change analysis
+  assert:
+    that:
+    - query_file_all_result.Analyses[0] != None
+
+- name: Query specific pre-change analysis (checks if Pre-Change Job is complete)
+  nae_prechange:
+    <<: *nae_info
+    ag_name: Change Management
+    name: ansible_file_upload_3
+    state: query
+  register: query_file_specific_result
+  ignore_errors: true
+  until: query_file_specific_result.msg != "Pre-Change Job has not yet completed."
+  retries: 25
+  delay: 5
+
+- name: Verify querying specific pre-change analysis
+  assert:
+    that:
+    - query_file_specific_result.msg == "Pre-change analysis failed. The above smart events have been detected for later epoch only."
+
+- name: Query non-existing pre-change analysis
+  nae_prechange:
+    <<: *query_pre_change_file
+    name: NewAnalysis_2
+  register: query_file_result
+  ignore_errors: true
+
+- name: Verify querying non-existing pre-change analysis
+  assert:
+    that:
+    - query_file_result.msg == "No such Pre-Change Job exists."
+
+- name: Delete a pre_change analysis
+  nae_prechange: &delete_prechange
+    <<: *nae_info
+    ag_name: Change Management
+    name: ansible_file_upload
+    state: absent
+  register: remove_file_pre_change
+
+- name: Delete a non-existing pre_change analysis
+  nae_prechange:
+    <<: *delete_prechange
+  ignore_errors: true
+  register: remove_file_pre_change_again
+
+- name: Verify deletion of pre-change analysis
+  assert:
+    that:
+    - remove_file_pre_change.msg == "Delete Pre-change Job successful"
+    - remove_file_pre_change_again.msg == "No such Pre-Change Job exists."
