@@ -1,0 +1,319 @@
+# Test code for the NAE modules
+# Copyright: (c) 2020, Anvitha Jain (@anvitha-jain) <anvjain@cisco.com>
+
+# GNU General Public License v3.0+ (see LICENSE or https://www.gnu.org/licenses/gpl-3.0.txt)
+
+- name: Set vars
+  set_fact:
+    nae_info: &nae_info
+      host: '{{ nae_host }}'
+      port: '{{ nae_port }}'
+      username: '{{ nae_username }}'
+      password: '{{ nae_password }}'
+      validate_certs: '{{ nae_validate_certs | default(false) }}'
+
+- name: Add new pre-change analysis from manual changes ( Add Contract )
+  nae_prechange: &add_prechange
+    <<: *nae_info
+    ag_name: Change Management
+    changes: |
+        [
+            {
+                "vzBrCP": {
+                    "attributes": {
+                        "descr": "",
+                        "intent": "install",
+                        "nameAlias": "",
+                        "prio": "unspecified",
+                        "scope": "context",
+                        "targetDscp": "unspecified",
+                        "dn": "uni/tn-AnsibleTest/brc-test_brc",
+                        "name": "test_brc",
+                        "pcv_status": "created"
+                    },
+                    "children": []
+                }
+            }
+        ]
+    name: ansible_manual_upload
+    state: present
+  register: add_pre_change_contract
+
+- name: Checking pre-change analysis from manual changes ( Contract ) is added
+  assert:
+    that:
+    - add_pre_change_contract is changed
+    - add_pre_change_contract.Previous == {}
+    - add_pre_change_contract.Result == "Pre-change analysis ansible_manual_upload successfully created."
+
+- name: Query specific pre-change analysis (checks if Pre-Change Job is complete)
+  nae_prechange:
+    <<: *nae_info
+    ag_name: Change Management
+    name: ansible_manual_upload
+    state: query
+  register: query_specific_result
+  ignore_errors: true
+  until: query_specific_result.msg != "Pre-Change Job has not yet completed."
+  retries: 25
+  delay: 5
+
+- name: Save pre-change analysis from manual changes ( Save Contract )
+  nae_prechange: &save_prechange
+    <<: *nae_info
+    ag_name: Change Management
+    changes: |
+        [
+            {
+                "vzBrCP": {
+                    "attributes": {
+                        "descr": "",
+                        "intent": "install",
+                        "nameAlias": "",
+                        "prio": "unspecified",
+                        "scope": "context",
+                        "targetDscp": "unspecified",
+                        "dn": "uni/tn-AnsibleTest/brc-test_brc",
+                        "name": "test_brc",
+                        "pcv_status": "created"
+                    },
+                    "children": []
+                }
+            }
+        ]
+    name: ansible_manual_upload_2
+    save: True
+    state: present
+  register: save_pre_change_contract
+
+- name: Checking pre-change analysis from manual changes ( Contract ) is saved
+  assert:
+    that:
+    - save_pre_change_contract.Previous == {}
+    - save_pre_change_contract is changed
+    - save_pre_change_contract.Result == "Pre-change analysis ansible_manual_upload_2 successfully created."
+
+- name: Run/Add existing saved pre-change analysis from manual changes without modification.
+  nae_prechange:
+    <<: *save_prechange
+    save: False
+  register: run_saved_pre_change_contract
+
+- name: Checking creation of existing saved pre-change analysis from manual changes without modification.
+  assert:
+    that:
+    - run_saved_pre_change_contract is changed
+    - run_saved_pre_change_contract.Result == "Pre-change analysis ansible_manual_upload_2 successfully created."
+
+- name: Query specific pre-change analysis (checks if Pre-Change Job is complete)
+  nae_prechange:
+    <<: *nae_info
+    ag_name: Change Management
+    name: ansible_manual_upload_2
+    state: query
+  register: query_specific_result
+  ignore_errors: true
+  until: query_specific_result.msg != "Pre-Change Job has not yet completed."
+  retries: 25
+  delay: 5
+
+- name: Save pre-change analysis from manual changes ( EPG ). [save]
+  nae_prechange: &prechange_save_epg
+    <<: *nae_info
+    ag_name: Change Management
+    changes: |
+        [
+            {
+                "fvAEPg": {
+                    "attributes": {
+                        "descr": "",
+                        "exceptionTag": "",
+                        "floodOnEncap": "disabled",
+                        "fwdCtrl": "none",
+                        "hasMcastSource": "no",
+                        "isAttrBasedEPg": "no",
+                        "matchT": "AtleastOne",
+                        "nameAlias": "",
+                        "pcEnfPref": "unenforced",
+                        "prefGrMemb": "exclude",
+                        "prio": "unspecified",
+                        "shutdown": "no",
+                        "dn": "uni/tn-common/ap-default/epg-epg",
+                        "name": "epg",
+                        "pcv_status": "created"
+                    },
+                    "children": [{
+                        "fvRsBd": {
+                            "attributes": {
+                                "tnFvBDName": "",
+                                "pcv_status": ""
+                            }
+                        }
+                    }]
+                }
+            }
+        ]
+    name: ansible_manual_upload_3
+    description: do change
+    state: present
+    save: True
+  register: save_pre_change
+
+- name: Checking pre-change analysis from manual changes ( EPG ) is saved. [save]
+  assert:
+    that:
+    - save_pre_change.Previous == {}
+    - save_pre_change is changed
+    - save_pre_change.Result == "Pre-change analysis ansible_manual_upload_3 successfully created."
+
+- name: Modify existing pre-change analysis from manual changes. [edit and save]
+  nae_prechange:
+    <<: *prechange_save_epg
+    changes: |
+        [
+            {
+                "fvAEPg": {
+                    "attributes": {
+                        "descr": "modify and save prechange analysis ",
+                        "exceptionTag": "",
+                        "floodOnEncap": "disabled",
+                        "fwdCtrl": "none",
+                        "hasMcastSource": "no",
+                        "isAttrBasedEPg": "no",
+                        "matchT": "AtleastOne",
+                        "nameAlias": "",
+                        "pcEnfPref": "unenforced",
+                        "prefGrMemb": "exclude",
+                        "prio": "unspecified",
+                        "shutdown": "no",
+                        "dn": "uni/tn-common/ap-default/epg-epg",
+                        "name": "epg",
+                        "pcv_status": "created"
+                    },
+                    "children": [{
+                        "fvRsBd": {
+                            "attributes": {
+                                "tnFvBDName": "",
+                                "pcv_status": ""
+                            }
+                        }
+                    }]
+                }
+            }
+        ]
+  register: modify_and_save_pre_change
+
+- name: Checking modification of existing pre-change analysis from manual changes [edit and save]
+  assert:
+    that:
+    - modify_and_save_pre_change is changed
+    - modify_and_save_pre_change.Result == "Pre-change analysis ansible_manual_upload_3 successfully created."
+
+- name: Modify existing saved pre-change analysis from manual changes [edit and run]
+  nae_prechange:
+    <<: *prechange_save_epg
+    description: modify prechange analysis
+    save: False
+  register: modify_pre_change
+
+- name: Checking modification of existing saved pre-change analysis from manual changes [edit and run]
+  assert:
+    that:
+    - modify_pre_change is changed
+    - modify_pre_change.Result == "Pre-change analysis ansible_manual_upload_3 successfully created."
+
+- name: Query specific pre-change analysis (checks if Pre-Change Job is complete)
+  nae_prechange:
+    <<: *nae_info
+    ag_name: Change Management
+    name: ansible_manual_upload_3
+    state: query
+  register: query_specific_result
+  ignore_errors: true
+  until: query_specific_result.msg != "Pre-Change Job has not yet completed."
+  retries: 25
+  delay: 5
+
+- name: Add existing pre-change analysis from manual changes again
+  nae_prechange:
+    <<: *add_prechange
+  ignore_errors: yes
+  register: add_pre_change_again
+
+- name: Verify adding existing pre-change analysis from manual changes again
+  assert:
+    that:
+    - add_pre_change_again is not changed
+
+- name: Modify pre-change analysis from manual changes again (status not SAVED)
+  nae_prechange:
+    <<: *add_prechange
+    description: contract analysis changes for unsaved
+  ignore_errors: yes
+  register: modify_unsaved_pre_change_again
+
+- name: Verify Modifying pre-change analysis from manual changes again (status not SAVED)
+  assert:
+    that:
+    - modify_unsaved_pre_change_again is not changed
+    - modify_unsaved_pre_change_again.msg == "Pre-change analysis ansible_manual_upload is not in SAVED status. It cannot be edited."
+
+- name: Query all pre-change analysis
+  nae_prechange:
+    <<: *nae_info
+    ag_name: Change Management
+    state: query
+  register: query_all_result
+
+- name: Verify querying all pre-change analysis
+  assert:
+    that:
+    - query_all_result.Analyses[0] != None
+
+- name: Query specific pre-change analysis
+  nae_prechange:
+    <<: *nae_info
+    ag_name: Change Management
+    name: ansible_manual_upload_3
+    state: query
+  register: query_specific_result
+  ignore_errors: true
+
+- name: Verify querying specific pre-change analysis
+  assert:
+    that:
+    - query_specific_result.msg == "Pre-change analysis failed. The above smart events have been detected for later epoch only."
+
+- name: Query non-existing pre-change analysis
+  nae_prechange:
+    <<: *nae_info
+    ag_name: Change Management
+    name: NewAnalysis_2
+    state: query
+  register: query_result
+  ignore_errors: true
+
+- name: Verify querying non-existing pre-change analysis
+  assert:
+    that:
+    - query_result.msg == "No such Pre-Change Job exists."
+
+- name: Delete a pre_change analysis
+  nae_prechange: &delete_prechange
+    <<: *nae_info
+    ag_name: Change Management
+    name: ansible_manual_upload_3
+    state: absent
+  register: remove_pre_change
+
+- name: Delete a non-existing pre_change analysis
+  nae_prechange:
+    <<: *delete_prechange
+  ignore_errors: yes
+  register: remove_pre_change_again
+
+- name: Verify deletion of pre-change analysis
+  assert:
+    that:
+    - remove_pre_change.msg == "Delete Pre-change Job successful"
+    - remove_pre_change_again.msg == "No such Pre-Change Job exists."
