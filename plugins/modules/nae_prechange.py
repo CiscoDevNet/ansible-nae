@@ -1,5 +1,6 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
+# Copyright: (c) 2020, Anvitha Jain (@anvitha-jain) <anvjain@cisco.com>
 
 # GNU General Public License v3.0+ (see COPYING or
 # https://www.gnu.org/licenses/gpl-3.0.txt)
@@ -62,6 +63,7 @@ options:
 
 author:
 - Shantanu Kulkarni (@shan_kulk)
+- Anvitha Jain (@anvitha-jain)
 '''
 
 EXAMPLES = r'''

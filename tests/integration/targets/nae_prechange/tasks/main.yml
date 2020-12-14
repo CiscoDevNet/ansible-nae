@@ -37,7 +37,6 @@
   - ansible_file_upload
   - ansible_file_upload_2
   - ansible_file_upload_3
-  - ansible_file_upload_test
 
 - name: Run file upload tasks
   include_tasks: file_upload.yml

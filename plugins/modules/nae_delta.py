@@ -30,7 +30,6 @@ options:
     - The name of the delta analysis
     type: str
     required: yes
-    aliases: [ name ]
   state:
     description:
     - Use C(present) or C(absent) for adding or removing.

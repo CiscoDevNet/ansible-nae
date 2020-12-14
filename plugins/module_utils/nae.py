@@ -128,9 +128,14 @@ class NAEModule(object):
             if('filename' in self.params):
                 self.params['file'] = self.params.get('filename')
                 del self.params['filename']
-            self.module.fail_json(
-                msg=json.loads(auth.get('body'))['messages'][0]['message'],
-                **self.result)
+            try:
+                self.module.fail_json(
+                    msg=json.loads(auth.get('body'))['messages'][0]['message'],
+                    **self.result)
+            except Exception:
+                self.module.fail_json(
+                    msg='Login failed for %(url)s. %(msg)s' % auth,
+                    **self.result)
 
         self.http_headers['X-NAE-CSRF-TOKEN'] = resp.headers['X-NAE-CSRF-TOKEN']
 
@@ -182,7 +187,7 @@ class NAEModule(object):
             if('filename' in self.params):
                 self.params['file'] = self.params.get('filename')
                 del self.params['filename']
-            self.module.exit_json(
+            self.module.fail_json(
                 msg=json.loads(auth.get('body'))['messages'][0]['message'],
                 **self.result)
 
@@ -339,7 +344,7 @@ class NAEModule(object):
             if('filename' in self.params):
                 self.params['file'] = self.params.get('filename')
                 del self.params['filename']
-            self.module.exit_json(
+            self.module.fail_json(
                 msg=json.loads(auth.get('body'))['messages'][0]['message'],
                 **self.result)
 
@@ -501,7 +506,7 @@ class NAEModule(object):
                                data=None,
                                method='GET')
         if auth.get('status') != 200:
-            self.module.exit_json(
+            self.module.fail_json(
                 msg=json.loads(
                     auth.get('body'))['messages'][0]['message'],
                 **self.result)
@@ -567,7 +572,7 @@ class NAEModule(object):
                     self.params['file'] = self.params.get('filename')
                     del self.params['filename']
                 self.result['status'] = auth['status']
-                self.module.exit_json(msg=json.loads(
+                self.module.fail_json(msg=json.loads(
                     auth.get('body'))['messages'][0]['message'], **self.result)
 
             if('filename' in self.params):
@@ -621,7 +626,7 @@ class NAEModule(object):
                         self.params['file'] = self.params.get('filename')
                         del self.params['filename']
                     self.result['status'] = auth['status']
-                    self.module.exit_json(msg=json.loads(
+                    self.module.fail_json(msg=json.loads(
                         auth.get('body'))['messages'][0]['message'], **self.result)
 
                 if('filename' in self.params):
@@ -719,7 +724,6 @@ class NAEModule(object):
     def copy_children(self, tree):
         '''
         Copies existing children objects to the built tree
-
         '''
         cmap = self.params.get('cmap')
         for dn, children in cmap.items():
@@ -814,7 +818,6 @@ class NAEModule(object):
         """
         Given a flat list of items, each with a dn. Construct a tree represeting their relative relationships.
         E.g. Given [/a/b/c/d, /a/b, /a/b/c/e, /a/f, /z], the function will construct
-
         __root__
           - a (no data)
              - b (data of /a/b)
@@ -823,7 +826,6 @@ class NAEModule(object):
                  - e (data of /a/b/c/e)
              - f (data of /a/f)
           - z (data of /z)
-
         __root__ is a predefined name, you could replace this with a flag root:True/False
         """
         tree = {'data': None, 'name': '__root__', 'children': {}}
@@ -876,10 +878,8 @@ class NAEModule(object):
     def get_aci_class(self, prefix):
         """
         Contains a hardcoded mapping between dn prefix and aci class.
-
         E.g for the input identifier prefix of "tn"
         this function will return "fvTenant"
-
         """
 
         if prefix == "tn":
@@ -942,7 +942,6 @@ class NAEModule(object):
     def find_tree_roots(self, tree):
         """
         Find roots for tree export. This involves finding all "fake" (dataless) nodes.
-
         E.g. for the tree
         __root__
           - a (no data)
@@ -951,8 +950,7 @@ class NAEModule(object):
                  - d (data of /a/b/c/d)
                  - e (data of /a/b/c/e)
              - f (data of /a/f)
-          - z (data of /z)
-
+          - z (data of /z)s
         This function will return [__root__, a, c]
         """
         if tree['data'] is not None:
@@ -966,7 +964,7 @@ class NAEModule(object):
 
     def export_tree(self, tree):
         """
-        Exports the constructed tree to a heirachial json representation. (equal to tn-ansible, except for ordering)
+        Exports the constructed tree to a hierarchial json representation. (equal to tn-ansible, except for ordering)
         """
         tree_data = {
             'attributes': tree['data'][1]['attributes']
@@ -995,7 +993,7 @@ class NAEModule(object):
             if('filename' in self.params):
                 self.params['file'] = self.params.get('filename')
                 del self.params['filename']
-            self.module.exit_json(
+            self.module.fail_json(
                 msg=json.loads(
                     auth.get('body'))['messages'][0]['message'],
                 **self.result)
@@ -1018,7 +1016,7 @@ class NAEModule(object):
             if('filename' in self.params):
                 self.params['file'] = self.params.get('filename')
                 del self.params['filename']
-            self.module.exit_json(
+            self.module.fail_json(
                 msg=json.loads(
                     auth.get('body'))['messages'][0]['message'],
                 **self.result)
@@ -1077,7 +1075,7 @@ class NAEModule(object):
                 self.params['file'] = self.params.get('filename')
                 del self.params['filename']
             self.result['status'] = auth['status']
-            self.module.exit_json(msg=json.loads(
+            self.module.fail_json(msg=json.loads(
                 auth.get('body'))['messages'][0]['message'], **self.result)
 
         if('filename' in self.params):
@@ -1718,7 +1716,7 @@ class NAEModule(object):
                     return str(response.json()['value']['data']['links'][-1]['href'])
                 else:
                     self.module.fail_json(
-                        msg="No reponse received while uploading chunks", **self.result)
+                        msg="No response received while uploading chunks", **self.result)
         except IOError as ioex:
             self.module.fail_json(
                 msg="Cannot open supplied file", **self.result)
@@ -1741,13 +1739,10 @@ class NAEModule(object):
 
     def complete_upload(self, complete_url):
         """Complete request to start dag.
-
         Args:
-           chunk_url: str: url to complte upload and start dag
-
+           chunk_url: str: url to complete upload and start dag
         Returns:
             str: uuid or None
-
         NOTE: Modified function to not fail if epoch is at scale.
         Scale epochs sometimes take longer to upload and in that
         case, the api returns a timeout even though the upload
@@ -1996,7 +1991,7 @@ class NAEModule(object):
                 if('filename' in self.params):
                     self.params['file'] = self.params.get('filename')
                     del self.params['filename']
-                self.module.exit_json(
+                self.module.fail_json(
                     msg=json.loads(
                         auth.get('body'))['messages'][0]['message'],
                     **self.result)
@@ -2110,7 +2105,7 @@ class NAEModule(object):
                 if('filename' in self.params):
                     self.params['file'] = self.params.get('filename')
                     del self.params['filename']
-                self.module.exit_json(
+                self.module.fail_json(
                     msg=json.loads(
                         auth.get('body'))['messages'][0]['message'],
                     **self.result)

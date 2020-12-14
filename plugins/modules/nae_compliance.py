@@ -99,7 +99,7 @@ def main():
     result = dict(changed=False, resp='')
     argument_spec = nae_argument_spec()
     argument_spec.update(  # Not required for querying all objects
-        name=dict(type='str', aliases=['name']),
+        name=dict(type='str'),
         description=dict(type='str'),
         association_to_ag=dict(type='bool', default=True),
         active=dict(type='bool', default=True),
