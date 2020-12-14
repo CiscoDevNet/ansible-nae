@@ -65,6 +65,7 @@
     name: ansible_file_upload
     description: pre-change analysis using file upload
     state: present
+  ignore_errors: true
   register: add_pre_change_again_same
 
 - name: Add pre-change analysis (Contract) from file upload again (same name different filename)
