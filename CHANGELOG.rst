@@ -17,9 +17,9 @@ Release v1.0.1 of the ``cisco.nae`` collection on 2020-12-15. This changelog des
 Minor Changes
 -------------
 
+- Add ability to do pre-change analysis by file upload
 - Add ability to do the same pre-change analysis again
 - Add ability to recreate/update compliance ojb
-- Add ablility to do pre-change analysis by file upload
 - Add check for existing compliance object
 - Add check for idempotency in nae_compliance test file
 - Add check_changed to check whether the obj changed
