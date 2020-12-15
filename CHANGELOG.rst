@@ -6,6 +6,43 @@ Cisco NAE Ansible Collection Release Notes
 
 This changelog describes changes after version 0.0.1.
 
+v1.0.1
+======
+
+Release Summary
+---------------
+
+Release v1.0.1 of the ``cisco.nae`` collection on 2020-12-15. This changelog describes all changes made to the modules and plugins included in this collection since v1.0.0. 
+
+Minor Changes
+-------------
+
+- Add ability to do pre-change analysis by file upload
+- Add ability to do the same pre-change analysis again
+- Add ability to recreate/update compliance object
+- Add check for existing compliance object
+- Add check for idempotency in nae_compliance test file
+- Add check_changed to check whether the object changed
+- Add check_existing function
+- Add current and previous in result
+- Add query_compliance_object function to query existing compliance object
+- Add tasks in nae_prechange's main.yml and added condition to check epoch value in nae.py and made changes to support the prechange tasks.
+- Add test cases for associating/disassociating req set to ag & activate/deactive req set
+- Add test cases for invalid host and non-nae host in nae_tcam
+- Add test cases for recreating/updating compliance object
+- Add test file for nae_tcam and potential solution for incorrect username/password
+- Add test task for get_changed
+- Make changes to allow modify and SAVE functionality for existing saved prechange analysis
+- Make changes to execute modification (PUT) to existng prechange analysis
+
+Bugfixes
+--------
+
+- Fix NoneType error when trying to parse response to get current object
+- Fix idempotency issue for nae_compliance module
+- Fix import error by reducing length of authors section
+- Fix sanity error
+
 v1.0.0
 ======
 
