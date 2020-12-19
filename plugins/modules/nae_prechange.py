@@ -204,7 +204,6 @@ import requests
 
 def main():
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-    result = dict(changed=False, resp='')
     argument_spec = nae_argument_spec()
     argument_spec.update(  # Not required for querying all objects
         ag_name=dict(type='str', aliases=['fab_name']),
@@ -227,9 +226,7 @@ def main():
 
     changes = module.params.get('changes')
     change_file = module.params.get('file')
-    description = module.params.get('description')
     state = module.params.get('state')
-    ag_name = module.params.get('ag_name')
     name = module.params.get('name')
     save = module.params.get('save')
     nae = NAEModule(module)

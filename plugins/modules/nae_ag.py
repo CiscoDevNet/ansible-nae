@@ -110,7 +110,6 @@ import requests
 
 def main():
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-    result = dict(changed=False, resp='')
     argument_spec = nae_argument_spec()
     argument_spec.update(  # Not required for querying all objects
         name=dict(type='str', aliases=['fab_name']),
@@ -130,13 +129,9 @@ def main():
                            required_if=[['state', 'absent', ['name']],
                                         ['state', 'present', ['name']]])
 
-    description = module.params.get('description')
     state = module.params.get('state')
     name = module.params.get('name')
     online = module.params.get('online')
-    apic_hostname = module.params.get('apic_hostname')
-    apic_username = module.params.get('apic_username')
-    apic_password = module.params.get('apic_password')
     nae = NAEModule(module)
 
     if state == 'query' and name:

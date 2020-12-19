@@ -34,7 +34,6 @@ __metaclass__ = type
 
 from requests_toolbelt.multipart.encoder import MultipartEncoder
 from datetime import datetime
-import base64
 import requests
 import csv
 import json
@@ -45,12 +44,8 @@ import gzip
 import filelock
 import pathlib
 import hashlib
-from copy import deepcopy
-from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.parsing.convert_bool import boolean
 from ansible.module_utils.urls import fetch_url
-from ansible.module_utils._text import to_bytes, to_native
-from jsonpath_ng import jsonpath, parse
+from jsonpath_ng import parse
 
 
 def nae_argument_spec():
@@ -399,8 +394,8 @@ class NAEModule(object):
 
     def is_json(self, myjson):
         try:
-            json_object = json.loads(myjson)
-        except ValueError as e:
+            json.loads(myjson)
+        except ValueError:
             return False
         return True
 
@@ -842,7 +837,6 @@ class NAEModule(object):
                     self.params['cmap'][attr['dn']] = existing_children
                 path = self.parse_path(attr['dn'])
                 cursor = tree
-                prev_node = None
                 curr_node_dn = ""
                 for node in path:
                     curr_node_dn += "/" + str(node)
@@ -869,7 +863,6 @@ class NAEModule(object):
                                 'children': {}
                             }
                     cursor = cursor['children'][node]
-                    prev_node = node
                 cursor['data'] = (nm, desc)
                 cursor['name'] = path[-1]
 
@@ -1033,7 +1026,6 @@ class NAEModule(object):
             self.module.fail_json(msg='Assurance group {0} does not exist'.format(self.params.get('ag_name')), **self.result)
         self.params['fabric_id'] = str(ag.get('uuid'))
         self.params['base_epoch_id'] = str(self.get_epochs()[0]["epoch_id"])
-        f = self.params.get('file')
         payload = {
             "name": self.params.get('name'),
             "fabric_uuid": self.params.get('fabric_id'),
@@ -1627,7 +1619,7 @@ class NAEModule(object):
                     self.module.fail_json(
                         'Failed to upload file chunks', **self.result)
             return file_upload_uuid
-        except Exception as e:
+        except Exception:
             self.module.fail_json(msg='Failed to upload file chunks', **self.result)
 
     def start_upload(self, uri, upload_type):
@@ -1717,7 +1709,7 @@ class NAEModule(object):
                 else:
                     self.module.fail_json(
                         msg="No response received while uploading chunks", **self.result)
-        except IOError as ioex:
+        except IOError:
             self.module.fail_json(
                 msg="Cannot open supplied file", **self.result)
         return None
@@ -1777,7 +1769,7 @@ class NAEModule(object):
 
             self.module.fail_json(msg="No upload complete", **self.result)
             raise Exception
-        except Exception as e:
+        except Exception:
             self.module.fail_json(msg="Unknown error", **self.result)
 
     def isLiveAnalysis(self):
