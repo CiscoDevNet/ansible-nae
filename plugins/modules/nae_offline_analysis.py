@@ -87,7 +87,6 @@ import requests
 
 def main():
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-    result = dict(changed=False, resp='')
     argument_spec = nae_argument_spec()
     argument_spec.update(  # Not required for querying all objects
         name=dict(type='str', aliases=['unique_name']),
@@ -108,9 +107,7 @@ def main():
                                         ])
 
     state = module.params.get('state')
-    file_name = module.params.get('file')
     name = module.params.get('name')
-    ag_name = module.params.get('ag_name')
     nae = NAEModule(module)
 
     if state == 'present':

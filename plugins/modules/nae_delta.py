@@ -79,7 +79,6 @@ import requests
 
 def main():
     requests.packages.urllib3.disable_warnings(InsecureRequestWarning)
-    result = dict(changed=False, resp='')
     argument_spec = nae_argument_spec()
     argument_spec.update(  # Not required for querying all objects
         validate_certs=dict(type='bool', default=False),
@@ -93,7 +92,6 @@ def main():
                            required_if=[['state', 'absent', ['ag_name', 'name']],
                                         ['state', 'query', ['ag_name']],
                                         ['state', 'present', ['ag_name', 'name']]])
-    ag_name = module.params.get('ag_name')
     name = module.params.get('name')
     state = module.params.get('state')
     nae = NAEModule(module)
