@@ -17,10 +17,10 @@ jobs:
     - name: Check out code
       uses: actions/checkout@v2
     
-    - name: Set up Python 3.6
+    - name: Set up Python 3.7
       uses: actions/setup-python@v1
       with:
-        python-version: 3.6
+        python-version: 3.7
 
     - name: Install ansible-base (v${{ matrix.ansible }})
       run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
@@ -43,10 +43,10 @@ jobs:
       matrix:
         ansible: [2.9.12, 2.10.0]
     steps:
-    - name: Set up Python 3.6
+    - name: Set up Python 3.7
       uses: actions/setup-python@v1
       with:
-        python-version: 3.6
+        python-version: 3.7
 
     - name: Install ansible-base (v${{ matrix.ansible }})
       run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
@@ -84,10 +84,10 @@ jobs:
       matrix:
         ansible: [2.9.12, 2.10.0]
     steps:
-    - name: Set up Python 3.6
+    - name: Set up Python 3.7
       uses: actions/setup-python@v1
       with:
-        python-version: 3.6
+        python-version: 3.7
 
     - name: Install ansible-base (v${{ matrix.ansible }})
       run: pip install https://github.com/ansible/ansible/archive/v${{ matrix.ansible }}.tar.gz --disable-pip-version-check
@@ -105,7 +105,7 @@ jobs:
       run: ansible-galaxy collection install .cache/collection-tarballs/*.tar.gz
 
     # - name: Run unit tests
-    #   run: ansible-test units --docker -v --color --truncate 0 --python 3.6 --coverage
+    #   run: ansible-test units --docker -v --color --truncate 0 --python 3.7 --coverage
     #   working-directory: /home/runner/.ansible/collections/ansible_collections/cisco/nae
 
     # - name: Generate coverage report.
@@ -123,10 +123,10 @@ jobs:
     - build
     runs-on: ubuntu-latest
     steps:
-    - name: Set up Python 3.6
+    - name: Set up Python 3.7
       uses: actions/setup-python@v1
       with:
-        python-version: 3.6
+        python-version: 3.7
 
     - name: Install ansible-base (v2.9.12)
       run: pip install https://github.com/ansible/ansible/archive/v2.9.12.tar.gz --disable-pip-version-check
@@ -151,8 +151,8 @@ jobs:
         timeout: 2000000
         interval: 5000
 
-    - name: Run integration tests on Python 3.6
-      run: ansible-test network-integration --docker -v --color --retry-on-error --python 3.6 --truncate 0 --continue-on-error --coverage
+    - name: Run integration tests on Python 3.7
+      run: ansible-test network-integration --docker -v --color --retry-on-error --python 3.7 --truncate 0 --continue-on-error --coverage
       working-directory: /home/runner/.ansible/collections/ansible_collections/cisco/nae
 
     - name: Releasing integration mutex
