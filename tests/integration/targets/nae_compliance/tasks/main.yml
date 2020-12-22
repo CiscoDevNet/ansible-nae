@@ -37,6 +37,7 @@
             "bd_config_requirement"
         ]
       }
+  ignore_errors: yes
 
 - name: Delete Requirement Sets
   cisco.nae.nae_compliance:
