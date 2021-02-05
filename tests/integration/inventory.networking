@@ -7,4 +7,4 @@ apic_hostname=173.36.219.25
 apic_username=ansible_github_ci
 apic_password="sJ94G92#8dq2hx*K4qh"
 ansible_connection=local
-ansible_python_interpreter=/usr/bin/python3.7
+ansible_python_interpreter=/usr/bin/python3.8
