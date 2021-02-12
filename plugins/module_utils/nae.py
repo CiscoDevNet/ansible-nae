@@ -200,7 +200,7 @@ class NAEModule(object):
             self.params['file'] = self.params.get('filename')
             del self.params['filename']
         self.module.fail_json(
-            msg="Assurange Group '{}' does not exist".format(name),
+            msg="Assurange Group {} does not exist".format(name),
             **self.result)
 
     def deleteAG(self):
