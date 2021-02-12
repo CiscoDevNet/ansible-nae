@@ -46,7 +46,7 @@ import pathlib
 import hashlib
 from ansible.module_utils.urls import fetch_url
 from jsonpath_ng import parse
-
+from xml.dom import minidom
 
 def nae_argument_spec():
     return dict(
@@ -177,7 +177,6 @@ class NAEModule(object):
                                headers=self.http_headers,
                                data=None,
                                method='GET')
-
         if auth.get('status') != 200:
             if('filename' in self.params):
                 self.params['file'] = self.params.get('filename')
@@ -197,35 +196,37 @@ class NAEModule(object):
         for ag in self.assuranceGroups:
             if ag['unique_name'] == name:
                 return ag
-        return None
+        if('filename' in self.params):
+            self.params['file'] = self.params.get('filename')
+            del self.params['filename']
+        self.module.fail_json(
+            msg="Assurange Group '{}' does not exist".format(name),
+            **self.result)
 
     def deleteAG(self):
         ag = self.get_assurance_group(self.params.get('name'))
-        if ag is None:
-            self.result['Result'] = "No such Assurance Group exists"
-            self.module.fail_json(msg='Assurance group {0} does not exist'.format(self.params.get('name')), **self.result)
-        else:
-            self.params['uuid'] = str(ag.get('uuid'))
-            url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/assurance-group/fabric/%(uuid)s' % self.params
-            resp, auth = fetch_url(self.module, url,
-                                   headers=self.http_headers,
-                                   data=None,
-                                   method='DELETE')
-            if auth.get('status') != 200:
-                if('filename' in self.params):
-                    self.params['file'] = self.params.get('filename')
-                    del self.params['filename']
-                self.response = auth.get('msg')
-                self.status = auth.get('status')
-                try:
-                    self.module.fail_json(msg=self.response, **self.result)
-                except KeyError:
-                    # Connection error
-                    self.module.fail_json(
-                        msg='Connection failed for %(url)s. %(msg)s' %
-                        auth, **self.result)
-            if json.loads(resp.read())['success'] is True:
-                self.result['Result'] = 'Assurance Group "%(name)s" deleted successfully' % self.params
+
+        self.params['uuid'] = str(ag.get('uuid'))
+        url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/assurance-group/fabric/%(uuid)s' % self.params
+        resp, auth = fetch_url(self.module, url,
+                                headers=self.http_headers,
+                                data=None,
+                                method='DELETE')
+        if auth.get('status') != 200:
+            if('filename' in self.params):
+                self.params['file'] = self.params.get('filename')
+                del self.params['filename']
+            self.response = auth.get('msg')
+            self.status = auth.get('status')
+            try:
+                self.module.fail_json(msg=self.response, **self.result)
+            except KeyError:
+                # Connection error
+                self.module.fail_json(
+                    msg='Connection failed for %(url)s. %(msg)s' %
+                    auth, **self.result)
+        if json.loads(resp.read())['success'] is True:
+            self.result['Result'] = 'Assurance Group "%(name)s" deleted successfully' % self.params
 
     def newOnlineAG(self):
         # This method creates a new Offline Assurance Group, you only need to
@@ -324,11 +325,57 @@ class NAEModule(object):
                     **self.result)
         self.result['Result'] = 'Successfully created Assurance Group "%(name)s"' % self.params
 
+    def start_stop_ag(self):
+        ag = self.get_assurance_group(self.params.get('name'))
+        self.params['fabric_id'] = str(ag.get('uuid'))
+        self.params['analysis_id'] = str(ag.get('analysis_id'))
+        if self.params.get('run'):
+            if self.params.get('run_iter') is None:
+                run_iter = "null"
+            else:
+                run_iter = str(self.params.get('run_iter'))
+            url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/analysis' % self.params
+
+            form = '''
+                    {
+                    "assurance_group_list": [
+                        {
+                        "uuid": "''' + self.params['fabric_id'] + '''"
+                        }
+                    ],
+                    "interval": 900,
+                    "type": "AUTO",
+                    "iterations": ''' + run_iter + '''
+                    }'''
+
+            #self.module.fail_json(msg=form)
+            resp, auth = fetch_url(self.module, url,
+                                    headers=self.http_headers,
+                                    data=form,
+                                    method='POST')
+            if auth.get('status') != 200:
+                if('filename' in self.params):
+                    self.params['file'] = self.params.get('filename')
+                    del self.params['filename']
+                self.result['status'] = auth['status']
+                self.module.fail_json(msg=json.loads(
+                    auth.get('body'))['messages'][0]['message'], **self.result)
+        else:
+            url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/analysis/%(analysis_id)s/stop' % self.params
+            
+            resp, auth = fetch_url(self.module, url,
+                                headers=self.http_headers,
+                                method='POST')
+            if auth.get('status') != 200:
+                if('filename' in self.params):
+                    self.params['file'] = self.params.get('filename')
+                    del self.params['filename']
+                self.result['status'] = auth['status']
+                self.module.fail_json(msg=json.loads(
+                    auth.get('body'))['messages'][0]['message'], **self.result)
+    
     def get_pre_change_analyses(self):
         ag = self.get_assurance_group(self.params.get('ag_name'))
-        if ag is None:
-            self.result['Result'] = "No such Assurance Group exists"
-            self.module.fail_json(msg='Assurance group {0} does not exist'.format(self.params.get('ag_name')), **self.result)
         self.params['fabric_id'] = str(ag.get('uuid'))
         url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis?fabric_id=%(fabric_id)s' % self.params
         resp, auth = fetch_url(self.module, url,
@@ -392,13 +439,19 @@ class NAEModule(object):
         self.result['Analyses'] = result
         return result
 
-    def is_json(self, myjson):
+    def is_json(self, filename):
+        f = open(filename)
         try:
-            json.loads(myjson)
+            json.loads(f.read())
         except ValueError:
             return False
         return True
-
+    def is_xml(self, filename):
+        try:
+            minidom.parse(filename)
+        except ValueError:
+            return False
+        return True
     def get_pre_change_analysis(self):
         ret = self.get_pre_change_analyses()
         for a in ret:
@@ -408,11 +461,6 @@ class NAEModule(object):
 
     def get_pre_change_result(self):
         ag = self.get_assurance_group(self.params.get('ag_name'))
-        if ag is None:
-            self.result['Result'] = "No such Assurance Group exists"
-            self.module.fail_json(
-                msg='Assurance group {0} does not exist'.format(self.params.get('ag_name')),
-                **self.result)
         self.params['fabric_id'] = str(ag.get('uuid'))
         if self.get_pre_change_analysis() is None:
             self.module.fail_json(
@@ -474,9 +522,6 @@ class NAEModule(object):
 
     def get_delta_result(self):
         ag = self.get_assurance_group(self.params.get('ag_name'))
-        if ag is None:
-            self.result['Result'] = "No such Assurance Group exists"
-            self.module.fail_json(msg='Assurance group {0} does not exist'.format(self.params.get('ag_name')), **self.result)
         self.params['fabric_id'] = str(ag.get('uuid'))
         if self.get_delta_analysis() is None:
             self.module.fail_json(
@@ -531,9 +576,6 @@ class NAEModule(object):
 
     def send_manual_payload(self):
         ag = self.get_assurance_group(self.params.get('ag_name'))
-        if ag is None:
-            self.result['Result'] = "No such Assurance Group exists"
-            self.module.fail_json(msg='Assurance group {0} does not exist'.format(self.params.get('ag_name')), **self.result)
         self.params['fabric_id'] = str(ag.get('uuid'))
         epochs = self.get_epochs()
         if not epochs:
@@ -693,7 +735,7 @@ class NAEModule(object):
                 self.create_structured_data(tree)
             else:
                 self.module.fail_json(
-                    msg="Error parsing input file. JSON format necessary",
+                    msg="Error parsing input file, unsupported object found in hierarchy.",
                     **self.result)
         else:
             try:
@@ -1007,9 +1049,6 @@ class NAEModule(object):
 
     def get_epochs(self):
         ag = self.get_assurance_group(self.params.get('ag_name'))
-        if ag is None:
-            self.result['Result'] = "No such Assurance Group exists"
-            self.module.fail_json(msg='Assurance group {0} does not exist'.format(self.params.get('ag_name')), **self.result)
         self.params['fabric_id'] = str(ag.get('uuid'))
         url = 'https://%(host)s:%(port)s/nae/api/v1/event-services/assured-networks/%(fabric_id)s/epochs?$sort=-collectionTimestamp' % self.params
         resp, auth = fetch_url(self.module, url,
@@ -1032,62 +1071,64 @@ class NAEModule(object):
         return json.loads(resp.read())['value']['data']
 
     def send_pre_change_payload(self):
-        ag = self.get_assurance_group(self.params.get('ag_name'))
-        if ag is None:
-            self.result['Result'] = "No such Assurance Group exists"
-            self.module.fail_json(msg='Assurance group {0} does not exist'.format(self.params.get('ag_name')), **self.result)
-        self.params['fabric_id'] = str(ag.get('uuid'))
-        self.params['base_epoch_id'] = str(self.get_epochs()[0]["epoch_id"])
-        payload = {
-            "name": self.params.get('name'),
-            "fabric_uuid": self.params.get('fabric_id'),
-            "base_epoch_id": self.params.get('base_epoch_id'),
-            "stop_analysis": False
-        }
+        
+        if self.is_json(self.params.get('filename')) or self.is_xml(self.params.get('filename')):
+            ag = self.get_assurance_group(self.params.get('ag_name'))
+            self.params['fabric_id'] = str(ag.get('uuid'))
+            self.params['base_epoch_id'] = str(self.get_epochs()[0]["epoch_id"])
+            payload = {
+                "name": self.params.get('name'),
+                "fabric_uuid": self.params.get('fabric_id'),
+                "base_epoch_id": self.params.get('base_epoch_id'),
+                "stop_analysis": False
+            }
 
-        if '4.1' in self.version:
-            payload['change_type'] = "CONFIG_FILE"
-            payload['changes'] = self.params.get('changes')
-            url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis' % self.params
+            if '4.1' in self.version:
+                payload['change_type'] = "CONFIG_FILE"
+                payload['changes'] = self.params.get('changes')
+                url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis' % self.params
 
-        elif '5.0' in self.version or '5.1' in self.version:
-            payload['allow_unsupported_object_modification'] = 'true'
-            payload['uploaded_file_name'] = str(self.params.get('filename'))
-            url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/file-changes' % self.params
+            elif '5.0' in self.version or '5.1' in self.version:
+                payload['allow_unsupported_object_modification'] = 'true'
+                payload['uploaded_file_name'] = str(self.params.get('filename'))
+                url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/file-changes' % self.params
+            
+            files = {"file": (str(self.params.get('filename')),
+                            open(str(self.params.get('filename')),
+                                'rb'),
+                            'application/json'),
+                    "data": ("blob",
+                            json.dumps(payload),
+                            'application/json')}
 
-        files = {"file": (str(self.params.get('filename')),
-                          open(str(self.params.get('filename')),
-                               'rb'),
-                          'application/json'),
-                 "data": ("blob",
-                          json.dumps(payload),
-                          'application/json')}
 
-        m = MultipartEncoder(fields=files)
+            m = MultipartEncoder(fields=files)
 
-        # Need to set the right content type for the multi part upload!
-        h = self.http_headers.copy()
-        h['Content-Type'] = m.content_type
+            # Need to set the right content type for the multi part upload!
+            h = self.http_headers.copy()
+            h['Content-Type'] = m.content_type
 
-        resp, auth = fetch_url(self.module, url,
-                               headers=h,
-                               data=m,
-                               method='POST')
+            resp, auth = fetch_url(self.module, url,
+                                headers=h,
+                                data=m,
+                                method='POST')
 
-        if auth.get('status') != 200:
+            if auth.get('status') != 200:
+                if('filename' in self.params):
+                    self.params['file'] = self.params.get('filename')
+                    del self.params['filename']
+                self.result['status'] = auth['status']
+                self.module.fail_json(msg=json.loads(
+                    auth.get('body'))['messages'][0]['message'], **self.result)
+
             if('filename' in self.params):
                 self.params['file'] = self.params.get('filename')
                 del self.params['filename']
-            self.result['status'] = auth['status']
-            self.module.fail_json(msg=json.loads(
-                auth.get('body'))['messages'][0]['message'], **self.result)
 
-        if('filename' in self.params):
-            self.params['file'] = self.params.get('filename')
-            del self.params['filename']
-
-        self.result['Result'] = "Pre-change analysis %(name)s successfully created." % self.params
-
+            self.result['Result'] = "Pre-change analysis %(name)s successfully created." % self.params
+        else:
+            del self.params['file']
+            self.module.fail_json(msg="In vilid config file, Only JSON and XML are supported")
     def check_existing(self):
         try:
             form = json.loads(self.params.get('form'))
@@ -1250,9 +1291,6 @@ class NAEModule(object):
     def new_compliance_requirement_set(self):
         obj, form, detail = self.check_existing()
         ag = self.get_assurance_group(self.params.get('ag_name'))
-        if ag is None:
-            self.result['Result'] = "No such Assurance Group exists"
-            self.module.fail_json(msg='Assurance group {0} does not exist'.format(self.params.get('ag_name')), **self.result)
         self.params['fabric_uuid'] = str(ag.get('uuid'))
         assurance_groups_lists = []
         if self.params.get('association_to_ag'):
@@ -1798,9 +1836,6 @@ class NAEModule(object):
 
     def get_tcam_stats(self):
         ag = self.get_assurance_group(self.params.get('ag_name'))
-        if ag is None:
-            self.result['Result'] = "No such Assurance Group exists"
-            self.module.fail_json(msg='Assurance group {0} does not exist'.format(self.params.get('ag_name')), **self.result)
         self.params['fabric_id'] = str(ag.get('uuid'))
         self.params['latest_epoch'] = str(self.get_epochs()[-1]["epoch_id"])
         self.params['page'] = 0
@@ -1884,11 +1919,7 @@ class NAEModule(object):
                 msg='There is currently an OnDemand analysis running on {0} please stop it manually and try again'.format(runningOnDemand), **self.result)
         else:
             ag = self.get_assurance_group(self.params.get('ag_name'))
-            if ag is None:
-                self.result['Result'] = "No such Assurance Group exists"
-                self.module.fail_json(msg='Assurance group {0} does not exist'.format(self.params.get('ag_name')), **self.result)
             self.params['fabric_uuid'] = str(ag.get('uuid'))
-
             ag_iterations = json.dumps({'iterations': iterations})
             url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/assured-networks/aci-fabric/%(fabric_uuid)s/start-analysis' % self.params
             resp, auth = fetch_url(self.module, url,
@@ -1916,9 +1947,6 @@ class NAEModule(object):
 
     def get_delta_analyses(self):
         ag = self.get_assurance_group(self.params.get('ag_name'))
-        if ag is None:
-            self.result['Result'] = "No such Assurance Group exists"
-            self.module.fail_json(msg='Assurance group {0} does not exist'.format(self.params.get('ag_name')), **self.result)
         self.params['fabric_id'] = str(ag.get('uuid'))
         url = 'https://%(host)s/nae/api/v1/job-services?$page=0&$size=' \
               '100&$sort=status&$type=EPOCH_DELTA_ANALYSIS&assurance_group_id=%(fabric_id)s' % self.params
@@ -1928,9 +1956,6 @@ class NAEModule(object):
 
     def delete_delta_analysis(self):
         ag = self.get_assurance_group(self.params.get('ag_name'))
-        if ag is None:
-            self.result['Result'] = "No such Assurance Group exists"
-            self.module.fail_json(msg='Assurance group {0} does not exist'.format(self.params.get('ag_name')), **self.result)
         self.params['fabric_id'] = str(ag.get('uuid'))
         try:
             self.params['analysis_id'] = [analysis for analysis in self.get_delta_analyses(
@@ -1950,9 +1975,6 @@ class NAEModule(object):
 
     def new_delta_analysis(self):
         ag = self.get_assurance_group(self.params.get('ag_name'))
-        if ag is None:
-            self.result['Result'] = "No such Assurance Group exists"
-            self.module.fail_json(msg='Assurance group {0} does not exist'.format(self.params.get('ag_name')), **self.result)
         fabric_id = str(ag.get('uuid'))
         epochs = list(self.get_epochs())
         e = [epoch for epoch in epochs if epoch['fabric_id'] == fabric_id]
@@ -2041,9 +2063,6 @@ class NAEModule(object):
                     self.module.fail_json(msg="File %(filename)s not found" % self.params, **self.result)
             fileID = fileID[0]['uuid']
             ag = self.get_assurance_group(self.params.get('ag_name'))
-            if ag is None:
-                self.result['Result'] = "No such Assurance Group exists"
-                self.module.fail_json(msg='Assurance group {0} does not exist'.format(self.params.get('ag_name')), **self.result)
             fabricID = str(ag.get('uuid'))
             form = '''{
             "unique_name": "''' + self.params.get('name') + '''",
