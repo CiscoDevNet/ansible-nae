@@ -39,9 +39,9 @@ options:
     aliases: [ descr ]
   verify:
     description:
-    - When used with C(present) this flag specify if pre-change analysis is made from cisco.aci collection
-    - output_path config dump.
-    - When used with C(query) this flag will wait to execute the query until the prechange status is COMPLETED.
+    - This parameter is used to change the behaviour of the C(present) and C(query) state
+    - When used with state C(present) this flag specify that the input JSON file has been created by the cisco.aci collection output_path config dump.
+    - When used with state C(query) this flag will wait to execute the query until the NAE pre-change verification task status value is COMPLETED
     type: bool
   state:
     description:
