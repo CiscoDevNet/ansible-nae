@@ -44,7 +44,7 @@ options:
   run:
     description:
     - Set to True to start the Assurance Group Analysis
-    - Set to Falso to stop the Assurance Group Analysis 
+    - Set to Falso to stop the Assurance Group Analysis
     type: bool
 
 author:
@@ -124,7 +124,7 @@ EXAMPLES = \
     password: 1234
     name: AG1
     run: True
-    run_iter: 5
+    run_iterations: 5
 '''
 
 RETURN = \
@@ -153,7 +153,7 @@ def main():
         online=dict(type='bool', default=False),
         validate_certs=dict(type='bool', default=False),
         run=dict(type='bool', default=None),
-        run_iter=dict(type='int', default=None),
+        run_iterations=dict(type='int', default=None),
         state=dict(type='str', default='present', choices=['absent',
                                                            'present', 'query', 'modify']),
         export_apic_policy=dict(type='bool', default=False)
@@ -185,7 +185,7 @@ def main():
     elif state == 'present' and run is not None:
         nae.start_stop_ag()
         nae.result['changed'] = True
-        module.exit_json(**nae.result)   
+        module.exit_json(**nae.result)
     elif state == 'absent' and name:
         nae.deleteAG()
         nae.result['changed'] = True
