@@ -445,14 +445,14 @@ class NAEModule(object):
         except ValueError:
             return False
         return True
-    
+
     def is_xml(self, filename):
         try:
             minidom.parse(filename)
         except ValueError:
             return False
         return True
-    
+
     def get_pre_change_analysis(self):
         ret = self.get_pre_change_analyses()
         for a in ret:
@@ -1071,7 +1071,7 @@ class NAEModule(object):
             return json.loads(r.decode())['value']['data']
         return json.loads(resp.read())['value']['data']
 
-    def send_pre_change_payload(self):    
+    def send_pre_change_payload(self):
         if self.is_json(self.params.get('filename')) or self.is_xml(self.params.get('filename')):
             ag = self.get_assurance_group(self.params.get('ag_name'))
             self.params['fabric_id'] = str(ag.get('uuid'))
@@ -1091,7 +1091,7 @@ class NAEModule(object):
             elif '5.0' in self.version or '5.1' in self.version:
                 payload['allow_unsupported_object_modification'] = 'true'
                 payload['uploaded_file_name'] = str(self.params.get('filename'))
-                url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/file-changes' % self.params  
+                url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/file-changes' % self.params
             files = {"file": (str(self.params.get('filename')),
                               open(str(self.params.get('filename')),
                               'rb'),
