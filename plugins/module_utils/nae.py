@@ -48,6 +48,7 @@ from ansible.module_utils.urls import fetch_url
 from jsonpath_ng import parse
 from xml.dom import minidom
 
+
 def nae_argument_spec():
     return dict(
         host=dict(type='str', required=True, aliases=['hostname']),
@@ -200,7 +201,7 @@ class NAEModule(object):
             self.params['file'] = self.params.get('filename')
             del self.params['filename']
         self.module.fail_json(
-            msg="Assurange Group {} does not exist".format(name),
+            msg="Assurange Group {0} does not exist".format(name),
             **self.result)
 
     def deleteAG(self):
@@ -209,9 +210,9 @@ class NAEModule(object):
         self.params['uuid'] = str(ag.get('uuid'))
         url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/assurance-group/fabric/%(uuid)s' % self.params
         resp, auth = fetch_url(self.module, url,
-                                headers=self.http_headers,
-                                data=None,
-                                method='DELETE')
+                               headers=self.http_headers,
+                               data=None,
+                               method='DELETE')
         if auth.get('status') != 200:
             if('filename' in self.params):
                 self.params['file'] = self.params.get('filename')
@@ -340,7 +341,7 @@ class NAEModule(object):
                     {
                     "assurance_group_list": [
                         {
-                        "uuid": "''' + self.params['fabric_id'] + '''"
+                        "uuid": "''' + self.params.get('fabric_id') + '''"
                         }
                     ],
                     "interval": 900,
@@ -348,11 +349,10 @@ class NAEModule(object):
                     "iterations": ''' + run_iter + '''
                     }'''
 
-            #self.module.fail_json(msg=form)
             resp, auth = fetch_url(self.module, url,
-                                    headers=self.http_headers,
-                                    data=form,
-                                    method='POST')
+                                   headers=self.http_headers,
+                                   data=form,
+                                   method='POST')
             if auth.get('status') != 200:
                 if('filename' in self.params):
                     self.params['file'] = self.params.get('filename')
@@ -362,10 +362,9 @@ class NAEModule(object):
                     auth.get('body'))['messages'][0]['message'], **self.result)
         else:
             url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/analysis/%(analysis_id)s/stop' % self.params
-            
             resp, auth = fetch_url(self.module, url,
-                                headers=self.http_headers,
-                                method='POST')
+                                   headers=self.http_headers,
+                                   method='POST')
             if auth.get('status') != 200:
                 if('filename' in self.params):
                     self.params['file'] = self.params.get('filename')
@@ -373,7 +372,7 @@ class NAEModule(object):
                 self.result['status'] = auth['status']
                 self.module.fail_json(msg=json.loads(
                     auth.get('body'))['messages'][0]['message'], **self.result)
-    
+
     def get_pre_change_analyses(self):
         ag = self.get_assurance_group(self.params.get('ag_name'))
         self.params['fabric_id'] = str(ag.get('uuid'))
@@ -446,12 +445,14 @@ class NAEModule(object):
         except ValueError:
             return False
         return True
+    
     def is_xml(self, filename):
         try:
             minidom.parse(filename)
         except ValueError:
             return False
         return True
+    
     def get_pre_change_analysis(self):
         ret = self.get_pre_change_analyses()
         for a in ret:
@@ -1070,8 +1071,7 @@ class NAEModule(object):
             return json.loads(r.decode())['value']['data']
         return json.loads(resp.read())['value']['data']
 
-    def send_pre_change_payload(self):
-        
+    def send_pre_change_payload(self):    
         if self.is_json(self.params.get('filename')) or self.is_xml(self.params.get('filename')):
             ag = self.get_assurance_group(self.params.get('ag_name'))
             self.params['fabric_id'] = str(ag.get('uuid'))
@@ -1091,16 +1091,14 @@ class NAEModule(object):
             elif '5.0' in self.version or '5.1' in self.version:
                 payload['allow_unsupported_object_modification'] = 'true'
                 payload['uploaded_file_name'] = str(self.params.get('filename'))
-                url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/file-changes' % self.params
-            
+                url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/prechange-analysis/file-changes' % self.params  
             files = {"file": (str(self.params.get('filename')),
-                            open(str(self.params.get('filename')),
-                                'rb'),
-                            'application/json'),
-                    "data": ("blob",
-                            json.dumps(payload),
-                            'application/json')}
-
+                              open(str(self.params.get('filename')),
+                              'rb'),
+                              'application/json'),
+                     "data": ("blob",
+                              json.dumps(payload),
+                              'application/json')}
 
             m = MultipartEncoder(fields=files)
 
@@ -1109,9 +1107,9 @@ class NAEModule(object):
             h['Content-Type'] = m.content_type
 
             resp, auth = fetch_url(self.module, url,
-                                headers=h,
-                                data=m,
-                                method='POST')
+                                   headers=h,
+                                   data=m,
+                                   method='POST')
 
             if auth.get('status') != 200:
                 if('filename' in self.params):
@@ -1129,6 +1127,7 @@ class NAEModule(object):
         else:
             del self.params['file']
             self.module.fail_json(msg="In vilid config file, Only JSON and XML are supported")
+
     def check_existing(self):
         try:
             form = json.loads(self.params.get('form'))

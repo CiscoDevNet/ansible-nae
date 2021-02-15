@@ -39,7 +39,7 @@ options:
     aliases: [ descr ]
   verify:
     description:
-    - This parameter is used to change the behaviour of the C(present) and C(query) state
+    - This parameter is used to change the behaviour of the C(present) and C(query) states
     - When used with state C(present) this flag specify that the input JSON file has been created by the cisco.aci collection output_path config dump.
     - When used with state C(query) this flag will wait to execute the query until the NAE pre-change verification task status value is COMPLETED
     type: bool
