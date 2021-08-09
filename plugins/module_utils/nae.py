@@ -46,6 +46,7 @@ import pathlib
 import hashlib
 from ansible.module_utils.urls import fetch_url
 from jsonpath_ng import parse
+import ast
 
 
 def nae_argument_spec():
@@ -690,31 +691,43 @@ class NAEModule(object):
                 self.params['cmap'] = {}
                 data = self.load(open(self.params.get('file')))
                 tree = self.construct_tree(data)
-                if tree is False:
-                    self.module.fail_json(
-                        msg="Error parsing input file, unsupported object found in hierarchy.",
-                        **self.result)
-                tree_roots = self.find_tree_roots(tree)
-                ansible_ds = {}
-                for root in tree_roots:
-                    exp = self.export_tree(root)
-                    for key, val in exp.items():
-                        ansible_ds[key] = val
-                self.copy_children(ansible_ds)
-                toplevel = {"totalCount": "1", "imdata": []}
-                toplevel['imdata'].append(ansible_ds)
-                with open(self.params.get('file'), 'w') as f:
-                    json.dump(toplevel, f)
-                del self.params['cmap']
-                f.close()
+                self.create_structured_data(tree)
             else:
                 self.module.fail_json(
                     msg="Error parsing input file. JSON format necessary",
                     **self.result)
+        else:
+            try:
+                with open(self.params.get('file')) as j:
+                    extract_data = json.load(j)
+                tree = self.construct_tree([extract_data[0]])
+                self.params['cmap'] = {}
+                self.create_structured_data(tree)
+            except KeyError:
+                pass
         config = []
         self.params['file'] = f
         self.params['changes'] = config
         self.send_pre_change_payload()
+
+    def create_structured_data(self, tree):
+        if tree is False:
+            self.module.fail_json(
+                msg="Error parsing input file, unsupported object found in hierarchy.",
+                **self.result)
+        tree_roots = self.find_tree_roots(tree)
+        ansible_ds = {}
+        for root in tree_roots:
+            exp = self.export_tree(root)
+            for key, val in exp.items():
+                ansible_ds[key] = val
+        self.copy_children(ansible_ds)
+        toplevel = {"totalCount": "1", "imdata": []}
+        toplevel['imdata'].append(ansible_ds)
+        with open(self.params.get('file'), 'w') as f:
+            json.dump(toplevel, f)
+        del self.params['cmap']
+        f.close()
 
     def copy_children(self, tree):
         '''

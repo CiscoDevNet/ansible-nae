@@ -17,6 +17,13 @@
       password: '{{ nae_password }}'
       validate_certs: '{{ nae_validate_certs | default(false) }}'
 
+- name: Check whether AG Change Management exists
+  cisco.nae.nae_ag:
+    <<: *nae_info
+    name: Change Management
+    state: query
+  register: check_ag
+
 - name: Check if Assurance group Change Management exist (else create)
   include_tasks: ../../../../../../integration/targets/nae_compliance/tasks/create_ag.yml
   tags: create_ag
@@ -37,10 +44,15 @@
   - ansible_file_upload
   - ansible_file_upload_2
   - ansible_file_upload_3
+  - ansible_file_upload_tenant
 
 - name: Run file upload tasks
   include_tasks: file_upload.yml
   tags: file_upload
+
+- name: Pause for 5 minutes to complete pre-change analysis in the previous step
+  pause:
+    minutes: 5
 
 - name: Run manual upload tasks
   include_tasks: manual_upload.yml
