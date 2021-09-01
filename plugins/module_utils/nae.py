@@ -46,7 +46,6 @@ import pathlib
 import hashlib
 from ansible.module_utils.urls import fetch_url
 from jsonpath_ng import parse
-import ast
 
 
 def nae_argument_spec():
