@@ -45,8 +45,8 @@ jobs:
       with:
         python-version: 3.8
 
-    - name: Install ansible-base (v2.9.17)
-      run: pip install https://github.com/ansible/ansible/archive/v2.9.17.tar.gz --disable-pip-version-check
+    - name: Install ansible-base (v2.11.0)
+      run: pip install https://github.com/ansible/ansible/archive/v2.11.0.tar.gz --disable-pip-version-check
 
     - name: Download migrated collection artifacts
       uses: actions/download-artifact@v1
