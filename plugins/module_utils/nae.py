@@ -698,8 +698,8 @@ class NAEModule(object):
                     **self.result)
         else:
             try:
-                with open(self.params.get('file')) as j:
-                    extract_data = json.load(j)
+                f.seek(0)
+                extract_data = json.loads(f.read())
                 tree = self.construct_tree([extract_data[0]])
                 self.params['cmap'] = {}
                 self.create_structured_data(tree)

@@ -52,7 +52,7 @@
 
 - name: Pause for 5 minutes to complete pre-change analysis in the previous step
   pause:
-    minutes: 5
+      minutes: 5
 
 - name: Run manual upload tasks
   include_tasks: manual_upload.yml
