@@ -212,3 +212,20 @@
     that:
     - remove_file_pre_change.msg == "Delete Pre-change Job successful"
     - remove_file_pre_change_again.msg == "No such Pre-Change Job exists."
+
+- name: Add pre-change analysis from file upload for tenant delete
+  nae_prechange:
+    <<: *nae_info
+    ag_name: Change Management
+    file: targets/nae_prechange/tasks/tenant_delete_dump.json
+    name: ansible_file_upload_tenant
+    description: pre-change analysis using file upload
+    verify: True  # converts to json format
+    state: present
+  register: add_pre_change_verify_tenant
+
+- name: Checking pre-change analysis from file upload for tenant delete (non JSON format & verify is True)
+  assert:
+    that:
+    - add_pre_change_verify_tenant is changed
+    - add_pre_change_verify_tenant.Result == "Pre-change analysis ansible_file_upload_tenant successfully created."
