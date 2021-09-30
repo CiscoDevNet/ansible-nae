@@ -177,9 +177,13 @@
     name: ansible_ap_online2
     run: False
 
-- name: Run an Existing Assurance Group Analysis 5 times and then stop
+- name: Run an Existing Assurance Group Analysis 2 times and then stop
   cisco.nae.nae_ag:
     <<: *nae_info
     name: ansible_ap_online2
     run: True
-    run_iterations: 5
+    run_iterations: 2
+
+- name: Pause for 10 minutes to complete assurance group analysis in the previous step
+  pause:
+      minutes: 10
