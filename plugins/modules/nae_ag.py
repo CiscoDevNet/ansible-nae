@@ -97,7 +97,6 @@ EXAMPLES = \
     apic_username: admin
     apic_password: password
     export_apic_policy: True
-
 - name: Start an Existing Assurance Group
   nae_ag:
     host: nae
@@ -106,7 +105,6 @@ EXAMPLES = \
     password: 1234
     name: AG1
     run: True
-
 - name: Stop an Existing Assurance Group
   nae_ag:
     host: nae
@@ -115,7 +113,6 @@ EXAMPLES = \
     password: 1234
     name: AG1
     run: False
-
 - name: Run an Existing Assurance Group Analysis 5 times and then stop
   nae_ag:
     host: nae
