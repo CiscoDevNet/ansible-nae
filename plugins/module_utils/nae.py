@@ -331,10 +331,10 @@ class NAEModule(object):
         self.params['fabric_id'] = str(ag.get('uuid'))
         self.params['analysis_id'] = str(ag.get('analysis_id'))
         if self.params.get('run'):
-            if self.params.get('run_iter') is None:
-                run_iter = "null"
+            if self.params.get('run_iterations') is None:
+                run_iterations = "null"
             else:
-                run_iter = str(self.params.get('run_iter'))
+                run_iterations = str(self.params.get('run_iterations'))
             url = 'https://%(host)s:%(port)s/nae/api/v1/config-services/analysis' % self.params
 
             form = '''
@@ -346,7 +346,7 @@ class NAEModule(object):
                     ],
                     "interval": 900,
                     "type": "AUTO",
-                    "iterations": ''' + run_iter + '''
+                    "iterations": ''' + run_iterations + '''
                     }'''
 
             resp, auth = fetch_url(self.module, url,
@@ -743,7 +743,7 @@ class NAEModule(object):
                 self.create_structured_data(tree)
             else:
                 self.module.fail_json(
-                    msg="Error parsing input file, unsupported object found in hierarchy.",
+                    msg="Error parsing input file. JSON format necessary",
                     **self.result)
         else:
             try:
