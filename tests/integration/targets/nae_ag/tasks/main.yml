@@ -24,6 +24,7 @@
   ignore_errors: yes
   loop:
     - ansible_ap_online
+    - ansible_ap_online2
     - ansible_ag_offline
 
 - name: Create online assurance group (with APIC Configuration Export Polciy)
@@ -117,13 +118,14 @@
     <<: *nae_info
     state: query
     name: ansible_ap_online
+  ignore_errors: true
   register: query_deleted_ag
 
 - name: Verify query_deleted_ag
   assert:
     that:
       - query_deleted_ag is not changed
-      - query_deleted_ag.msg == "Assurance group ansible_ap_online does not exist"
+      - query_deleted_ag.msg == "Assurange Group ansible_ap_online does not exist"
 
 - name: Use incorrect parameters
   cisco.nae.nae_ag:
@@ -144,3 +146,40 @@
     name: non_existing_ag
   ignore_errors: true
   register: query_non_existing_ag
+
+- name: Create online assurance group (with APIC Configuration Export Polciy) for running the analysis more than once
+  cisco.nae.nae_ag:
+    <<: *nae_info
+    state: present
+    name: ansible_ap_online2
+    online: True
+    apic_hostnames: '{{ apic_hostname }}'
+    apic_username: '{{ apic_username }}'
+    apic_password: '{{ apic_password }}'
+    export_apic_policy: True
+  register: create_online_ag2
+
+- name: Verify create_online_ag2
+  assert:
+    that:
+      - create_online_ag2 is changed
+      - create_online_ag2.Result == "Successfully created Assurance Group \"ansible_ap_online2\""
+
+- name: Start an Existing Assurance Group
+  cisco.nae.nae_ag:
+    <<: *nae_info
+    name: ansible_ap_online2
+    run: True
+
+- name: Stop an Existing Assurance Group
+  cisco.nae.nae_ag:
+    <<: *nae_info
+    name: ansible_ap_online2
+    run: False
+
+- name: Run an Existing Assurance Group Analysis 5 times and then stop
+  cisco.nae.nae_ag:
+    <<: *nae_info
+    name: ansible_ap_online2
+    run: True
+    run_iterations: 5
