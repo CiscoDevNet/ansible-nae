@@ -738,8 +738,8 @@ class NAEModule(object):
             if self.is_json_file(self.params.get('file')):
                 del self.params['filename']
                 self.module.fail_json(
-                     msg="""File is already parsed and Verify=True, this is not expected.
-                     Are you trying to verify a regular file? Then unset verify.""")
+                    msg="""File is already parsed and Verify=True, this is not expected.
+                    Are you trying to verify a regular file? Then unset verify.""")
             # # Input file is not parsed as expected.
             self.params['cmap'] = {}
             data = self.load(open(self.params.get('file')))
