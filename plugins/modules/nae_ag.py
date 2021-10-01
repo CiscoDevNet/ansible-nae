@@ -44,7 +44,7 @@ options:
   run:
     description:
     - Set to True to start the Assurance Group Analysis
-    - Set to Falso to stop the Assurance Group Analysis
+    - Set to False to stop the Assurance Group Analysis
     type: bool
 
 author:
