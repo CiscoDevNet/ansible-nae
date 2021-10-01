@@ -1133,7 +1133,7 @@ class NAEModule(object):
             self.result['Result'] = "Pre-change analysis %(name)s successfully created." % self.params
         else:
             del self.params['file']
-            self.module.fail_json(msg="In vilid config file, Only JSON and XML are supported")
+            self.module.fail_json(msg="Invalid config file, Only JSON and XML are supported")
 
     def check_existing(self):
         try:

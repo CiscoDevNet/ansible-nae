@@ -27,7 +27,7 @@
     - ansible_ap_online2
     - ansible_ag_offline
 
-- name: Create online assurance group (with APIC Configuration Export Polciy)
+- name: Create online assurance group (with APIC Configuration Export Policy)
   cisco.nae.nae_ag:
     <<: *nae_info
     state: present
@@ -45,7 +45,7 @@
       - create_online_ag is changed
       - create_online_ag.Result == "Successfully created Assurance Group \"ansible_ap_online\""
 
-- name: Query online assurance group (with APIC Configuration Export Polciy)
+- name: Query online assurance group (with APIC Configuration Export Policy)
   cisco.nae.nae_ag:
     <<: *nae_info
     state: query
@@ -147,7 +147,7 @@
   ignore_errors: true
   register: query_non_existing_ag
 
-- name: Create online assurance group (with APIC Configuration Export Polciy) for running the analysis more than once
+- name: Create online assurance group (with APIC Configuration Export Policy) for running the analysis more than once
   cisco.nae.nae_ag:
     <<: *nae_info
     state: present
