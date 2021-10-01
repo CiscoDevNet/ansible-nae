@@ -184,6 +184,6 @@
     run: True
     run_iterations: 2
 
-- name: Pause for 10 minutes to complete assurance group analysis in the previous step
+- name: Pause for 15 minutes to complete assurance group analysis in the previous step
   pause:
-      minutes: 10
+      minutes: 15
