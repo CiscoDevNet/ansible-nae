@@ -1,5 +1,7 @@
 # ansible-nae
 
+### Cisco NAE has been integrated into Cisco Nexus Dashboard Insights. This project will not be developed going forward. Please refer to the ND Ansible collection (https://github.com/CiscoDevNet/ansible-nd) for on-going development, support and enhancement requests.
+
 The ansible-nae project provides an Ansible collection for managing and automating your Cisco NAE environment. It consists of a set of modules and roles for performing tasks related to NAE.
 
 *Note: This collection is not compatible with versions of Ansible before v2.8.*
